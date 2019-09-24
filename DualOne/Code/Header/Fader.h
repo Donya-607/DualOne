@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include <Constant.h>
-#include "Template.h"
+#include "Donya/Constant.h"
+#include "Donya/Template.h"
 
 /// <summary>
 /// TODO : Change to the user can specify drawing sprite or color.

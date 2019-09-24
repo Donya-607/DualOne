@@ -2,12 +2,13 @@
 #include <time.h>
 #include <windows.h>
 
+#include "Donya/Constant.h"
+#include "Donya/Donya.h"
+#include "Donya/Sound.h"
+
 #include "Common.h"
-#include "Constant.h"
-#include "Donya.h"
 #include "Framework.h"
 #include "Icon.h"
-#include "Sound.h"
 
 INT WINAPI wWinMain( _In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPWSTR cmdLine, _In_ INT cmdShow )
 {
@@ -28,7 +29,7 @@ INT WINAPI wWinMain( _In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _
 
 	srand( scast<unsigned int>( time( NULL ) ) );
 
-	std::string title{ "‚©‚¯‚ÁŒÏ" };
+	std::string title{ "Lagerman" };
 	Donya::Init( cmdShow, Common::ScreenWidth(), Common::ScreenHeight(), title.c_str() );
 
 	Donya::SetWindowIcon( instance, IDI_ICON );

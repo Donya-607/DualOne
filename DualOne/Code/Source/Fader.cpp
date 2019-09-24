@@ -2,10 +2,11 @@
 
 #include <queue>
 
+#include "Donya/Sprite.h"
+#include "Donya/Useful.h"
+#include "Donya/Vector.h"
+
 #include "Common.h"
-#include "Sprite.h"
-#include "Useful.h"
-#include "Vector.h"
 
 class BaseFade
 {

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Animation.h"
-#include "GamepadXInput.h"
+#include "Donya/Animation.h"
+#include "Donya/GamepadXInput.h"
+
 #include "Scene.h"
 
 class ScenePause : public Scene

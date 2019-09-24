@@ -2,18 +2,19 @@
 
 #include <array>
 
-#include "Blend.h"
+#include "Donya/Blend.h"
+#include "Donya/Constant.h"
+#include "Donya/Donya.h"
+#include "Donya/Keyboard.h"
+#include "Donya/Mouse.h"
+#include "Donya/Resource.h"
+#include "Donya/ScreenShake.h"
+#include "Donya/Sound.h"
+#include "Donya/Useful.h"
+#include "Donya/UseImgui.h"
+
 #include "Common.h"
-#include "Constant.h"
-#include "Donya.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 #include "Music.h"
-#include "Resource.h"
-#include "ScreenShake.h"
-#include "Sound.h"
-#include "Useful.h"
-#include "UseImgui.h"
 
 using namespace DirectX;
 
@@ -48,7 +49,7 @@ void Framework::Update( float elapsedTime/*Elapsed seconds from last frame*/ )
 
 	if ( Donya::Keyboard::Trigger( 'C' ) )
 	{
-		char debugstopper = 0;
+		char breakPoint = 0;
 	}
 	if ( Donya::Keyboard::Trigger( 'T' ) )
 	{
@@ -69,11 +70,11 @@ void Framework::Update( float elapsedTime/*Elapsed seconds from last frame*/ )
 #define ENABLE_3D_TEST ( true && DEBUG_MODE && USE_IMGUI )
 #if ENABLE_3D_TEST
 #include <memory>
-#include "./../../../Donya/Source/Header/Camera.h"	// Specify library's camera.
-#include "GeometricPrimitive.h"
-#include "Loader.h"
-#include "StaticMesh.h"
-#include "Useful.h"
+#include "Donya/Camera.h"
+#include "Donya/GeometricPrimitive.h"
+#include "Donya/Loader.h"
+#include "Donya/StaticMesh.h"
+#include "Donya/Useful.h"
 #endif // ENABLE_3D_TEST
 void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 {
@@ -284,27 +285,11 @@ bool Framework::LoadSounds()
 	const std::array<Bundle, ID::TERMINATION_OF_MUSIC_ID> bandles =
 	{
 		{	// ID, FilePath, isEnableLoop
-			{ ID::BGM_Title,			"./Data/Sounds/BGM/Title.wav",					true  },
-			{ ID::BGM_Stage0,			"./Data/Sounds/BGM/Stage0.wav",					true  },
-			{ ID::BGM_Stage1,			"./Data/Sounds/BGM/Stage1.wav",					true  },
-			{ ID::BGM_Stage2,			"./Data/Sounds/BGM/Stage2.wav",					true  },
-			{ ID::BGM_Stage3,			"./Data/Sounds/BGM/Stage3.wav",					true  },
-			{ ID::BGM_Stage4,			"./Data/Sounds/BGM/Stage4.wav",					true  },
-			{ ID::BGM_Result,			"./Data/Sounds/BGM/Result.wav",					false },
+			{ ID::BGM_Title,		"./Data/Sounds/BGM/Title.mp3",				true  },
+			{ ID::BGM_Game,			"./Data/Sounds/BGM/Game.mp3",				true  },
 
-			{ ID::PlayerAtk,			"./Data/Sounds/SE/Player/Attack.wav",			false },
-			{ ID::PlayerAtkHit,			"./Data/Sounds/SE/Player/AttackHit.wav",		false },
-			{ ID::PlayerDamage,			"./Data/Sounds/SE/Player/ReceiveDamage.wav",	false },
-			{ ID::PlayerFullCharge,		"./Data/Sounds/SE/Player/FullCharge.wav",		false },
-			{ ID::PlayerHitToNeedle,	"./Data/Sounds/SE/Player/HitToNeedle.wav",		false },
-			{ ID::PlayerJump,			"./Data/Sounds/SE/Player/Jump.wav",				false },
-
-			{ ID::BreakRock,			"./Data/Sounds/SE/Player/BreakRock.wav",		false },
-
-			{ ID::TouchRespawnPoint,	"./Data/Sounds/SE/Player/TouchRespawnPoint.wav",false },
-
-			{ ID::ItemChoose,			"./Data/Sounds/SE/UI/ChooseItem.wav",			false },
-			{ ID::ItemDecision,			"./Data/Sounds/SE/UI/DecisionItem.wav",			false },
+			{ ID::ItemChoose,		"./Data/Sounds/SE/UI/ChooseItem.wav",		false },
+			{ ID::ItemDecision,		"./Data/Sounds/SE/UI/DecisionItem.wav",		false },
 		},
 	};
 
@@ -320,7 +305,7 @@ bool Framework::LoadSounds()
 }
 
 #if DEBUG_MODE && USE_IMGUI
-#include "Easing.h"
+#include "Donya/Easing.h"
 #endif // DEBUG_MODE && USE_IMGUI
 void Framework::DebugShowInformation()
 {
@@ -451,7 +436,7 @@ void Framework::DebugShowInformation()
 			ImGui::TreePop();
 		}
 
-		if ( ImGui::TreeNode( "Screen Shake" ) )
+		if ( ImGui::TreeNode( "Screen Shake Test" ) )
 		{
 			static float power = 20.0f;
 			static float decel = 5.0f;

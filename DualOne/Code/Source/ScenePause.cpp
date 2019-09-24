@@ -2,15 +2,15 @@
 
 #include <algorithm>
 
-#include "Constant.h"
+#include "Donya/Constant.h"
+#include "Donya/Keyboard.h"
+#include "Donya/Sprite.h"
+#include "Donya/Sound.h"
+#include "Donya/Vector.h"
+
 #include "Common.h"
 #include "FilePath.h"
-#include "Keyboard.h"
 #include "Music.h"
-#include "Sprite.h"
-#include "Sound.h"
-#include "UI.h"
-#include "Vector.h"
 
 #undef max
 #undef min

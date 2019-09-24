@@ -1,10 +1,10 @@
 #include "SceneManager.h"
 
+#include "Donya/Resource.h"
+
 #include "Common.h"
 #include "Fader.h"
-#include "Resource.h"
 #include "Scene.h"
-#include "SceneClear.h"
 #include "SceneGame.h"
 #include "SceneLogo.h"
 #include "SceneTitle.h"

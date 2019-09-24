@@ -20,9 +20,5 @@ public:
 
 	void	Draw( float elapsedTime ) override;
 private:
-	void	InitPerStage( int stageNo, bool resetTimeAndBGM, bool restartFromRespawnPoint = false );
-
-	void	DoCollisionDetection();
-
 	Result	ReturnResult();
 };
