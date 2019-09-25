@@ -128,7 +128,7 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 	//	( isFront )
 	//	? pScenes.push_front( std::make_unique<SceneClear>() )
 	//	: pScenes.push_back ( std::make_unique<SceneClear>() );
-		break;
+	//	break;
 	default: _ASSERT_EXPR( 0, L"Error : The scene does not exist." ); return;
 	}
 

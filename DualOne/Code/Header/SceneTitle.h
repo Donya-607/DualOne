@@ -20,18 +20,5 @@ public:
 
 	void	Draw( float elapsedTime );
 private:
-	void	StartFade();
-
-	void	TitleUpdate();
-	void	SelectUpdate();
-
-	void	TitleDraw();
-	void	SelectDraw();
-
-	void	Scroll();
-	void	ChooseStage();
-
-	void	StoreStageNo();
-
 	Result	ReturnResult();
 };

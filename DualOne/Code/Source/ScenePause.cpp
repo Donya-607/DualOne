@@ -17,7 +17,7 @@
 
 ScenePause::ScenePause() :
 	choice( Choice::Resume ),
-	sprUI(),
+	sprFont( NULL ),
 	controller( Donya::XInput::PadNumber::PAD_1 )
 {
 
@@ -29,7 +29,7 @@ ScenePause::~ScenePause()
 
 void ScenePause::Init()
 {
-	sprUI.LoadSheet( GetSpritePath( SpriteAttribute::UI ), 256U );
+	sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 }
 
 void ScenePause::Uninit()
@@ -48,7 +48,15 @@ Scene::Result ScenePause::Update( float elapsedTime )
 
 void ScenePause::Draw( float elapsedTime )
 {
-	
+	Donya::Sprite::DrawString
+	(
+		sprFont,
+		"Pause",
+		Common::HalfScreenWidthF(),
+		Common::HalfScreenHeightF(),
+		32.0f, 32.0f,
+		32.0f, 32.0f
+	);
 }
 
 void ScenePause::UpdateChooseItem()

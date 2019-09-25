@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Donya/Animation.h"
 #include "Donya/GamepadXInput.h"
 
 #include "Scene.h"
@@ -17,7 +16,7 @@ private:
 	};
 private:
 	Choice			choice;
-	SpriteSheet		sprUI;
+	size_t			sprFont;
 	Donya::XInput	controller;
 public:
 	ScenePause();

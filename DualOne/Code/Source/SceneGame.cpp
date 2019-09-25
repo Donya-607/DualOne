@@ -23,9 +23,10 @@
 
 struct SceneGame::Impl
 {
-
 public:
-	Impl()
+	size_t sprFont;
+public:
+	Impl() : sprFont( NULL )
 	{}
 	~Impl()
 	{
