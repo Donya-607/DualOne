@@ -23,9 +23,10 @@
 
 struct SceneGame::Impl
 {
-
 public:
-	Impl()
+	size_t sprFont;
+public:
+	Impl() : sprFont( NULL )
 	{}
 	~Impl()
 	{
@@ -169,6 +170,8 @@ SceneGame::~SceneGame()
 void SceneGame::Init()
 {
 	Donya::Sound::Play( Music::BGM_Game );
+
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 }
 
 void SceneGame::Uninit()
@@ -194,7 +197,24 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
+	Donya::Sprite::DrawRect
+	(
+		Common::HalfScreenWidthF(),
+		Common::HalfScreenHeightF(),
+		Common::ScreenWidthF(),
+		Common::ScreenHeightF(),
+		Donya::Sprite::Color::TEAL, 1.0f
+	);
 
+	Donya::Sprite::DrawString
+	(
+		pImpl->sprFont,
+		"Game",
+		Common::HalfScreenWidthF(),
+		Common::HalfScreenHeightF(),
+		32.0f, 32.0f,
+		32.0f, 32.0f
+	);
 }
 
 Scene::Result SceneGame::ReturnResult()
@@ -208,9 +228,21 @@ Scene::Result SceneGame::ReturnResult()
 	}
 	// else
 
-#if DEBUG_MODE
-	if ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) )
+	if ( Donya::Keyboard::Trigger( 'P' ) )
 	{
+		Donya::Sound::Play( Music::ItemDecision );
+
+		Scene::Result pause{};
+		pause.AddRequest( Scene::Request::ADD_SCENE );
+		pause.sceneType = Scene::Type::Pause;
+		return pause;
+	}
+
+#if DEBUG_MODE
+	if ( Donya::Keyboard::Trigger( VK_RETURN ) )
+	{
+		Donya::Sound::Play( Music::ItemDecision );
+
 		Scene::Result change{};
 		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
 		change.sceneType = Scene::Type::Title;

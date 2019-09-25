@@ -121,14 +121,14 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 		break;
 	case Scene::Type::Pause:
 		( isFront )
-		? pScenes.push_front( std::make_unique<SceneGame>() )
-		: pScenes.push_back ( std::make_unique<SceneGame>() );
+		? pScenes.push_front( std::make_unique<ScenePause>() )
+		: pScenes.push_back ( std::make_unique<ScenePause>() );
 		break;
 	//case Scene::Type::Clear:
 	//	( isFront )
 	//	? pScenes.push_front( std::make_unique<SceneClear>() )
 	//	: pScenes.push_back ( std::make_unique<SceneClear>() );
-		break;
+	//	break;
 	default: _ASSERT_EXPR( 0, L"Error : The scene does not exist." ); return;
 	}
 
