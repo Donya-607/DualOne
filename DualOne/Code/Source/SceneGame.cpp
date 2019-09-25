@@ -197,6 +197,15 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
+	Donya::Sprite::DrawRect
+	(
+		Common::HalfScreenWidthF(),
+		Common::HalfScreenHeightF(),
+		Common::ScreenWidthF(),
+		Common::ScreenHeightF(),
+		Donya::Sprite::Color::TEAL, 1.0f
+	);
+
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,

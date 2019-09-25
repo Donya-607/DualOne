@@ -73,6 +73,15 @@ Scene::Result SceneTitle::Update( float elapsedTime )
 
 void SceneTitle::Draw( float elapsedTime )
 {
+	Donya::Sprite::DrawRect
+	(
+		Common::HalfScreenWidthF(),
+		Common::HalfScreenHeightF(),
+		Common::ScreenWidthF(),
+		Common::ScreenHeightF(),
+		Donya::Sprite::Color::NAVY, 1.0f
+	);
+
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,
