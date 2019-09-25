@@ -52,8 +52,7 @@ void ScenePause::Draw( float elapsedTime )
 	(
 		sprFont,
 		"Pause",
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
+		128.0f, 32.0f,
 		32.0f, 32.0f,
 		32.0f, 32.0f
 	);

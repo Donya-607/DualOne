@@ -121,8 +121,8 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 		break;
 	case Scene::Type::Pause:
 		( isFront )
-		? pScenes.push_front( std::make_unique<SceneGame>() )
-		: pScenes.push_back ( std::make_unique<SceneGame>() );
+		? pScenes.push_front( std::make_unique<ScenePause>() )
+		: pScenes.push_back ( std::make_unique<ScenePause>() );
 		break;
 	//case Scene::Type::Clear:
 	//	( isFront )

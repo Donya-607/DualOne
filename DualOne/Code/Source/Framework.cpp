@@ -243,8 +243,7 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 		static Donya::Geometric::Cube				cube			= InitializedCube();
 		static Donya::Geometric::Sphere				sphere			= InitializedSphere();
 		static Donya::Geometric::TextureBoard		texBoard		= InitializedTexBoard();
-		static std::shared_ptr<Donya::StaticMesh>	pStaticMeshFBX	= InitializedStaticMesh( "D:\\Captures\\StaticTestFBX.bin" );
-		static std::shared_ptr<Donya::StaticMesh>	pStaticMeshOBJ	= InitializedStaticMesh( "D:\\Captures\\StaticTestOBJ.bin" );
+		static std::shared_ptr<Donya::StaticMesh>	pStaticMeshFBX	= InitializedStaticMesh( "./Data/Model/StaticTestFBX.bin" );
 		for ( int i = 0; i < drawCount; ++i )
 		{
 			cube.Render( worldViewProjection_Cube, world_Cube, lightDirection, mtlColor );
@@ -252,10 +251,8 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			texBoard.Render( worldViewProjection_TexBoard, world_TexBoard, lightDirection, mtlColor );
 
 			if ( pStaticMeshFBX )
-			// if ( pStaticMeshOBJ )
 			{
 				pStaticMeshFBX->Render( worldViewProjection_Mesh, world_Mesh, lightDirection, mtlColor, cameraPos );
-				// pStaticMeshOBJ->Render( worldViewProjection_Mesh, world_Mesh, lightDirection, mtlColor, cameraPos );
 			}
 		}
 	};

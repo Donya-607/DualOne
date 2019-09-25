@@ -76,7 +76,7 @@ void SceneTitle::Draw( float elapsedTime )
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,
-		"Pause",
+		"Title",
 		Common::HalfScreenWidthF(),
 		Common::HalfScreenHeightF(),
 		32.0f, 32.0f,
@@ -97,6 +97,8 @@ Scene::Result SceneTitle::ReturnResult()
 	// else
 	if ( Donya::Keyboard::Trigger( VK_RETURN ) )
 	{
+		Donya::Sound::Play( Music::ItemDecision );
+
 		Scene::Result change{};
 		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
 		change.sceneType = Scene::Type::Game;

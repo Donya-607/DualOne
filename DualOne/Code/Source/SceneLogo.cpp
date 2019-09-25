@@ -85,9 +85,9 @@ Scene::Result SceneLogo::Update( float elapsedTime )
 			if ( showCount <= showIndex )
 			{
 				Fader::Configuration config{};
-				config.type = Fader::Type::Scroll;
+				config.type = Fader::Type::Gradually;
 				config.closeFrame	= 20;
-				config.parameter	= Fader::Direction::RIGHT;
+				config.parameter	= scast<unsigned int>( Donya::Sprite::Color::BLACK );
 				Fader::Get().StartFadeOut( config );
 
 				status = State::END;
