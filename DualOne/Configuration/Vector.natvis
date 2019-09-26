@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?> 
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+	<Type Name="Donya::Vector2">
+		<DisplayString>{{x={x}, y={y}}}</DisplayString>
+		<Expand>
+			<Item Name="X">x</Item>
+			<Item Name="Y">y</Item>
+			<Item Name="LengthSq" ExcludeView="simple" Optional="true">
+				( x * x ) + ( y * y )
+			</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="Donya::Vector3">
+		<DisplayString>{{x={x}, y={y}, z={z}}}</DisplayString>
+		<Expand>
+			<Item Name="X">x</Item>
+			<Item Name="Y">y</Item>
+			<Item Name="Z">z</Item>
+			<Item Name="LengthSq" ExcludeView="simple" Optional="true">
+				( x * x ) + ( y * y ) + ( z * z )
+			</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="Donya::Vector4">
+		<DisplayString>{{x={x}, y={y}, z={z}, w={w}}}</DisplayString>
+		<Expand>
+			<Item Name="X">x</Item>
+			<Item Name="Y">y</Item>
+			<Item Name="Z">z</Item>
+			<Item Name="W">w</Item>
+			<Item Name="LengthSq" ExcludeView="simple" Optional="true">
+				( x * x ) + ( y * y ) + ( z * z ) + ( w * w )
+			</Item>
+		</Expand>
+	</Type>
+	
+</AutoVisualizer>
