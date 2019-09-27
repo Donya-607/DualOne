@@ -75,6 +75,7 @@ void Framework::Update( float elapsedTime/*Elapsed seconds from last frame*/ )
 #include "Donya/StaticMesh.h"
 #include "Donya/Useful.h"
 #include "Camera.h"
+#include "FilePath.h"
 #endif // ENABLE_3D_TEST
 void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 {
@@ -327,7 +328,6 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 		static Donya::Geometric::Cube				cube			= InitializedCube();
 		static Donya::Geometric::Sphere				sphere			= InitializedSphere();
 		static Donya::Geometric::TextureBoard		texBoard		= InitializedTexBoard();
-		static std::shared_ptr<Donya::StaticMesh>	pStaticMeshFBX	= InitializedStaticMesh( "./Data/Model/StaticTestFBX.bin" );
 		for ( int i = 0; i < drawCount; ++i )
 		{
 			cube.Render( worldViewProjection_Cube, world_Cube, lightDirection, mtlColor );

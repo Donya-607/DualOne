@@ -12,5 +12,11 @@ enum class SpriteAttribute
 	FMODLogoWhite,
 	TestFont,
 };
-
 std::wstring GetSpritePath( SpriteAttribute fileAttribute );
+
+enum class ModelAttribute
+{
+	Box,
+	Player,
+};
+std::string GetModelPath( ModelAttribute fileAttribute );
