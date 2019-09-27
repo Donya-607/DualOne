@@ -333,11 +333,6 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			cube.Render( worldViewProjection_Cube, world_Cube, lightDirection, mtlColor );
 			sphere.Render( worldViewProjection_Sphere, world_Sphere, lightDirection, mtlColor );
 			texBoard.Render( worldViewProjection_TexBoard, world_TexBoard, lightDirection, mtlColor );
-
-			if ( pStaticMeshFBX )
-			{
-				pStaticMeshFBX->Render( worldViewProjection_Mesh, world_Mesh, lightDirection, mtlColor, cameraPos );
-			}
 		}
 	};
 	Draw3DModelTest();
