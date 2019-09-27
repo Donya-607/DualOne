@@ -70,11 +70,11 @@ void Framework::Update( float elapsedTime/*Elapsed seconds from last frame*/ )
 #define ENABLE_3D_TEST ( true && DEBUG_MODE && USE_IMGUI )
 #if ENABLE_3D_TEST
 #include <memory>
-#include "Donya/Camera.h"
 #include "Donya/GeometricPrimitive.h"
 #include "Donya/Loader.h"
 #include "Donya/StaticMesh.h"
 #include "Donya/Useful.h"
+#include "Camera.h"
 #endif // ENABLE_3D_TEST
 void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 {
@@ -88,17 +88,101 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 	{
 		auto InitializedCameraPointer = []()
 		{
-			std::shared_ptr<Donya::Camera> pCamera = std::make_shared<Donya::Camera>();
+			std::shared_ptr<Camera> pCamera = std::make_shared<Camera>();
 			pCamera->Init
 			(
 				Common::ScreenWidthF(),
 				Common::ScreenHeightF(),
 				ToRadian( 30.0f ) // FOV
 			);
+			pCamera->SetFocusDistance( 2.0f );
 			return pCamera;
 		};
-		static std::shared_ptr<Donya::Camera> pCamera = InitializedCameraPointer();
-		pCamera->Update();
+		static std::shared_ptr<Camera> pCamera = InitializedCameraPointer();
+	
+		auto MakeControlStructWithMouse = []()
+		{
+			static Donya::Int2 prevMouse{};
+			static Donya::Int2 currMouse{};
+
+			prevMouse = currMouse;
+
+			auto nowMouse = Donya::Mouse::Coordinate();
+			currMouse.x = scast<float>( nowMouse.x );
+			currMouse.y = scast<float>( nowMouse.y );
+
+			auto IsEqual = []( const Donya::Int2 &lhs, const Donya::Int2 &rhs )
+			{
+				if ( lhs.x != rhs.x ) { return false; }
+				if ( lhs.y != rhs.y ) { return false; }
+				return true;
+			};
+			bool isInputMouseButton = Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) || Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) || Donya::Mouse::Press( Donya::Mouse::Kind::RIGHT );
+			bool isDriveMouse = ( !IsEqual( prevMouse, currMouse ) ) || Donya::Mouse::WheelRot() || isInputMouseButton;
+			if ( !isDriveMouse )
+			{
+				Camera::Controller noop{};
+				noop.SetNoOperation();
+				return noop;
+			}
+
+			Donya::Vector3 diff{};
+			{
+				Donya::Vector2 vec2 = ( currMouse - prevMouse ).Float();
+
+				diff.x = vec2.x;
+				diff.y = vec2.y * -1.0f;
+			}
+
+			Donya::Vector3 movement{};
+			Donya::Vector3 rotation{};
+
+			if ( Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) )
+			{
+				constexpr float ROT_AMOUNT = ToRadian( 1.0f );
+				rotation.x = diff.x * ROT_AMOUNT;
+				rotation.y = diff.y * ROT_AMOUNT;
+			}
+			else
+			if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
+			{
+				constexpr float MOVE_SPEED = 0.1f;
+				movement.x = diff.x * MOVE_SPEED;
+				movement.y = diff.y * MOVE_SPEED;
+			}
+
+			constexpr float FRONT_SPEED = 3.5f;
+			movement.z = FRONT_SPEED * scast<float>( Donya::Mouse::WheelRot() );
+
+			Donya::Quaternion rotYaw	= Donya::Quaternion::Make( Donya::Vector3::Up(), rotation.x );
+
+			Donya::Vector3 right = Donya::Vector3::Right();
+			right = rotYaw.RotateVector( right );
+			Donya::Quaternion rotPitch	= Donya::Quaternion::Make( right, rotation.y );
+
+			Donya::Quaternion rotQ		= rotYaw * rotPitch;
+
+			static Donya::Vector3 front = Donya::Vector3::Front();
+
+			if ( !rotation.IsZero() )
+			{
+				front = rotQ.RotateVector( front );
+				front.Normalize();
+			}
+
+			Camera::Controller ctrl{};
+			ctrl.moveVelocity		= movement;
+			ctrl.rotation			= rotation;
+			ctrl.slerpPercent		= 1.0f;
+			ctrl.moveAtLocalSpace	= true;
+
+			return ctrl;
+		};
+		pCamera->Update( MakeControlStructWithMouse() );
+		if ( Donya::Keyboard::Trigger( 'R' ) )
+		{
+			pCamera->SetToHomePosition();
+		}
 
 		XMMATRIX W_Cube{};
 		XMMATRIX W_Sphere{};
@@ -111,9 +195,9 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			static float angleZ = 0.0f; // 0;
 			static float moveX = 0.0f; // 2.0f;
 			static float moveY = 0.0f; // -2.0f;
-			static float moveZ = 0.0f; // 0;
+			static float moveZ = 5.0f; // 0;
 
-			if ( 1 )
+			if ( 0 )
 			{
 				constexpr float SCALE_ADD = 0.01f;
 				constexpr float ANGLE_ADD = 1.0f;

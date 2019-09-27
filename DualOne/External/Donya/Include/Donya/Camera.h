@@ -15,33 +15,39 @@ namespace DirectX
 
 namespace Donya
 {
-
+	/// <summary>
+	/// 
+	/// </summary>
 	class Camera
 	{
 		static constexpr unsigned int PROGRAM_VERSION = 0;
-	private:
-		enum class Mode
+	public:
+		/// <summary>
+		/// Store information of drive the camera.
+		/// </summary>
+		struct Controller
 		{
-			None,			// when the left-button and wheel-button is not pressed.
-			OrbitAround,	// when left-clicking.
-			Pan				// when wheel-pressing, or right-clicking.
-		};
-		struct MouseCoord
-		{
-			Donya::Vector2 prev{};
-			Donya::Vector2 current{};
+			Donya::Vector3	moveVelocity{};						// Set move direction(contain speed).
+			Donya::Vector3	lookDirection{ 0.0f, 0.0f, 0.0f };	// Set front direction of camera, If it is zero(default), the current direction is not rotate.
+			float			slerpPercent{ 1.0f };				// Set percentage of interpolation(0.0f ~ 1.0f, will be clamped). use to rotate direction to "lookAt" if that is not zero.
+			bool			moveAtLocalSpace{ true };			// Specify the space of movement. world-space or local-space(with current posture).
+		public:
+			// This condition is same as default constructed condition.
+			void SetNoOperation()
+			{
+				moveVelocity	= Donya::Vector3::Zero();
+				lookDirection	= Donya::Vector3::Zero();
+				slerpPercent	= 0.0f;
+			}
 		};
 	private:
-		Mode				moveMode;
-		float				radius;				// same as length of vector(pos-focus).
-		float				scopeAngle;			// 0-based, Radian
-		float				virtualDistance;	// The distance of from my-position to virtual-screen, use for Pan() move.
+		float				focusDistance;		// This enable when distance != zero, the focus is there front of camera.
+		float				scopeAngle;			// Radian
 		Donya::Vector2		screenSize;
 		Donya::Vector2		halfScreenSize;
 		Donya::Vector3		pos;
 		Donya::Vector3		focus;
 		Donya::Vector3		velocity;
-		MouseCoord			mouse;
 		Donya::Quaternion	posture;
 		DirectX::XMFLOAT4X4	projection;
 	public:
@@ -67,7 +73,22 @@ namespace Donya
 		/// </summary>
 		void SetScopeAngle( float scopeAngle );
 
+		/// <summary>
+		/// Set distance of focus from camera position.<para></para>
+		/// ! If the camera rotate after called this, the focus will be move also. !
+		/// </summary>
+		void SetFocusDistance( float distance );
+		/// <summary>
+		/// Set the focus position in world-space.<para></para>
+		/// If that focus position same as camera position, that focus position will be pushed to front.<para></para>
+		/// ! The focus position is fixed, that is not move if the camera rotate after call this.
+		/// </summary>
+		void SetFocusCoordinate( const Donya::Vector3 &coordinate );
+
 		void ResetOrthographicProjection();
+		/// <summary>
+		/// Requirement : the camera must be already initialized.
+		/// </summary>
 		void ResetPerspectiveProjection();
 		DirectX::XMMATRIX SetOrthographicProjectionMatrix( float width, float height, float mostNear, float mostFar );
 		/// <summary>
@@ -79,26 +100,17 @@ namespace Donya
 		DirectX::XMMATRIX GetProjectionMatrix() const;
 		Donya::Vector3 GetPos() const { return pos; }
 	public:
-		void Update();
+		void Update( Controller controller );
 	private:
-		/// <summary>
-		/// Set degrees to [X:45][Y:45][Z:0].
-		/// </summary>
+		bool IsFocusFixed() const;
+
 		void ResetPosture();
 
-		void MouseUpdate();
+		void SetFocusToFront();
 
-		void ChangeMode();
+		void Move( Controller controller );
 
-		void Move();
-
-		void Zoom();
-
-		void OrbitAround();
-
-		void Pan();
-		void CalcDistToVirtualScreen();
-		Donya::Vector3 ToWorldPos( const Donya::Vector2 &screenPos );
+		void Rotate( Controller controller );
 
 	#if DEBUG_MODE
 
