@@ -109,8 +109,8 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			prevMouse = currMouse;
 
 			auto nowMouse = Donya::Mouse::Coordinate();
-			currMouse.x = scast<float>( nowMouse.x );
-			currMouse.y = scast<float>( nowMouse.y );
+			currMouse.x = scast<int>( nowMouse.x );
+			currMouse.y = scast<int>( nowMouse.y );
 
 			auto IsEqual = []( const Donya::Int2 &lhs, const Donya::Int2 &rhs )
 			{

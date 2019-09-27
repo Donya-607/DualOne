@@ -33,7 +33,7 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 	return L"ERROR_ATTRIBUTE";
 }
 
-std::sstring GetModelPath( ModelAttribute fileAttribute )
+std::string GetModelPath( ModelAttribute fileAttribute )
 {
 	switch ( fileAttribute )
 	{
