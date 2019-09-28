@@ -28,7 +28,7 @@ namespace Donya
 		struct Controller
 		{
 			Donya::Vector3	moveVelocity{};						// Set move direction(contain speed).
-			Donya::Vector3	lookDirection{ 0.0f, 0.0f, 0.0f };	// Set front direction of camera, If it is zero(default), the current direction is not rotate.
+			Donya::Vector3	rotation{};							// Set rotate angles(radian), each angles are used to direction of rotate(e.g. rotation.x is used to yaw-axis rotate).
 			float			slerpPercent{ 1.0f };				// Set percentage of interpolation(0.0f ~ 1.0f, will be clamped). use to rotate direction to "lookAt" if that is not zero.
 			bool			moveAtLocalSpace{ true };			// Specify the space of movement. world-space or local-space(with current posture).
 		public:
@@ -36,7 +36,7 @@ namespace Donya
 			void SetNoOperation()
 			{
 				moveVelocity	= Donya::Vector3::Zero();
-				lookDirection	= Donya::Vector3::Zero();
+				rotation		= Donya::Vector3::Zero();
 				slerpPercent	= 0.0f;
 			}
 		};
@@ -90,15 +90,16 @@ namespace Donya
 		/// Requirement : the camera must be already initialized.
 		/// </summary>
 		void ResetPerspectiveProjection();
-		DirectX::XMMATRIX SetOrthographicProjectionMatrix( float width, float height, float mostNear, float mostFar );
+		DirectX::XMMATRIX	SetOrthographicProjectionMatrix( float width, float height, float mostNear, float mostFar );
 		/// <summary>
 		/// ScopeAngle, Near, Far are used to default.
 		/// </summary>
-		DirectX::XMMATRIX SetPerspectiveProjectionMatrix( float aspectRatio );
-		DirectX::XMMATRIX SetPerspectiveProjectionMatrix( float scopeAngle, float aspectRatio, float mostNear, float mostFar );
-		DirectX::XMMATRIX CalcViewMatrix() const;
-		DirectX::XMMATRIX GetProjectionMatrix() const;
-		Donya::Vector3 GetPos() const { return pos; }
+		DirectX::XMMATRIX	SetPerspectiveProjectionMatrix( float aspectRatio );
+		DirectX::XMMATRIX	SetPerspectiveProjectionMatrix( float scopeAngle, float aspectRatio, float mostNear, float mostFar );
+		DirectX::XMMATRIX	CalcViewMatrix() const;
+		DirectX::XMMATRIX	GetProjectionMatrix() const;
+		Donya::Vector3		GetPos() const { return pos; }
+		Donya::Quaternion	GetPosture() const { return posture; }
 	public:
 		void Update( Controller controller );
 	private:

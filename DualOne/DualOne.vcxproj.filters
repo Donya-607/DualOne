@@ -14,6 +14,7 @@
     <ClInclude Include="Code\Header\ScenePause.h" />
     <ClInclude Include="Code\Header\SceneTitle.h" />
     <ClInclude Include="Code\Header\Camera.h" />
+    <ClInclude Include="Code\Header\Player.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -30,6 +31,7 @@
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
     <ClCompile Include="Code\Source\Camera.cpp" />
+    <ClCompile Include="Code\Source\Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />
