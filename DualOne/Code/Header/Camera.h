@@ -54,10 +54,9 @@ public:
 	/// </summary>
 	void SetScreenSize( Donya::Vector2 newScreenSize );
 	/// <summary>
-	/// The position are setting to { 0.0f, 0.0f, 0.0f }.<para></para>
-	/// The focus are setting to { 0.0f, 0.0f, 1.0f }.
+	/// Can not Set to focus-position.
 	/// </summary>
-	void SetToHomePosition( Donya::Vector3 homePosition = { 0.0f, 0.0f, 0.0f }, Donya::Vector3 homeFocus = { 0.0f, 0.0f, 1.0f } );
+	void SetPosition( Donya::Vector3 newPosition );
 	/// <summary>
 	/// "scopeAngle" is 0-based, radian.
 	/// </summary>
@@ -80,7 +79,7 @@ public:
 	/// Requirement : the camera must be already initialized.
 	/// </summary>
 	void ResetPerspectiveProjection();
-	DirectX::XMMATRIX SetOrthographicProjectionMatrix( float width, float height, float mostNear, float mostFar );
+	DirectX::XMMATRIX	SetOrthographicProjectionMatrix( float width, float height, float mostNear, float mostFar );
 	/// <summary>
 	/// ScopeAngle, Near, Far are used to default.
 	/// </summary>
@@ -90,14 +89,21 @@ public:
 	DirectX::XMMATRIX	GetProjectionMatrix() const;
 	Donya::Vector3		GetPos() const { return pos; }
 	Donya::Quaternion	GetPosture() const { return posture; }
+
+	/// <summary>
+	/// If the focus point is fixed(was passed coordinate of focus directly), returns true.<para></para>
+	/// If the focus point is floated(was passed distance to focus), returns false.
+	/// </summary>
+	bool IsFocusFixed() const;
 public:
 	void Update( Controller controller );
 private:
-	bool IsFocusFixed() const;
-
 	void ResetPosture();
+	void NormalizePostureIfNeeded();
 
 	void SetFocusToFront();
+
+	void LookAtFocus();
 
 	void Move( Controller controller );
 

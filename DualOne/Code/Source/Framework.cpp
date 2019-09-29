@@ -182,7 +182,8 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 		pCamera->Update( MakeControlStructWithMouse() );
 		if ( Donya::Keyboard::Trigger( 'R' ) )
 		{
-			pCamera->SetToHomePosition();
+			pCamera->SetPosition( { 0.0f, 0.0f, 0.0f } );
+			pCamera->SetFocusDistance( 2.0f );
 		}
 
 		XMMATRIX W_Cube{};
@@ -335,7 +336,7 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			texBoard.Render( worldViewProjection_TexBoard, world_TexBoard, lightDirection, mtlColor );
 		}
 	};
-	Draw3DModelTest();
+	// Draw3DModelTest();
 
 #endif // ENABLE_3D_TEST
 }

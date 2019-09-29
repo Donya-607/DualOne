@@ -16,38 +16,47 @@
 #include "Donya/Useful.h"
 #include "Donya/UseImGui.h"
 
+#include "Camera.h"
 #include "Common.h"
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "Player.h"
 
 struct SceneGame::Impl
 {
 public:
 	size_t sprFont;
+	Camera camera;
+	Player player;
+
+	Donya::Vector3 lightDirection;
 public:
-	Impl() : sprFont( NULL )
+	Impl() : sprFont( NULL ),
+		camera(),
+		player(),
+		lightDirection( 0.0f, 0.0f, 1.0f )
 	{}
 	~Impl()
-	{
-
-	}
+	{}
 private:
 	friend class cereal::access;
 	template<class Archive>
 	void serialize( Archive &archive, std::uint32_t version )
 	{
-		//archive
-		//(
-		//	CEREAL_NVP()
-		//);
+		archive
+		(
+			CEREAL_NVP( lightDirection )
+		);
 
 		if ( 1 <= version )
 		{
-			//archive
-			//(
-			//	CEREAL_NVP()
-			//);
+			/*
+			archive
+			(
+				CEREAL_NVP()
+			);
+			*/
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Game";
@@ -82,53 +91,10 @@ public:
 		{
 			if ( ImGui::TreeNode( "Game" ) )
 			{
-				if ( ImGui::TreeNode( "Xbox Input" ) )
-				{
-					ImGui::Text( "Input Check." );
-
-					static Donya::XInput controller{ Donya::XInput::PadNumber::PAD_1 };
-					controller.Update();
-
-					using Button = Donya::XInput::Button;
-					std::vector<std::string> inputs
-					{
-						"UP : " + std::to_string( controller.Press( Button::UP ) ),
-						"DOWN : " + std::to_string( controller.Press( Button::DOWN ) ),
-						"LEFT : " + std::to_string( controller.Press( Button::LEFT ) ),
-						"RIGHT : " + std::to_string( controller.Press( Button::RIGHT ) ),
-						"START : " + std::to_string( controller.Press( Button::START ) ),
-						"SELECT : " + std::to_string( controller.Press( Button::SELECT ) ),
-						"PRESS_L : " + std::to_string( controller.Press( Button::PRESS_L ) ),
-						"PRESS_R : " + std::to_string( controller.Press( Button::PRESS_R ) ),
-						"LB : " + std::to_string( controller.Press( Button::LB ) ),
-						"RB : " + std::to_string( controller.Press( Button::RB ) ),
-						"A : " + std::to_string( controller.Press( Button::A ) ),
-						"B : " + std::to_string( controller.Press( Button::B ) ),
-						"X : " + std::to_string( controller.Press( Button::X ) ),
-						"Y : " + std::to_string( controller.Press( Button::Y ) ),
-						"LT : " + std::to_string( controller.Press( Button::LT ) ),
-						"RT : " + std::to_string( controller.Press( Button::RT ) ),
-						"Stick L X : " + std::to_string( controller.LeftStick().x ),
-						"Stick L Y : " + std::to_string( controller.LeftStick().y ),
-						"Stick R X : " + std::to_string( controller.RightStick().x ),
-						"Stick R Y : " + std::to_string( controller.RightStick().y ),
-					};
-
-					auto ShowString = []( const std::string &str )
-					{
-						ImGui::Text( str.c_str() );
-					};
-					for ( size_t i = 0; i < inputs.size(); ++i )
-					{
-						ShowString( inputs[i] );
-					}
-
-					ImGui::TreePop();
-				}
-
+				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
-				if ( ImGui::TreeNode( u8"ファイル（タイマー）" ) )
+				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
 					if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
@@ -151,6 +117,8 @@ public:
 				ImGui::TreePop();
 			}
 
+			camera.ShowParametersToImGui();
+
 			ImGui::End();
 		}
 	}
@@ -172,11 +140,17 @@ void SceneGame::Init()
 	Donya::Sound::Play( Music::BGM_Game );
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+
+	constexpr float FOV = ToRadian( 30.0f );
+	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
+	pImpl->camera.SetFocusCoordinate( { 0.0f, 0.0f, 1.0f } );
+
+	pImpl->player.Init();
 }
 
 void SceneGame::Uninit()
 {
-	pImpl->SaveParameter();
+	pImpl->player.Uninit();
 
 	Donya::ScreenShake::StopX();
 	Donya::ScreenShake::StopY();
@@ -192,11 +166,103 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 #endif // USE_IMGUI
 
+	pImpl->player.Update();
+
+	Camera::Controller cameraController{};
+	cameraController.SetNoOperation();
+
+#if DEBUG_MODE
+	auto MakeControlStructWithMouse = []()
+	{
+		static Donya::Int2 prevMouse{};
+		static Donya::Int2 currMouse{};
+
+		prevMouse = currMouse;
+
+		auto nowMouse = Donya::Mouse::Coordinate();
+		currMouse.x = scast<int>( nowMouse.x );
+		currMouse.y = scast<int>( nowMouse.y );
+
+		bool isInputMouseButton = Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) || Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) || Donya::Mouse::Press( Donya::Mouse::Kind::RIGHT );
+		bool isDriveMouse = ( prevMouse != currMouse ) || Donya::Mouse::WheelRot() || isInputMouseButton;
+		if ( !isDriveMouse || Donya::IsMouseHoveringImGuiWindow() )
+		{
+			Camera::Controller noop{};
+			noop.SetNoOperation();
+			return noop;
+		}
+
+		Donya::Vector3 diff{};
+		{
+			Donya::Vector2 vec2 = ( currMouse - prevMouse ).Float();
+
+			diff.x = vec2.x;
+			diff.y = vec2.y * -1.0f;
+		}
+
+		Donya::Vector3 movement{};
+		Donya::Vector3 rotation{};
+
+		if ( Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) )
+		{
+			constexpr float ROT_AMOUNT = ToRadian( 1.0f );
+			rotation.x = diff.x * ROT_AMOUNT;
+			rotation.y = diff.y * ROT_AMOUNT;
+		}
+		else
+		if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
+		{
+			constexpr float MOVE_SPEED = 0.1f;
+			movement.x = diff.x * MOVE_SPEED;
+			movement.y = diff.y * MOVE_SPEED;
+		}
+
+		constexpr float FRONT_SPEED = 3.5f;
+		movement.z = FRONT_SPEED * scast<float>( Donya::Mouse::WheelRot() );
+
+		Donya::Quaternion rotYaw = Donya::Quaternion::Make( Donya::Vector3::Up(), rotation.x );
+
+		Donya::Vector3 right = Donya::Vector3::Right();
+		right = rotYaw.RotateVector( right );
+		Donya::Quaternion rotPitch = Donya::Quaternion::Make( right, rotation.y );
+
+		Donya::Quaternion rotQ = rotYaw * rotPitch;
+
+		static Donya::Vector3 front = Donya::Vector3::Front();
+
+		if ( !rotation.IsZero() )
+		{
+			front = rotQ.RotateVector( front );
+			front.Normalize();
+		}
+
+		Camera::Controller ctrl{};
+		ctrl.moveVelocity		= movement;
+		ctrl.rotation			= rotation;
+		ctrl.slerpPercent		= 1.0f;
+		ctrl.moveAtLocalSpace	= true;
+
+		return ctrl;
+	};
+	cameraController = MakeControlStructWithMouse();
+	if ( Donya::Keyboard::Trigger( 'R' ) )
+	{
+		pImpl->camera.SetPosition( { 0.0f, 0.0f, 0.0f } );
+	}
+#else
+
+#endif // DEBUG_MODE
+
+	pImpl->camera.Update( cameraController );
+
 	return ReturnResult();
 }
 
 void SceneGame::Draw( float elapsedTime )
 {
+	// Draw BackGround.
+#if DEBUG_MODE
+
 	Donya::Sprite::DrawRect
 	(
 		Common::HalfScreenWidthF(),
@@ -215,6 +281,32 @@ void SceneGame::Draw( float elapsedTime )
 		32.0f, 32.0f,
 		32.0f, 32.0f
 	);
+
+#endif // DEBUG_MODE
+
+	using namespace DirectX;
+
+	auto Matrix		= []( const XMFLOAT4X4 &matrix )
+	{
+		return XMLoadFloat4x4( &matrix );
+	};
+	auto Float4x4	= []( const XMMATRIX &M )
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4( &matrix, M );
+		return matrix;
+	};
+	auto ToFloat4	= []( const Donya::Vector3 &vec3, float fourthValue )
+	{
+		return Donya::Vector4 { vec3.x, vec3.y, vec3.z, fourthValue };
+	};
+
+	XMFLOAT4X4 matView = Float4x4( pImpl->camera.CalcViewMatrix()		);
+	XMFLOAT4X4 matProj = Float4x4( pImpl->camera.GetProjectionMatrix()	);
+	Donya::Vector4 lightDir  = ToFloat4( pImpl->lightDirection,  0.0f	);
+	Donya::Vector4 cameraPos = ToFloat4( pImpl->camera.GetPos(), 1.0f	);
+
+	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
 }
 
 Scene::Result SceneGame::ReturnResult()

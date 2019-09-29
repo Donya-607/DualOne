@@ -38,9 +38,9 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 	switch ( fileAttribute )
 	{
 	case ModelAttribute::Box:
-		return "./Data/Model/Box/Box.bin";			// break;
+		return "./Data/Models/Box/Box.bin";			// break;
 	case ModelAttribute::Player:
-		return "./Data/Model/Player/Player.bin";	// break;
+		return "./Data/Models/Player/Player.bin";	// break;
 	default:
 		assert( !"Error : Specified unexpect model type." ); break;
 	}

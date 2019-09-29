@@ -23,6 +23,7 @@ Camera::Camera() :
 	posture(),
 	projection()
 {
+	focus = pos + Donya::Vector3::Front();
 	/*
 	constexpr float DEFAULT_FOV		= ToRadian( 30.0f );
 	constexpr float DEFAULT_WIDTH	= 1920.0f;
@@ -40,7 +41,6 @@ void Camera::Init( float screenWidth, float screenHeight, float scopeAngle )
 {
 	SetScreenSize( screenWidth, screenHeight );
 	SetScopeAngle( scopeAngle );
-	SetToHomePosition();
 	ResetPerspectiveProjection();
 	ResetPosture();
 }
@@ -55,11 +55,21 @@ void Camera::SetScreenSize( Donya::Vector2 newScreenSize )
 	halfScreenSize	= screenSize * 0.5f;
 }
 
-void Camera::SetToHomePosition( Donya::Vector3 homePosition, Donya::Vector3 homeFocus )
+void Camera::SetPosition( Donya::Vector3 newPosition )
 {
-	pos			= homePosition;
-	focus		= homeFocus;
-	posture		= Donya::Quaternion::Identity();
+	if ( IsFocusFixed() )
+	{
+		if ( newPosition == focus ) { return; }
+		// else
+
+		pos = newPosition;
+		LookAtFocus();
+	}
+	else
+	{
+		pos = newPosition;
+		SetFocusToFront();
+	}
 }
 
 void Camera::SetScopeAngle( float scope )
@@ -127,6 +137,11 @@ XMMATRIX Camera::GetProjectionMatrix() const
 	return XMLoadFloat4x4( &projection );
 }
 
+bool Camera::IsFocusFixed() const
+{
+	return ( ZeroEqual( focusDistance ) ) ? true : false;
+}
+
 void Camera::Update( Controller controller )
 {
 	Move( controller );
@@ -167,14 +182,18 @@ void Camera::Interpolate()
 }
 */
 
-bool Camera::IsFocusFixed() const
-{
-	return ( ZeroEqual( focusDistance ) ) ? true : false;
-}
-
 void Camera::ResetPosture()
 {
 	posture = Donya::Quaternion::Make( 0.0f, 0.0f, 0.0f );
+}
+
+void Camera::NormalizePostureIfNeeded()
+{
+	// Norm() != 1
+	if ( !ZeroEqual( posture.Length() - 1.0f ) )
+	{
+		posture.Normalize();
+	}
 }
 
 void Camera::SetFocusToFront()
@@ -187,6 +206,15 @@ void Camera::SetFocusToFront()
 	focus = pos + localFront;
 }
 
+void Camera::LookAtFocus()
+{
+	Donya::Vector3 look = focus - pos;
+	look.Normalize();
+
+	posture = Donya::Quaternion::LookAt( look );
+	NormalizePostureIfNeeded();
+}
+
 void Camera::Move( Controller controller )
 {
 	if ( controller.moveVelocity.IsZero() ) { return; }
@@ -197,21 +225,25 @@ void Camera::Move( Controller controller )
 		controller.moveVelocity = posture.RotateVector( controller.moveVelocity );
 	}
 
-	pos += controller.moveVelocity;
-	if ( !IsFocusFixed() )
+	if ( IsFocusFixed() )
 	{
-		focus += controller.moveVelocity;
-		SetFocusToFront();
+		if ( focus == ( pos + controller.moveVelocity ) ) { return; }
+		// else
+
+		pos += controller.moveVelocity;
+		LookAtFocus();
 	}
 	else
 	{
-		// TODO:フォーカス地点へ向くクォータニオンを算出し，postureに球面線形補間か代入かする
+		pos   += controller.moveVelocity;
+		focus += controller.moveVelocity; // SetFocusToFront();
 	}
 }
 
 void Camera::Rotate( Controller controller )
 {
 	if ( controller.rotation.IsZero() ) { return; }
+	if ( IsFocusFixed() ) { return; }	// In fixed focus mode, rotation is meaningless.
 	// else
 
 	auto GetAxis = []( const Donya::Quaternion &q, Donya::Vector3 axis, bool inLocalSpace )
@@ -225,6 +257,8 @@ void Camera::Rotate( Controller controller )
 	};
 
 	Donya::Quaternion resultPosture = posture;
+
+	// Rotate with each axis.
 
 	if ( !ZeroEqual( controller.rotation.x ) )
 	{
@@ -250,12 +284,7 @@ void Camera::Rotate( Controller controller )
 
 	// posture = Donya::Quaternion::Slerp( posture, resultPosture, controller.slerpPercent );
 	posture = resultPosture;
-
-	// Norm() != 1
-	if ( !ZeroEqual( posture.Length() - 1.0f ) )
-	{
-		posture.Normalize();
-	}
+	NormalizePostureIfNeeded();
 
 	SetFocusToFront();
 }
