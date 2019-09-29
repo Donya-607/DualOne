@@ -214,6 +214,7 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 	if ( Common::IsShowCollision() )
 	{
 		AABB wsBody = GetHitBox();
+		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
 
 		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
 		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
@@ -221,7 +222,7 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
-		constexpr XMFLOAT4 colColor{ 0.0f, 0.9f, 0.5f, 0.4f };
+		constexpr XMFLOAT4 colColor{ 0.6f, 1.0f, 0.4f, 0.5f };
 
 		auto InitializedCube = []()
 		{
