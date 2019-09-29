@@ -1,0 +1,20 @@
+{
+    "Player": {
+        "cereal_class_version": 0,
+        "hitBox": {
+            "cereal_class_version": 0,
+            "pos": {
+                "cereal_class_version": 0,
+                "x": 0.0,
+                "y": 12.0,
+                "z": 1.0
+            },
+            "size": {
+                "x": 4.922999858856201,
+                "y": 13.0,
+                "z": 5.0
+            },
+            "exist": false
+        }
+    }
+}

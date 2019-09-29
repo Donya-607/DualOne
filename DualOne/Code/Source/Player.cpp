@@ -61,6 +61,22 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"プレイヤー" ) )
 			{
+				if ( ImGui::TreeNode( u8"当たり判定" ) )
+				{
+					auto EnumAABBParamToImGui = []( AABB *pAABB )
+					{
+						if ( !pAABB ) { return; }
+						// else
+
+						constexpr float RANGE = 64.0f;
+						ImGui::SliderFloat3( u8"原点のオフセット（ＸＹＺ）",	&pAABB->pos.x,	-RANGE,	RANGE );
+						ImGui::SliderFloat3( u8"サイズの半分（ＸＹＺ）",		&pAABB->size.x,	0.0f,	RANGE );
+					};
+
+					EnumAABBParamToImGui( &hitBox );
+
+					ImGui::TreePop();
+				}
 				
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
@@ -205,7 +221,7 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
-		constexpr XMFLOAT4 colColor{ 0.0f, 1.0f, 0.5f, 0.7f };
+		constexpr XMFLOAT4 colColor{ 0.0f, 0.9f, 0.5f, 0.4f };
 
 		auto InitializedCube = []()
 		{
@@ -219,7 +235,7 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 			Float4x4( colWVP ),
 			Float4x4( colW ),
 			lightDirection,
-			color
+			colColor
 		);
 
 	}
