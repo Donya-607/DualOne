@@ -119,6 +119,11 @@ namespace Donya
 		static Quaternion Make( const DirectX::XMFLOAT4X4 &rotationMatrix );
 
 		/// <summary>
+		/// Create a quaternion of rotates in the "lookDirection".
+		/// </summary>
+		static Quaternion LookAt( const Donya::Vector3 &lookDirection );
+
+		/// <summary>
 		/// Returns Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f }.
 		/// </summary>
 		static Quaternion Identity();
