@@ -365,6 +365,10 @@ bool Framework::LoadSounds()
 			{ ID::BGM_Title,		"./Data/Sounds/BGM/Title.mp3",				true  },
 			{ ID::BGM_Game,			"./Data/Sounds/BGM/Game.mp3",				true  },
 
+			{ ID::PlayerCharge,			"./Data/Sounds/SE/Player/Charge.wav",	false },
+			{ ID::PlayerJump,			"./Data/Sounds/SE/Player/Jump.wav",		false },
+			{ ID::PlayerLanding,		"./Data/Sounds/SE/Player/Landing.wav",	false },
+
 			{ ID::ItemChoose,		"./Data/Sounds/SE/UI/ChooseItem.wav",		false },
 			{ ID::ItemDecision,		"./Data/Sounds/SE/UI/DecisionItem.wav",		false },
 		},

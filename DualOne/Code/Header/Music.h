@@ -8,6 +8,10 @@ namespace Music
 
 		BGM_Game,
 
+		PlayerCharge,
+		PlayerJump,
+		PlayerLanding,
+
 		ItemChoose,
 		ItemDecision,
 

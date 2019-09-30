@@ -1,11 +1,21 @@
 {
     "Game": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "lightDirection": {
             "cereal_class_version": 0,
             "x": 0.0,
-            "y": -1.0,
-            "z": 0.5
+            "y": 0.0,
+            "z": 1.0
+        },
+        "cameraDistance": {
+            "x": 0.0,
+            "y": 256.0,
+            "z": -256.0
+        },
+        "cameraFocus": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 64.0
         }
     }
 }
