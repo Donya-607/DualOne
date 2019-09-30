@@ -458,6 +458,7 @@ void Player::JumpUpdate( Input input )
 
 void Player::Landing()
 {
+	charge		= 0.0f;
 	pos.y		= 0.0f;
 	velocity.y	= 0.0f;
 
@@ -475,9 +476,9 @@ void Player::ShowParamToImGui() const
 {
 	if ( ImGui::BeginIfAllowed() )
 	{
-		if ( ImGui::TreeNode( u8"パラメータ" ) )
+		if ( ImGui::TreeNode( u8"プレイヤー・パラメータ" ) )
 		{
-			std::string statusStr{ u8"ステータス" };
+			std::string statusStr{ u8"今のステータス：" };
 			switch ( status )
 			{
 			case Player::State::Run:	statusStr += u8"走る";		break;
@@ -489,11 +490,11 @@ void Player::ShowParamToImGui() const
 			ImGui::Text( statusStr.c_str() );
 			ImGui::Text( "" );
 
-			ImGui::Text( u8"今のレーン[%d]（０始まり・左から）", currentLane );
-			ImGui::Text( u8"レーン数[%d]（１始まり）", laneCount );
+			ImGui::Text( u8"今のレーン：%d（０始まり・左から）", currentLane );
+			ImGui::Text( u8"レーンの数：%d（１始まり）", laneCount );
 			ImGui::Text( "" );
 			
-			ImGui::Text( u8"チャージ量[%5.3f]", charge );
+			ImGui::Text( u8"チャージ量：%5.3f", charge );
 			ImGui::Text( "" );
 			
 			ImGui::Text( u8"位置[X:%5.3f][Y:%5.3f][Z:%5.3f]", pos.x, pos.y, pos.z );
