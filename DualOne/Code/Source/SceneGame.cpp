@@ -109,8 +109,6 @@ public:
 				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -64.0f, 64.0f );
 				ImGui::Text( "" );
 
-				camera.ShowParametersToImGui();
-
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -134,6 +132,8 @@ public:
 				ImGui::TreePop();
 			}
 
+			camera.ShowParametersToImGui();
+
 			ImGui::End();
 		}
 	}
@@ -156,9 +156,20 @@ void SceneGame::Init()
 {
 	Donya::Sound::Play( Music::BGM_Game );
 
+	pImpl->LoadParameter();
+
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
-	pImpl->player.Init();
+#if DEBUG_MODE
+	std::vector<Donya::Vector3> tmpLanes
+	{
+		Donya::Vector3( -32.0f, 0.0f, 0.0f ),
+		Donya::Vector3( 0.0f, 0.0f, 0.0f ),
+		Donya::Vector3(  32.0f, 0.0f, 0.0f )
+	};
+#endif // DEBUG_MODE
+
+	pImpl->player.Init( tmpLanes );
 
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
@@ -184,7 +195,20 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 #endif // USE_IMGUI
 
-	pImpl->player.Update();
+	auto MakePlayerInput = [&]()->Player::Input
+	{
+		Player::Input input{};
+
+		// TODO:コントローラの入力も取る
+
+		if ( Donya::Keyboard::Press( VK_RIGHT ) ) { input.stick.x = 1.0f; }
+		if ( Donya::Keyboard::Press( VK_LEFT  ) ) { input.stick.x = -1.0f; }
+		
+		if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
+
+		return input;
+	};
+	pImpl->player.Update( MakePlayerInput() );
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -267,8 +291,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	pImpl->camera.Update( cameraController );
 
-	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
-	pImpl->camera.SetPosition( pImpl->player.GetPos() + pImpl->cameraDistance );
+	Donya::Vector3 criteria = pImpl->player.GetPos();
+	criteria.x = criteria.y = 0.0f;
+	pImpl->camera.SetPosition( criteria + pImpl->cameraDistance );
+	pImpl->camera.SetFocusCoordinate( criteria + pImpl->cameraFocus );
 
 	return ReturnResult();
 }
