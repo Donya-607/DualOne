@@ -31,11 +31,14 @@ public:
 	Player player;
 
 	Donya::Vector3 lightDirection;
+	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
+	Donya::Vector3 cameraFocus;		// Relative position from the camera.
 public:
 	Impl() : sprFont( NULL ),
 		camera(),
 		player(),
-		lightDirection( 0.0f, 0.0f, 1.0f )
+		lightDirection( 0.0f, 0.0f, 1.0f ),
+		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f )
 	{}
 	~Impl()
 	{}
@@ -50,13 +53,21 @@ private:
 		);
 
 		if ( 1 <= version )
-		{
+		{			
+			archive
+			(
+				CEREAL_NVP( cameraDistance ),
+				CEREAL_NVP( cameraFocus )
+			);	
+		}
+		if ( 2 <= version )
+		{			
 			/*
 			archive
 			(
 				CEREAL_NVP()
 			);
-			*/
+			*/	
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Game";
@@ -89,10 +100,16 @@ public:
 	{
 		if ( ImGui::BeginIfAllowed() )
 		{
-			if ( ImGui::TreeNode( "Game" ) )
+			if ( ImGui::TreeNode( u8"一般" ) )
 			{
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
+				ImGui::Text("");
+
+				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -64.0f, 64.0f );
 				ImGui::Text( "" );
+
+				camera.ShowParametersToImGui();
 
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
@@ -117,14 +134,14 @@ public:
 				ImGui::TreePop();
 			}
 
-			camera.ShowParametersToImGui();
-
 			ImGui::End();
 		}
 	}
 
 #endif // USE_IMGUI
 };
+
+CEREAL_CLASS_VERSION( SceneGame::Impl, 1 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -141,11 +158,12 @@ void SceneGame::Init()
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
+	pImpl->player.Init();
+
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
-	pImpl->camera.SetFocusCoordinate( { 0.0f, 0.0f, 1.0f } );
-
-	pImpl->player.Init();
+	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
+	pImpl->camera.SetPosition( pImpl->player.GetPos() + pImpl->cameraDistance );
 }
 
 void SceneGame::Uninit()
@@ -244,16 +262,13 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 		return ctrl;
 	};
-	cameraController = MakeControlStructWithMouse();
-	if ( Donya::Keyboard::Trigger( 'R' ) )
-	{
-		pImpl->camera.SetPosition( { 0.0f, 0.0f, 0.0f } );
-	}
-#else
-
+	// cameraController = MakeControlStructWithMouse();
 #endif // DEBUG_MODE
 
 	pImpl->camera.Update( cameraController );
+
+	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
+	pImpl->camera.SetPosition( pImpl->player.GetPos() + pImpl->cameraDistance );
 
 	return ReturnResult();
 }

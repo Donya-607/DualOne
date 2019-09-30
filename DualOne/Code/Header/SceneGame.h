@@ -6,8 +6,9 @@
 
 class SceneGame : public Scene
 {
-private:
+public:
 	struct Impl;
+private:
 	std::unique_ptr<Impl> pImpl;
 public:
 	SceneGame();
