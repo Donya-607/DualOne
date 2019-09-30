@@ -164,7 +164,7 @@ void SceneGame::Init()
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
 #if DEBUG_MODE
-	std::vector<Donya::Vector3> tmpLanes
+	std::vector<Donya::Vector3> tmpLanes // should be fetch from "ground".
 	{
 		Donya::Vector3( -32.0f, 0.0f, 0.0f ),
 		Donya::Vector3( 0.0f, 0.0f, 0.0f ),
