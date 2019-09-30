@@ -253,7 +253,7 @@ namespace Donya
 			{
 				( y * R.z ) - ( z * R.y ),
 				( z * R.x ) - ( x * R.z ),
-				( x * R.y ) - ( y * R.z )
+				( x * R.y ) - ( y * R.x )
 			};
 		}
 		Vector3 Cross( const XMFLOAT3 &R ) const
@@ -262,7 +262,7 @@ namespace Donya
 			{
 				( y * R.z ) - ( z * R.y ),
 				( z * R.x ) - ( x * R.z ),
-				( x * R.y ) - ( y * R.z )
+				( x * R.y ) - ( y * R.x )
 			};
 		}
 	public:
@@ -482,6 +482,13 @@ namespace Donya
 	static Int2 operator + ( const Int2 &L, const Int2 &R ) { return ( Int2( L ) += R ); }
 	static Int2 operator - ( const Int2 &L, const Int2 &R ) { return ( Int2( L ) -= R ); }
 
+	static bool operator == ( const Int2 &L, const Int2 &R )
+	{
+		if ( L.x != R.x ) { return false; }
+		if ( L.y != R.y ) { return false; }
+		return true;
+	}
+	static bool operator != ( const Int2 &L, const Int2 &R ) { return !( L == R ); }
 
 #pragma endregion
 
