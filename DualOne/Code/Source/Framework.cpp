@@ -256,7 +256,7 @@ void Framework::Draw( float elapsedTime/*Elapsed seconds from last frame*/ )
 			}
 		}
 	};
-	Draw3DModelTest();
+//	Draw3DModelTest();
 
 #endif // ENABLE_3D_TEST
 }

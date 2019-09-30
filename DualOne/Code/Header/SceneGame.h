@@ -1,14 +1,19 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "Scene.h"
+#include "Donya/GeometricPrimitive.h"
+
 
 class SceneGame : public Scene
 {
 private:
 	struct Impl;
 	std::unique_ptr<Impl> pImpl;
+	Donya::Geometric::Sphere sphere;
+	std::vector<Donya::Geometric::Cube> ground;
 public:
 	SceneGame();
 	~SceneGame();

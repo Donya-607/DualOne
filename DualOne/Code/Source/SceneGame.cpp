@@ -15,11 +15,14 @@
 #include "Donya/Sprite.h"
 #include "Donya/Useful.h"
 #include "Donya/UseImGui.h"
+#include "Donya/Camera.h"
 
 #include "Common.h"
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+
+using namespace DirectX;
 
 struct SceneGame::Impl
 {
@@ -172,6 +175,14 @@ void SceneGame::Init()
 	Donya::Sound::Play( Music::BGM_Game );
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+
+	sphere.Init();
+	for (int i = 0; i < 7; i++)
+	{
+		Donya::Geometric::Cube pre;
+		pre.Init();
+		ground.emplace_back(pre);
+	}
 }
 
 void SceneGame::Uninit()
@@ -197,24 +208,70 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
-	Donya::Sprite::DrawRect
-	(
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		Common::ScreenWidthF(),
-		Common::ScreenHeightF(),
-		Donya::Sprite::Color::TEAL, 1.0f
-	);
 
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		"Game",
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+	auto InitializedCameraPointer = []()
+	{
+		std::shared_ptr<Donya::Camera> pCamera = std::make_shared<Donya::Camera>();
+		pCamera->Init
+		(
+			Common::ScreenWidthF(),
+			Common::ScreenHeightF(),
+			ToRadian(30.0f) // FOV
+		);
+		return pCamera;
+	};
+	static std::shared_ptr<Donya::Camera> pCamera = InitializedCameraPointer();
+	pCamera->Update();
+	for (int i = 0; i < 7; i++)
+	{
+		XMMATRIX W;
+		XMMATRIX V;
+		XMMATRIX P;
+		XMMATRIX S = XMMatrixScaling(0.9f, 0.9f, 0.9f);
+		XMMATRIX RX = XMMatrixRotationX(ToRadian(0));
+		XMMATRIX RY = XMMatrixRotationY(ToRadian(0));
+		XMMATRIX RZ = XMMatrixRotationZ(ToRadian(0));
+		XMMATRIX R = (RZ * RY) * RX;
+		constexpr float SHIFT = 1.0f;
+		XMMATRIX T = XMMatrixTranslation(0+i, 0, 0);
+		W = S * R * T;
+
+		V = pCamera->CalcViewMatrix();
+		P = pCamera->GetProjectionMatrix();
+
+		XMFLOAT4X4 WVP;
+		XMFLOAT4X4 world_m;
+		XMStoreFloat4x4(&WVP, W * V * P);
+		XMStoreFloat4x4(&world_m, W);
+
+		XMFLOAT4 lightDirection{ 0.0f, 0.0f, 1.0f, 0.0f };
+		XMFLOAT4 mtlColor{ 0.4f, 1.0f, 0.7f, 1.0f };
+
+		Donya::Sprite::DrawRect
+		(
+			Common::HalfScreenWidthF(),
+			Common::HalfScreenHeightF(),
+			Common::ScreenWidthF(),
+			Common::ScreenHeightF(),
+			Donya::Sprite::Color::TEAL, 1.0f
+		);
+
+		Donya::Sprite::DrawString
+		(
+			pImpl->sprFont,
+			"Game",
+			Common::HalfScreenWidthF(),
+			Common::HalfScreenHeightF(),
+			32.0f, 32.0f,
+			32.0f, 32.0f
+		);
+
+		//	sphere.Render(WVP, world_m, lightDirection, mtlColor);
+		for (auto& it : ground)
+		{
+			it.Render(WVP, world_m, lightDirection, mtlColor);
+		}
+	}
 }
 
 Scene::Result SceneGame::ReturnResult()
