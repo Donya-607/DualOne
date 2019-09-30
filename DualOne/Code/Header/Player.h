@@ -6,6 +6,7 @@
 #include "Donya/Collision.h"
 #include "Donya/StaticMesh.h"
 #include "Donya/Quaternion.h"
+#include "Donya/UseImgui.h"		// Use USE_IMGUI macro.
 #include "Donya/Vector.h"		// Also include <DirectXMath>
 
 class Player
@@ -94,7 +95,7 @@ private:
 	/// </summary>
 	void HorizontalMove();
 	/// <summary>
-	/// Judge to close(true) when the distance to current-lane is lower-equal than half-change-lane-speed.
+	/// Judge to close(true) when the distance to current-lane is lower-equal than little-change-lane-speed.
 	/// </summary>
 	bool IsCloseToCurrentLane( const Donya::Vector3 &wsJudgePosition ) const;
 	bool IsChangingLane() const;
@@ -109,4 +110,10 @@ private:
 	/// Add "velocity" to "pos", the "pos" is only changed by this method.
 	/// </summary>
 	void ApplyVelocity();
+
+#if USE_IMGUI
+
+	void ShowParamToImGui() const;
+
+#endif // USE_IMGUI
 };

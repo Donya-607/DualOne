@@ -1,6 +1,6 @@
 {
     "Player": {
-        "cereal_class_version": 1,
+        "cereal_class_version": 0,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -14,14 +14,15 @@
                 "y": 6.5,
                 "z": 2.5
             },
-            "exist": false
+            "exist": true
         },
-        "changeLaneSpeed": 0.06666667014360428,
+        "changeLaneSpeed": 0.0833333358168602,
         "chargeSpeed": 0.05000000074505806,
         "fallResistance": 0.5,
         "gravity": 0.800000011920929,
-        "maxJumpHeight": 32.0,
-        "runSpeedUsual": 8.0,
-        "runSpeedSlow": 4.0
+        "jumpResistance": 0.5,
+        "jumpStrength": 12.0,
+        "runSpeedUsual": 4.0,
+        "runSpeedSlow": 2.0
     }
 }

@@ -8,7 +8,6 @@
 #include "Donya/Sound.h"
 #include "Donya/Template.h"
 #include "Donya/Useful.h"
-#include "Donya/UseImgui.h"
 
 #include "Common.h"
 #include "FilePath.h"
@@ -23,9 +22,10 @@ struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
 public:
 	float	changeLaneSpeed;// Horizontal move speed.
 	float	chargeSpeed;	// MAX is 1.0f.
-	float	fallResistance;	// Resist to gravity(will calc to "gravity * ( 1 - resistance )"). this will affected by charge.
+	float	fallResistance;	// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
 	float	gravity;		// This is not affected by charge.
-	float	maxJumpHeight;	// This is not affected by charge.
+	float	jumpResistance;	// Resist to jumpStrength(will calc to "strength * ( 1 - resistance * charge )"). this will affected by charge.
+	float	jumpStrength;	// Init speed of jump. This is not affected by charge.
 	float	runSpeedUsual;	// Running speed when not charging.
 	float	runSpeedSlow;	// Running speed when charging.
 	AABB	hitBox{};		// Store local-space.
@@ -34,24 +34,22 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, std::uint32_t version )
 	{
-		archive( CEREAL_NVP( hitBox ) );
+		archive
+		(
+			CEREAL_NVP( hitBox ),
+			CEREAL_NVP( changeLaneSpeed ),
+			CEREAL_NVP( chargeSpeed ),
+			CEREAL_NVP( fallResistance ),
+			CEREAL_NVP( gravity ),
+			CEREAL_NVP( jumpResistance ),
+			CEREAL_NVP( jumpStrength ),
+			CEREAL_NVP( runSpeedUsual ),
+			CEREAL_NVP( runSpeedSlow )
+		);
 
 		if ( 1 <= version )
 		{
-			archive
-			(
-				CEREAL_NVP( changeLaneSpeed ),
-				CEREAL_NVP( chargeSpeed ),
-				CEREAL_NVP( fallResistance ),
-				CEREAL_NVP( gravity ),
-				CEREAL_NVP( maxJumpHeight ),
-				CEREAL_NVP( runSpeedUsual ),
-				CEREAL_NVP( runSpeedSlow )
-			);
-		}
-		if ( 2 <= version )
-		{
-			// archive( CEREAL_NVP( chargeSpeed ) );
+			// archive( CEREAL_NVP( x ), );
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Player";
@@ -98,6 +96,11 @@ public:
 						constexpr float RANGE = 64.0f;
 						ImGui::SliderFloat3( u8"原点のオフセット（ＸＹＺ）",	&pAABB->pos.x,	-RANGE,	RANGE );
 						ImGui::SliderFloat3( u8"サイズの半分（ＸＹＺ）",		&pAABB->size.x,	0.0f,	RANGE );
+
+						bool &exist = pAABB->exist;
+						std::string caption = u8"当たり判定：";
+						caption += ( exist ) ? u8"あり" : u8"なし";
+						ImGui::Checkbox( caption.c_str(), &exist );
 					};
 
 					EnumAABBParamToImGui( &hitBox );
@@ -123,7 +126,10 @@ public:
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 
-					ImGui::SliderFloat( u8"ジャンプの最高到達地点", &maxJumpHeight, 1.0f, 512.0f );
+					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 512.0f );
+					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.01f, 512.0f );
+					ImGui::Text( u8"ジャンプ初速 ＝ ジャンプ初速 * ( 1.0f - ジャンプ抵抗力 * チャージ量 )" );
+
 					ImGui::SliderFloat( u8"重力", &gravity, 0.0f, 16.0f );
 					ImGui::SliderFloat( u8"重力抵抗力（チャージ量の影響を受ける）", &fallResistance, 0.001f, 0.99f );
 					ImGui::Text( u8"重力 ＝ 重力 * ( 1.0f - 重力抵抗力 * チャージ量 )" );
@@ -162,7 +168,7 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 1 )
+CEREAL_CLASS_VERSION( PlayerParameter, 0 )
 
 Player::Player() :
 	status( State::Run ),
@@ -187,7 +193,7 @@ Player::~Player()
 void Player::Init( const std::vector<Donya::Vector3> &lanes )
 {
 	_ASSERT_EXPR( 0 < lanes.size(), L"Error : The lanes count is must over than zero." );
-	laneCount = scast<int>( lanes.size() );
+	laneCount = scast<int>( lanes.size() ) - 1;
 	lanePositions = lanes;
 
 	currentLane = laneCount >> 1;
@@ -217,6 +223,7 @@ void Player::Update( Input input )
 
 	PlayerParameter::Get().UseImGui();
 	ApplyExternalParameter();
+	ShowParamToImGui();
 
 #endif // USE_IMGUI
 
@@ -343,7 +350,7 @@ void Player::RunUpdate( Input input )
 	ChangeLaneIfRequired( input );
 	HorizontalMove();
 
-	if ( input.doCharge )
+	if ( !IsCharging()&& IsCloseToCurrentLane( pos ) && input.doCharge )
 	{
 		ChargeInit();
 	}
@@ -363,9 +370,6 @@ void Player::ChargeUpdate( Input input )
 {
 	charge += PlayerParameter::Get().chargeSpeed;
 	charge = std::min( 1.0f, charge );
-
-	ChangeLaneIfRequired( input );
-	HorizontalMove();
 
 	if ( !input.doCharge )
 	{
@@ -414,7 +418,7 @@ void Player::HorizontalMove()
 bool Player::IsCloseToCurrentLane( const Donya::Vector3 &wsJudgePos ) const
 {
 	float destination = lanePositions[currentLane].x;
-	float applicableMargin = PlayerParameter::Get().changeLaneSpeed * 0.5f;
+	float applicableMargin = PlayerParameter::Get().changeLaneSpeed * 0.1f;
 
 	return ( fabsf( destination - wsJudgePos.x ) <= applicableMargin ) ? true : false;
 }
@@ -436,24 +440,20 @@ void Player::JumpInit()
 {
 	status = State::Jump;
 
-#if DEBUG_MODE // 仮置き
-	constexpr float INIT_SPEED = 8.0f;
-	velocity.y = INIT_SPEED;
-#endif // DEBUG_MODE
+	auto &param = PlayerParameter::Get();
+	velocity.y = param.jumpStrength * ( 1.0f - param.jumpResistance * charge );
 
 	Donya::Sound::Play( Music::PlayerJump );
 }
 void Player::JumpUpdate( Input input )
 {
-	if ( pos.y <= 0 )
+	velocity.y -= CalcGravity();
+
+	if ( pos.y + velocity.y <= 0 )
 	{
 		Landing();
 		RunInit();
-		return;
 	}
-	// else
-
-	velocity.y -= CalcGravity();
 }
 
 void Player::Landing()
@@ -468,3 +468,43 @@ void Player::ApplyVelocity()
 {
 	pos += velocity;
 }
+
+#if USE_IMGUI
+
+void Player::ShowParamToImGui() const
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"パラメータ" ) )
+		{
+			std::string statusStr{ u8"ステータス" };
+			switch ( status )
+			{
+			case Player::State::Run:	statusStr += u8"走る";		break;
+			case Player::State::Charge:	statusStr += u8"チャージ";	break;
+			case Player::State::Jump:	statusStr += u8"ジャンプ";	break;
+			case Player::State::Stun:	statusStr += u8"スタン";		break;
+			default: break;
+			}
+			ImGui::Text( statusStr.c_str() );
+			ImGui::Text( "" );
+
+			ImGui::Text( u8"今のレーン[%d]（０始まり・左から）", currentLane );
+			ImGui::Text( u8"レーン数[%d]（１始まり）", laneCount );
+			ImGui::Text( "" );
+			
+			ImGui::Text( u8"チャージ量[%5.3f]", charge );
+			ImGui::Text( "" );
+			
+			ImGui::Text( u8"位置[X:%5.3f][Y:%5.3f][Z:%5.3f]", pos.x, pos.y, pos.z );
+			ImGui::Text( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", velocity.x, velocity.y, velocity.z );
+			ImGui::Text( "" );
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
