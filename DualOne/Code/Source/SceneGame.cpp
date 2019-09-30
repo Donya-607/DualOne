@@ -22,6 +22,7 @@
 #include "FilePath.h"
 #include "Music.h"
 #include "Player.h"
+#include "../../Ground.h"
 
 struct SceneGame::Impl
 {
@@ -29,6 +30,7 @@ public:
 	size_t sprFont;
 	Camera camera;
 	Player player;
+	Ground ground;
 
 	Donya::Vector3 lightDirection;
 public:
@@ -146,6 +148,7 @@ void SceneGame::Init()
 	pImpl->camera.SetFocusCoordinate( { 0.0f, 0.0f, 1.0f } );
 
 	pImpl->player.Init();
+	pImpl->ground.Init();
 }
 
 void SceneGame::Uninit()
@@ -167,6 +170,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 #endif // USE_IMGUI
 
 	pImpl->player.Update();
+	pImpl->ground.Update();
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -306,6 +310,7 @@ void SceneGame::Draw( float elapsedTime )
 	Donya::Vector4 lightDir  = ToFloat4( pImpl->lightDirection,  0.0f	);
 	Donya::Vector4 cameraPos = ToFloat4( pImpl->camera.GetPos(), 1.0f	);
 
+	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
 	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
 }
 

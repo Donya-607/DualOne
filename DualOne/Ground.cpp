@@ -10,12 +10,6 @@
 /*-------------------------------------------------*/
 Block::Block()
 {
-	for (auto& it : cube)
-	{
-		it.Init();
-	}
-	pos = Donya::Vector3(0.0f, 0.0f, 0.0f);
-	size = Donya::Vector3(1.0f, 1.0f, 1.0f);
 }
 
 Block::~Block()
@@ -23,6 +17,16 @@ Block::~Block()
 
 }
 
+void Block::Init()
+{
+	for (auto& it : cube)
+	{
+		it.Init();
+	}
+	pos = Donya::Vector3(0.0f, 0.0f, -10.0f);
+	velocity = Donya::Vector3(0.0f, 0.0f, 0.1f);
+	size = Donya::Vector3(1.0f, 1.0f, 1.0f);
+}
 /*-------------------------------------------------*/
 //	更新関数
 /*-------------------------------------------------*/
@@ -34,12 +38,38 @@ void Block::Update()
 /*-------------------------------------------------*/
 //	描画関数
 /*-------------------------------------------------*/
-void Block::Draw()
+void Block::Draw(
+	const DirectX::XMFLOAT4X4& matView,
+	const DirectX::XMFLOAT4X4& matProjection,
+	const DirectX::XMFLOAT4& lightDirection,
+	const DirectX::XMFLOAT4& cameraPosition,
+	bool isEnableFill
+)
 {
+	using namespace DirectX;
 
-	for (auto& it : cube)
+	auto Matrix = [](const XMFLOAT4X4 & matrix)
 	{
-//		it.Render();
+		return XMLoadFloat4x4(&matrix);
+	};
+	auto Float4x4 = [](const XMMATRIX & M)
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4(&matrix, M);
+		return matrix;
+	};
+
+	XMMATRIX S = DirectX::XMMatrixIdentity();
+	XMMATRIX R = DirectX::XMMatrixIdentity();
+	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	for ( int i = 0; i < cube.size()/*7*/; i++ )
+	{
+		XMMATRIX T = DirectX::XMMatrixTranslation(i-3, pos.y, pos.z);
+		XMMATRIX W = S * R * T;
+		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
+
+		cube[i].Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
 	}
 }
 
@@ -71,6 +101,21 @@ Ground::~Ground()
 
 }
 
+void Ground::Init()
+{
+	timer = 0;
+	for (auto& it : block)
+	{
+		it.Init();
+	}
+	Create();
+}
+
+void Ground::Uninit()
+{
+
+}
+
 /*-------------------------------------------------*/
 //	更新関数
 /*-------------------------------------------------*/
@@ -79,6 +124,12 @@ void Ground::Update()
 	for (auto& it : block)
 	{
 		it.Update();
+	}
+
+	if (++timer >= 10)
+	{
+		timer = 0;
+		Create();
 	}
 }
 
@@ -95,7 +146,7 @@ void Ground::Draw(
 {
 	for (auto& it : block)
 	{
-		it.Draw();
+		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
 }
 
@@ -105,5 +156,6 @@ void Ground::Draw(
 void Ground::Create()
 {
 	Block pre;
+	pre.Init();
 	block.emplace_back(pre);
 }
