@@ -144,6 +144,7 @@
     <ClInclude Include="Code\Header\Fader.h" />
     <ClInclude Include="Code\Header\FilePath.h" />
     <ClInclude Include="Code\Header\Framework.h" />
+    <ClInclude Include="Code\Header\Ground.h" />
     <ClInclude Include="Code\Header\Icon.h" />
     <ClInclude Include="Code\Header\Music.h" />
     <ClInclude Include="Code\Header\Player.h" />
@@ -153,7 +154,6 @@
     <ClInclude Include="Code\Header\SceneManager.h" />
     <ClInclude Include="Code\Header\ScenePause.h" />
     <ClInclude Include="Code\Header\SceneTitle.h" />
-    <ClInclude Include="Ground.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -164,6 +164,7 @@
     <ClCompile Include="Code\Source\Fader.cpp" />
     <ClCompile Include="Code\Source\FilePath.cpp" />
     <ClCompile Include="Code\Source\Framework.cpp" />
+    <ClCompile Include="Code\Source\Ground.cpp" />
     <ClCompile Include="Code\Source\main.cpp" />
     <ClCompile Include="Code\Source\Player.cpp" />
     <ClCompile Include="Code\Source\SceneGame.cpp" />
@@ -171,7 +172,6 @@
     <ClCompile Include="Code\Source\SceneManager.cpp" />
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
-    <ClCompile Include="Ground.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />

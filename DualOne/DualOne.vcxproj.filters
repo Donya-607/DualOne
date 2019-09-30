@@ -13,9 +13,9 @@
     <ClInclude Include="Code\Header\SceneManager.h" />
     <ClInclude Include="Code\Header\ScenePause.h" />
     <ClInclude Include="Code\Header\SceneTitle.h" />
-    <ClInclude Include="Ground.h">
-      <Filter>Object</Filter>
-    </ClInclude>
+    <ClInclude Include="Code\Header\Camera.h" />
+    <ClInclude Include="Code\Header\Player.h" />
+    <ClInclude Include="Code\Header\Ground.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -31,13 +31,16 @@
     <ClCompile Include="Code\Source\SceneManager.cpp" />
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
-    <ClCompile Include="Ground.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
+    <ClCompile Include="Code\Source\Camera.cpp" />
+    <ClCompile Include="Code\Source\Player.cpp" />
+    <ClCompile Include="Code\Source\Ground.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Object">
       <UniqueIdentifier>{5019535a-0576-4d4c-a769-cb75266fd00f}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Configuration\Vector.natvis" />
   </ItemGroup>
 </Project>

@@ -20,9 +20,9 @@
 #include "Common.h"
 #include "Fader.h"
 #include "FilePath.h"
+#include "Ground.h"
 #include "Music.h"
 #include "Player.h"
-#include "../../Ground.h"
 
 struct SceneGame::Impl
 {
