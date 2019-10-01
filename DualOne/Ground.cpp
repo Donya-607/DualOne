@@ -63,7 +63,7 @@ void Block::Draw(
 	XMMATRIX R = DirectX::XMMatrixIdentity();
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
-	for ( int i = 0; i < cube.size()/*7*/; i++ )
+	for ( unsigned int i = 0; i < cube.size()/*7*/; i++ )
 	{
 		XMMATRIX T = DirectX::XMMatrixTranslation(i-3, pos.y, pos.z);
 		XMMATRIX W = S * R * T;
