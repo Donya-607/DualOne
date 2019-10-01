@@ -20,6 +20,7 @@ struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
 {
 	friend class Donya::Singleton<PlayerParameter>;
 public:
+	int		stunFrame;
 	float	changeLaneSpeed;// Horizontal move speed.
 	float	chargeSpeed;	// MAX is 1.0f.
 	float	fallResistance;	// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
@@ -29,6 +30,8 @@ public:
 	float	runSpeedUsual;	// Running speed when not charging.
 	float	runSpeedSlow;	// Running speed when charging.
 	AABB	hitBox{};		// Store local-space.
+	Donya::Vector3 generateReflectionOffset;
+	Player::CollideResult reflection;
 private:
 	friend class cereal::access;
 	template<class Archive>
@@ -49,7 +52,18 @@ private:
 
 		if ( 1 <= version )
 		{
-			// archive( CEREAL_NVP( x ), );
+			archive
+			(
+				CEREAL_NVP( stunFrame ),
+				CEREAL_NVP( generateReflectionOffset ),
+				CEREAL_NVP( reflection.gravity ),
+				CEREAL_NVP( reflection.hitBox ),
+				CEREAL_NVP( reflection.velocity )
+			);
+		}
+		if ( 2 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Player";
@@ -136,6 +150,38 @@ public:
 
 					ImGui::TreePop();
 				}
+
+				ImGui::SliderInt( u8"気絶時間（フレーム）", &stunFrame, 1, 120 );
+
+				if ( ImGui::TreeNode( u8"反射するやつ関連" ) )
+				{
+					if ( ImGui::TreeNode( u8"当たり判定" ) )
+					{
+						auto EnumSphereParamToImGui = []( Sphere *pSphere )
+						{
+							if ( !pSphere ) { return; }
+							// else
+
+							constexpr float RANGE = 64.0f;
+							ImGui::SliderFloat3( u8"原点のオフセット（ＸＹＺ）", &pSphere->pos.x, -RANGE, RANGE );
+							ImGui::SliderFloat3( u8"半径", &pSphere->radius, 0.01f, RANGE );
+
+							pSphere->exist = true;
+						};
+
+						EnumSphereParamToImGui( &reflection.hitBox );
+
+						ImGui::TreePop();
+					}
+
+					ImGui::SliderFloat( u8"重力", &reflection.gravity, 0.01f, 64.0f );
+					ImGui::Text( "" );
+
+					ImGui::SliderFloat3( u8"生成位置のオフセット[X:%5.3f][X:%5.3f][X:%5.3f]", &generateReflectionOffset.x, -128.0f, 128.0f );
+					ImGui::SliderFloat3( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", &reflection.velocity.x, -64.0f, 64.0f );
+
+					ImGui::TreePop();
+				}
 				
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
@@ -168,11 +214,12 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 0 )
+CEREAL_CLASS_VERSION( PlayerParameter, 1 )
 
 Player::Player() :
 	status( State::Run ),
 	currentLane(), laneCount(),
+	stunTimer(),
 	charge(),
 	hitBox(),
 	pos(), velocity(),
@@ -310,6 +357,43 @@ AABB Player::GetHitBox() const
 	return wsHitBox;
 }
 
+Player::CollideResult MakeFetchedResult()
+{
+	Player::CollideResult rv{};
+	rv.wsPos = {};
+	rv.shouldGenerateBullet = false;
+	
+	auto &param	= PlayerParameter::Get();
+	rv.gravity	= param.reflection.gravity;
+	rv.hitBox	= param.reflection.hitBox;
+	rv.velocity	= param.reflection.velocity;
+
+	return rv;
+}
+Player::CollideResult Player::ReceiveImpact( bool canReflection )
+{
+	CollideResult rv = MakeFetchedResult();
+	rv.wsPos = pos + PlayerParameter::Get().generateReflectionOffset;
+	rv.shouldGenerateBullet = false;
+
+	if ( !canReflection || !IsJumping() )
+	{
+		MakeStun();
+		return rv;
+	}
+	// else
+
+	if ( !IsFullCharged() )
+	{
+		MakeStun();
+		return rv;
+	}
+	// else
+
+	rv.shouldGenerateBullet = true;
+	return rv;
+}
+
 void Player::LoadModel()
 {
 	Donya::Loader loader{};
@@ -334,7 +418,7 @@ void Player::ChooseCurrentStateUpdate( Input input )
 	case Player::State::Run:	RunUpdate( input );		break;
 	case Player::State::Charge:	ChargeUpdate( input );	break;
 	case Player::State::Jump:	JumpUpdate( input );	break;
-	case Player::State::Stun:							break;
+	case Player::State::Stun:	StunUpdate( input );	break;
 	default: break;
 	}
 }
@@ -379,6 +463,10 @@ void Player::ChargeUpdate( Input input )
 bool Player::IsCharging() const
 {
 	return ( status == State::Charge ) ? true : false;
+}
+bool Player::IsFullCharged() const
+{
+	return ( charge < 1.0f ) ? false : true;
 }
 
 void Player::ChangeLaneIfRequired( Input input )
@@ -455,6 +543,10 @@ void Player::JumpUpdate( Input input )
 		RunInit();
 	}
 }
+bool Player::IsJumping() const
+{
+	return ( status == State::Jump ) ? true : false;
+}
 
 void Player::Landing()
 {
@@ -468,6 +560,42 @@ void Player::Landing()
 void Player::ApplyVelocity()
 {
 	pos += velocity;
+}
+
+void Player::MakeStun()
+{
+	stunTimer = PlayerParameter::Get().stunFrame;
+
+	charge		= 0.0f;
+	velocity.x	= 0.0f;
+	velocity.y	= 0.0f;
+	velocity.z	= 0.0f;
+
+	status = State::Stun;
+}
+void Player::StunUpdate( Input input )
+{
+	// Use falling process.
+	if ( 0.0f < pos.y )
+	{
+		JumpUpdate( input );
+	}
+
+#if DEBUG_MODE
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
+	posture = tmpRot * posture;
+#endif // DEBUG_MODE
+
+	stunTimer--;
+	if ( stunTimer <= 0 )
+	{
+		stunTimer = 0;
+		RunInit();
+
+	#if DEBUG_MODE
+		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	#endif // DEBUG_MODE
+	}
 }
 
 #if USE_IMGUI

@@ -311,6 +311,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	pImpl->camera.SetPosition( criteria + pImpl->cameraDistance );
 	pImpl->camera.SetFocusCoordinate( criteria + pImpl->cameraFocus );
 
+	DetectCollision();
+
 	return ReturnResult();
 }
 
@@ -364,6 +366,18 @@ void SceneGame::Draw( float elapsedTime )
 
 	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
 	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
+}
+
+void SceneGame::DetectCollision()
+{
+#if DEBUG_MODE
+
+	if ( Donya::Keyboard::Trigger( VK_SPACE ) )
+	{
+		pImpl->player.ReceiveImpact( /* canReflection = */ true );
+	}
+
+#endif // DEBUG_MODE
 }
 
 Scene::Result SceneGame::ReturnResult()
