@@ -9,8 +9,9 @@
 
 class SceneGame : public Scene
 {
-private:
+public:
 	struct Impl;
+private:
 	std::unique_ptr<Impl> pImpl;
 	Donya::Geometric::Sphere sphere;
 	std::vector<Donya::Geometric::Cube> ground;

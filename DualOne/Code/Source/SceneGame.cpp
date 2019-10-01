@@ -20,9 +20,9 @@
 #include "Common.h"
 #include "Fader.h"
 #include "FilePath.h"
+#include "Ground.h"
 #include "Music.h"
 #include "Player.h"
-#include "../../Ground.h"
 
 struct SceneGame::Impl
 {
@@ -33,11 +33,15 @@ public:
 	Ground ground;
 
 	Donya::Vector3 lightDirection;
+	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
+	Donya::Vector3 cameraFocus;		// Relative position from the camera.
 public:
 	Impl() : sprFont( NULL ),
 		camera(),
 		player(),
-		lightDirection( 0.0f, 0.0f, 1.0f )
+		ground(),
+		lightDirection( 0.0f, 0.0f, 1.0f ),
+		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f )
 	{}
 	~Impl()
 	{}
@@ -52,13 +56,21 @@ private:
 		);
 
 		if ( 1 <= version )
-		{
+		{			
+			archive
+			(
+				CEREAL_NVP( cameraDistance ),
+				CEREAL_NVP( cameraFocus )
+			);	
+		}
+		if ( 2 <= version )
+		{			
 			/*
 			archive
 			(
 				CEREAL_NVP()
 			);
-			*/
+			*/	
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Game";
@@ -91,9 +103,13 @@ public:
 	{
 		if ( ImGui::BeginIfAllowed() )
 		{
-			if ( ImGui::TreeNode( "Game" ) )
+			if ( ImGui::TreeNode( u8"一般" ) )
 			{
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
+				ImGui::Text("");
+
+				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -64.0f, 64.0f );
 				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"ファイル" ) )
@@ -128,6 +144,8 @@ public:
 #endif // USE_IMGUI
 };
 
+CEREAL_CLASS_VERSION( SceneGame::Impl, 1 )
+
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
 
@@ -141,19 +159,40 @@ void SceneGame::Init()
 {
 	Donya::Sound::Play( Music::BGM_Game );
 
+	pImpl->LoadParameter();
+
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+
+#if DEBUG_MODE
+	std::vector<Donya::Vector3> tmpLanes // should be fetch from "ground".
+	{
+		Donya::Vector3( -32.0f, 0.0f, 0.0f ),
+		Donya::Vector3( 0.0f, 0.0f, 0.0f ),
+		Donya::Vector3(  32.0f, 0.0f, 0.0f )
+	};
+#endif // DEBUG_MODE
+
+	/*
+	Initialize order:
+	1.ground. the player wants lane data.
+	2.player. the camera wants player position.
+	3.camera. this is unrelated to anything.
+	*/
+
+	pImpl->ground.Init();
+
+	pImpl->player.Init( tmpLanes );
 
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
-	pImpl->camera.SetFocusCoordinate( { 0.0f, 0.0f, 1.0f } );
-
-	pImpl->player.Init();
-	pImpl->ground.Init();
+	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
+	pImpl->camera.SetPosition( pImpl->player.GetPos() + pImpl->cameraDistance );
 }
 
 void SceneGame::Uninit()
 {
 	pImpl->player.Uninit();
+	pImpl->ground.Uninit();
 
 	Donya::ScreenShake::StopX();
 	Donya::ScreenShake::StopY();
@@ -169,8 +208,22 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 #endif // USE_IMGUI
 
-	pImpl->player.Update();
 	pImpl->ground.Update();
+
+	auto MakePlayerInput = [&]()->Player::Input
+	{
+		Player::Input input{};
+
+		// TODO:コントローラの入力も取る
+
+		if ( Donya::Keyboard::Press( VK_RIGHT ) ) { input.stick.x = 1.0f; }
+		if ( Donya::Keyboard::Press( VK_LEFT  ) ) { input.stick.x = -1.0f; }
+		
+		if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
+
+		return input;
+	};
+	pImpl->player.Update( MakePlayerInput() );
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -248,16 +301,15 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 		return ctrl;
 	};
-	cameraController = MakeControlStructWithMouse();
-	if ( Donya::Keyboard::Trigger( 'R' ) )
-	{
-		pImpl->camera.SetPosition( { 0.0f, 0.0f, 0.0f } );
-	}
-#else
-
+	// cameraController = MakeControlStructWithMouse();
 #endif // DEBUG_MODE
 
 	pImpl->camera.Update( cameraController );
+
+	Donya::Vector3 criteria = pImpl->player.GetPos();
+	criteria.x = criteria.y = 0.0f;
+	pImpl->camera.SetPosition( criteria + pImpl->cameraDistance );
+	pImpl->camera.SetFocusCoordinate( criteria + pImpl->cameraFocus );
 
 	return ReturnResult();
 }
