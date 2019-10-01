@@ -216,8 +216,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 		// TODO:ƒRƒ“ƒgƒ[ƒ‰‚Ì“ü—Í‚àæ‚é
 
-		if ( Donya::Keyboard::Press( VK_RIGHT ) ) { input.stick.x = 1.0f; }
-		if ( Donya::Keyboard::Press( VK_LEFT  ) ) { input.stick.x = -1.0f; }
+		if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x = 1.0f; }
+		if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
 		
 		if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
 
