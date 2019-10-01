@@ -42,6 +42,7 @@ public:
 		camera(),
 		player(),
 		ground(),
+		boss(),
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f )
 	{}
@@ -369,8 +370,8 @@ void SceneGame::Draw(float elapsedTime)
 	Donya::Vector4 lightDir = ToFloat4(pImpl->lightDirection, 0.0f);
 	Donya::Vector4 cameraPos = ToFloat4(pImpl->camera.GetPos(), 1.0f);
 
-	pImpl->ground.Draw(matView, matProj, lightDir, cameraPos);
-	pImpl->player.Draw(matView, matProj, lightDir, cameraPos);
+	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
+	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
 	pImpl->boss.Draw( matView, matProj, lightDir, cameraPos );
 }
 
