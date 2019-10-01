@@ -19,13 +19,10 @@ Block::~Block()
 
 void Block::Init()
 {
-	for (auto& it : cube)
-	{
-		it.Init();
-	}
+	cube.Init();
 	pos = Donya::Vector3(0.0f, 0.0f, -10.0f);
-	velocity = Donya::Vector3(0.0f, 0.0f, 0.1f);
-	size = Donya::Vector3(1.0f, 1.0f, 1.0f);
+	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
+	scale = Donya::Vector3(48.5f, 1.0f, 1000.0f);
 }
 /*-------------------------------------------------*/
 //	çXêVä÷êî
@@ -59,18 +56,15 @@ void Block::Draw(
 		return matrix;
 	};
 
-	XMMATRIX S = DirectX::XMMatrixIdentity();
+	XMMATRIX S = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
 	XMMATRIX R = DirectX::XMMatrixIdentity();
+	XMMATRIX T = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	XMMATRIX W = S * R * T;
+	XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
+
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
-	for ( int i = 0; i < static_cast<int>( cube.size() )/*7*/; i++ )
-	{
-		XMMATRIX T = DirectX::XMMatrixTranslation(static_cast<float>(i-3), pos.y, pos.z);
-		XMMATRIX W = S * R * T;
-		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
-
-		cube[i].Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
-	}
+	cube.Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
 }
 
 /*-------------------------------------------------*/
