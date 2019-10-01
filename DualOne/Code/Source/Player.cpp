@@ -4,10 +4,15 @@
 
 #include "Donya/Constant.h"
 #include "Donya/Loader.h"
+#include "Donya/Random.h"
 #include "Donya/Serializer.h"
 #include "Donya/Sound.h"
 #include "Donya/Template.h"
 #include "Donya/Useful.h"
+
+#if DEBUG_MODE
+#include "Donya/GeometricPrimitive.h" // For drawing collision.
+#endif // DEBUG_MODE
 
 #include "Common.h"
 #include "FilePath.h"
@@ -15,6 +20,149 @@
 
 #undef max
 #undef min
+
+#pragma region ReflectedEntity
+
+std::shared_ptr<Donya::StaticMesh> ReflectedEntity::pModel{ nullptr };
+void ReflectedEntity::LoadModel()
+{
+	static bool wasLoaded = false;
+	if ( wasLoaded ) { return; }
+	// else
+
+	Donya::Loader loader{};
+	bool result = loader.Load( GetModelPath( ModelAttribute::ReflectedEntity ), nullptr );
+
+	_ASSERT_EXPR( result, L"Failed : Load player's reflection-entity model." );
+
+	pModel = Donya::StaticMesh::Create( loader );
+
+	_ASSERT_EXPR( pModel, L"Failed : Load player's reflection-entity model." );
+
+	wasLoaded = true;
+
+}
+
+ReflectedEntity::ReflectedEntity() :
+	gravity(),
+	hitBox(),
+	wsPos(), velocity(),
+	posture( Donya::Quaternion::Identity() )
+{}
+ReflectedEntity::~ReflectedEntity() = default;
+
+void ReflectedEntity::Init( float argGravity, Sphere argHitBox, Donya::Vector3 argWSPos, Donya::Vector3 argVelocity )
+{
+	gravity		= argGravity;
+	hitBox		= argHitBox;
+	wsPos		= argWSPos;
+	velocity	= argVelocity;
+
+	float radZ	= ToRadian( Donya::Random::GenerateFloat( 0.0f, 359.0f ) );
+	posture		= Donya::Quaternion::Make( 0.0f, 0.0f, radZ );
+}
+void ReflectedEntity::Uninit()
+{
+	// No op.
+}
+
+void ReflectedEntity::Update()
+{
+	velocity.y -= gravity;
+
+	wsPos += velocity;
+
+	constexpr float ROT_SPEED = ToRadian( 12.0f );
+	auto rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), ROT_SPEED );
+	posture = rotation * posture;
+}
+
+void ReflectedEntity::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const Donya::Vector4 &lightDirection, const Donya::Vector4 &cameraPos ) const
+{
+	if ( !pModel ) { return; }
+	// else
+
+	using namespace DirectX;
+
+	auto Matrix		= []( const XMFLOAT4X4 &matrix )
+	{
+		return XMLoadFloat4x4( &matrix );
+	};
+	auto Float4x4	= []( const XMMATRIX &M )
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4( &matrix, M );
+		return matrix;
+	};
+
+	XMMATRIX S = XMMatrixIdentity();
+	XMMATRIX R = Matrix( posture.RequireRotationMatrix() );
+	XMMATRIX T = XMMatrixTranslation( wsPos.x, wsPos.y, wsPos.z );
+	XMMATRIX W = S * R * T;
+
+	XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+
+	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	pModel->Render
+	(
+		Float4x4( WVP ),
+		Float4x4( W ),
+		lightDirection,
+		color,
+		cameraPos
+	);
+
+#if DEBUG_MODE
+
+	if ( Common::IsShowCollision() )
+	{
+		Sphere wsBody = GetHitBox();
+		wsBody.radius *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
+
+		float &scale = wsBody.radius;
+		XMMATRIX colS = XMMatrixScaling( scale, scale, scale );
+		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
+		XMMATRIX colW = colS * R * colT;
+
+		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
+
+		constexpr XMFLOAT4 colColor{ 0.6f, 1.0f, 0.4f, 0.5f };
+
+		auto InitializedSphere = []()
+		{
+			Donya::Geometric::Sphere sphere{};
+			sphere.Init();
+			return sphere;
+		};
+		static Donya::Geometric::Sphere sphere = InitializedSphere();
+		sphere.Render
+		(
+			Float4x4( colWVP ),
+			Float4x4( colW ),
+			lightDirection,
+			colColor
+		);
+
+	}
+
+#endif // DEBUG_MODE
+}
+
+bool ReflectedEntity::ShouldErase() const
+{
+	return ( wsPos.y < 0.0f + hitBox.radius ) ? true : false;
+}
+
+Sphere ReflectedEntity::GetHitBox() const
+{
+	Sphere wsHitBox = hitBox;
+	wsHitBox.pos += wsPos;
+	return wsHitBox;
+}
+
+// regioni ReflectedEntity
+#pragma endregion
 
 struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
 {
@@ -246,6 +394,7 @@ void Player::Init( const std::vector<Donya::Vector3> &lanes )
 	currentLane = laneCount >> 1;
 
 	LoadModel();
+	ReflectedEntity::LoadModel();
 
 	PlayerParameter::Get().LoadParameter();
 
@@ -279,9 +428,6 @@ void Player::Update( Input input )
 	ApplyVelocity();
 }
 
-#if DEBUG_MODE
-#include "Donya/GeometricPrimitive.h" // For drawing collision.
-#endif // DEBUG_MODE
 void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const Donya::Vector4 &lightDirection, const Donya::Vector4 &cameraPos ) const
 {
 	using namespace DirectX;

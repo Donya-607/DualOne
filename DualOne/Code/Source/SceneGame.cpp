@@ -1,5 +1,6 @@
 #include "SceneGame.h"
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <vector>
@@ -37,6 +38,8 @@ public:
 	Donya::Vector3 lightDirection;
 	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3 cameraFocus;		// Relative position from the camera.
+
+	std::vector<ReflectedEntity> reflectedEntities;
 public:
 	Impl() : sprFont( NULL ),
 		camera(),
@@ -44,10 +47,14 @@ public:
 		ground(),
 		boss(),
 		lightDirection( 0.0f, 0.0f, 1.0f ),
-		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f )
+		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
+		reflectedEntities()
 	{}
 	~Impl()
-	{}
+	{
+		reflectedEntities.clear();
+		reflectedEntities.shrink_to_fit();
+	}
 private:
 	friend class cereal::access;
 	template<class Archive>
@@ -112,7 +119,7 @@ public:
 				ImGui::Text("");
 
 				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
-				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -64.0f, 64.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -128.0f, 128.0f );
 				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"ファイル" ) )
@@ -196,7 +203,14 @@ void SceneGame::Init()
 void SceneGame::Uninit()
 {
 	pImpl->player.Uninit();
+
+	for ( auto &it : pImpl->reflectedEntities )
+	{
+		it.Uninit();
+	}
+
 	pImpl->boss.Uninit();
+
 	pImpl->ground.Uninit();
 
 	Donya::ScreenShake::StopX();
@@ -229,6 +243,27 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		return input;
 	};
 	pImpl->player.Update( MakePlayerInput() );
+
+	// Update "pImpl->reflectedEntities"
+	{
+		for ( auto &it : pImpl->reflectedEntities )
+		{
+			it.Update();
+		}
+
+		auto result = std::remove_if
+		(
+			pImpl->reflectedEntities.begin(),
+			pImpl->reflectedEntities.end(),
+			[]( ReflectedEntity &element )
+			{
+				return element.ShouldErase();
+			}
+		);
+
+		pImpl->reflectedEntities.erase( result, pImpl->reflectedEntities.end() );
+	}
+
 	pImpl->boss.Update();
 
 	Camera::Controller cameraController{};
@@ -371,8 +406,15 @@ void SceneGame::Draw(float elapsedTime)
 	Donya::Vector4 cameraPos = ToFloat4(pImpl->camera.GetPos(), 1.0f);
 
 	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
+
 	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
+
 	pImpl->boss.Draw( matView, matProj, lightDir, cameraPos );
+
+	for ( const auto &it : pImpl->reflectedEntities )
+	{
+		it.Draw( matView, matProj, lightDir, cameraPos );
+	}
 }
 
 void SceneGame::DetectCollision()
@@ -381,7 +423,18 @@ void SceneGame::DetectCollision()
 
 	if ( Donya::Keyboard::Trigger( VK_SPACE ) )
 	{
-		pImpl->player.ReceiveImpact( /* canReflection = */ true );
+		auto result = pImpl->player.ReceiveImpact( /* canReflection = */ true );
+		if ( result.shouldGenerateBullet )
+		{
+			pImpl->reflectedEntities.emplace_back();
+			pImpl->reflectedEntities.back().Init
+			(
+				result.gravity,
+				result.hitBox,
+				result.wsPos,
+				result.velocity
+			);
+		}
 	}
 
 #endif // DEBUG_MODE

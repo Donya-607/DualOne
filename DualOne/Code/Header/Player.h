@@ -9,6 +9,49 @@
 #include "Donya/UseImgui.h"		// Use USE_IMGUI macro.
 #include "Donya/Vector.h"		// Also include <DirectXMath>
 
+class ReflectedEntity
+{
+private:
+	static std::shared_ptr<Donya::StaticMesh> pModel;
+	/// <summary>
+	/// Load model if has not loaded.
+	/// </summary>
+public:
+	static void LoadModel();
+private:
+	float				gravity;
+	Sphere				hitBox;
+	Donya::Vector3		wsPos;
+	Donya::Vector3		velocity;
+	Donya::Quaternion	posture;
+public:
+	ReflectedEntity();
+	~ReflectedEntity();
+public:
+	void Init( float gravity, Sphere hitBox, Donya::Vector3 wsPos, Donya::Vector3 velocity );
+	void Uninit();
+
+	void Update();
+
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const Donya::Vector4 &lightDirection,
+		const Donya::Vector4 &cameraPos
+	) const;
+public:
+	bool ShouldErase() const;
+	/// <summary>
+	/// Returns position is belong world-space.
+	/// </summary>
+	Donya::Vector3 GetPos() const { return wsPos; };
+	/// <summary>
+	/// Returns hit-box is belong world-space.
+	/// </summary>
+	Sphere GetHitBox() const;
+};
+
 class Player
 {
 public:
