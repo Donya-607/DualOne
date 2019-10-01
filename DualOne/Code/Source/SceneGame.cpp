@@ -23,14 +23,16 @@
 #include "Ground.h"
 #include "Music.h"
 #include "Player.h"
+#include "Boss.h"
 
 struct SceneGame::Impl
 {
 public:
-	size_t sprFont;
-	Camera camera;
-	Player player;
-	Ground ground;
+	size_t  sprFont;
+	Camera  camera;
+	Player  player;
+	Ground  ground;
+	Boss	boss;
 
 	Donya::Vector3 lightDirection;
 	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
@@ -182,6 +184,7 @@ void SceneGame::Init()
 	pImpl->ground.Init();
 
 	pImpl->player.Init( tmpLanes );
+	pImpl->boss.Init();
 
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
@@ -192,6 +195,7 @@ void SceneGame::Init()
 void SceneGame::Uninit()
 {
 	pImpl->player.Uninit();
+	pImpl->boss.Uninit();
 	pImpl->ground.Uninit();
 
 	Donya::ScreenShake::StopX();
@@ -224,6 +228,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		return input;
 	};
 	pImpl->player.Update( MakePlayerInput() );
+	pImpl->boss.Update();
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -316,7 +321,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	return ReturnResult();
 }
 
-void SceneGame::Draw( float elapsedTime )
+void SceneGame::Draw(float elapsedTime)
 {
 	// Draw BackGround.
 #if DEBUG_MODE
@@ -344,28 +349,29 @@ void SceneGame::Draw( float elapsedTime )
 
 	using namespace DirectX;
 
-	auto Matrix		= []( const XMFLOAT4X4 &matrix )
+	auto Matrix = [](const XMFLOAT4X4 & matrix)
 	{
-		return XMLoadFloat4x4( &matrix );
+		return XMLoadFloat4x4(&matrix);
 	};
-	auto Float4x4	= []( const XMMATRIX &M )
+	auto Float4x4 = [](const XMMATRIX & M)
 	{
 		XMFLOAT4X4 matrix{};
-		XMStoreFloat4x4( &matrix, M );
+		XMStoreFloat4x4(&matrix, M);
 		return matrix;
 	};
-	auto ToFloat4	= []( const Donya::Vector3 &vec3, float fourthValue )
+	auto ToFloat4 = [](const Donya::Vector3 & vec3, float fourthValue)
 	{
-		return Donya::Vector4 { vec3.x, vec3.y, vec3.z, fourthValue };
+		return Donya::Vector4{ vec3.x, vec3.y, vec3.z, fourthValue };
 	};
 
-	XMFLOAT4X4 matView = Float4x4( pImpl->camera.CalcViewMatrix()		);
-	XMFLOAT4X4 matProj = Float4x4( pImpl->camera.GetProjectionMatrix()	);
-	Donya::Vector4 lightDir  = ToFloat4( pImpl->lightDirection,  0.0f	);
-	Donya::Vector4 cameraPos = ToFloat4( pImpl->camera.GetPos(), 1.0f	);
+	XMFLOAT4X4 matView = Float4x4(pImpl->camera.CalcViewMatrix());
+	XMFLOAT4X4 matProj = Float4x4(pImpl->camera.GetProjectionMatrix());
+	Donya::Vector4 lightDir = ToFloat4(pImpl->lightDirection, 0.0f);
+	Donya::Vector4 cameraPos = ToFloat4(pImpl->camera.GetPos(), 1.0f);
 
-	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
-	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
+	pImpl->ground.Draw(matView, matProj, lightDir, cameraPos);
+	pImpl->player.Draw(matView, matProj, lightDir, cameraPos);
+	pImpl->boss.Draw( matView, matProj, lightDir, cameraPos );
 }
 
 void SceneGame::DetectCollision()

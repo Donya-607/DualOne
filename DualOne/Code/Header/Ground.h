@@ -10,8 +10,8 @@ class Block
 private:
 	Donya::Vector3	pos;
 	Donya::Vector3	velocity;
-	Donya::Vector3	size;
-	std::array<Donya::Geometric::Cube, 7> cube;
+	Donya::Vector3	scale;
+	Donya::Geometric::Cube cube;
 
 public:
 	Block();
