@@ -179,6 +179,7 @@
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
     <ClCompile Include="Code\Source\StorageForScene.cpp" />
+    <ClCompile Include="Code\Source\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />

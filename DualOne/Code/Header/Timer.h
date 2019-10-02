@@ -1,7 +1,12 @@
 #pragma once
 
+#include <string>
+
 #include "Donya/Serializer.h"
 
+/// <summary>
+/// Measure elapsed time. this class can count until 99min-59sec-59ms with frame.
+/// </summary>
 class Timer
 {
 private:
@@ -41,30 +46,7 @@ public:
 		if ( newCurrent != -1 ) { current = newCurrent; }
 	}
 
-	void Update()
-	{
-		if ( IsMaxCount() ) { return; }
-		// else
-
-		current++;
-
-		if ( 60 <= current )
-		{
-			current = 0;
-			second++;
-			if ( 60 <= second )
-			{
-				auto Min = []( int lhs, int rhs )
-				{
-					return ( lhs < rhs ) ? lhs : rhs;
-				};
-
-				second = 0;
-				minute++;
-				minute = Min( 99, minute );
-			}
-		}
-	}
+	void Update();
 
 	bool IsMaxCount() const
 	{
@@ -77,6 +59,11 @@ public:
 	int Current() const { return current; }
 	int Second()  const { return second;  }
 	int Minute()  const { return minute;  }
+
+	/// <summary>
+	/// Returns string is "XX:XX:XX", min:sec:ms.
+	/// </summary>
+	std::string ToStr( bool isInsertColon = true );
 };
 
 static bool operator <  ( const Timer &L, const Timer &R )

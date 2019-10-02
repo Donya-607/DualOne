@@ -426,6 +426,15 @@ void SceneGame::Draw( float elapsedTime )
 	{
 		it.Draw( matView, matProj, lightDir, cameraPos );
 	}
+
+	Donya::Sprite::DrawString
+	(
+		pImpl->sprFont,
+		pImpl->currentTime.ToStr(),
+		32.0f, 64.0f,
+		32.0f, 32.0f,
+		32.0f, 32.0f
+	);
 }
 
 void SceneGame::DetectCollision()

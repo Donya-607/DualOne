@@ -1,6 +1,7 @@
 #include "SceneClear.h"
 
 #include <algorithm>
+#include <array>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,7 @@ public:
 	size_t			sprFont;
 	Choice			choice;
 	Timer			clearTime;
+	std::string		timeString; // Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
 	Donya::XInput	controller;
 public:
 	Impl() : sprFont( NULL ),
@@ -76,6 +78,8 @@ void SceneClear::Init()
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
 	pImpl->clearTime = StorageForScene::Get().GetTimer();
+
+	pImpl->timeString = pImpl->clearTime.ToStr();
 }
 
 void SceneClear::Uninit()
@@ -123,6 +127,15 @@ void SceneClear::Draw( float elapsedTime )
 		32.0f, 32.0f,
 		32.0f, 32.0f,
 		2.0f, 2.0f
+	);
+
+	Donya::Sprite::DrawString
+	(
+		pImpl->sprFont,
+		pImpl->timeString,
+		32.0f, 64.0f,
+		32.0f, 32.0f,
+		32.0f, 32.0f
 	);
 
 	auto GetString = []( Impl::Choice choice )->std::string
