@@ -40,9 +40,10 @@ public:
 	public:
 		bool HasRequest( Request kind ) const
 		{
-		#define CAST static_cast<int>
-			return ( CAST( request ) & CAST( kind ) ) ? true : false;
-		#undef  CAST
+			return
+			( static_cast<int>( request ) & static_cast<int>( kind ) )
+			? true
+			: false;
 		}
 	};
 public:

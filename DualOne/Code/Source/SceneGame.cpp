@@ -24,6 +24,8 @@
 #include "Ground.h"
 #include "Music.h"
 #include "Player.h"
+#include "StorageForScene.h"
+#include "Timer.h"
 #include "Boss.h"
 
 struct SceneGame::Impl
@@ -34,7 +36,7 @@ public:
 	Player  player;
 	Ground  ground;
 	Boss	boss;
-
+	Timer	currentTime;
 	Donya::Vector3 lightDirection;
 	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3 cameraFocus;		// Relative position from the camera.
@@ -46,6 +48,7 @@ public:
 		player(),
 		ground(),
 		boss(),
+		currentTime(),
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		reflectedEntities()
@@ -116,6 +119,9 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"ˆê”Ê" ) )
 			{
+				ImGui::Text( u8"[%02d:%02d:%02d]", currentTime.Minute(), currentTime.Second(), currentTime.Current() );
+				ImGui::Text( "" );
+
 				ImGui::SliderFloat3( u8"ƒ‰ƒCƒg‚Ì•ûŒü", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
@@ -174,6 +180,17 @@ void SceneGame::Init()
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
+	pImpl->currentTime.Set( 0, 0, 0 );
+
+	/*
+	Initialize order:
+	1.ground. the player wants lane data.
+	2.player. the camera wants player position.
+	3.others. these are unrelated to anything.
+	*/
+
+	pImpl->ground.Init();
+
 #if DEBUG_MODE
 	std::vector<Donya::Vector3> tmpLanes // should be fetch from "ground".
 	{
@@ -182,17 +199,8 @@ void SceneGame::Init()
 		Donya::Vector3( 32.0f, 0.0f, 0.0f )
 	};
 #endif // DEBUG_MODE
-
-	/*
-	Initialize order:
-	1.ground. the player wants lane data.
-	2.player. the camera wants player position.
-	3.camera. this is unrelated to anything.
-	*/
-
-	pImpl->ground.Init();
-
 	pImpl->player.Init( tmpLanes );
+
 	pImpl->boss.Init();
 
 	constexpr float FOV = ToRadian( 30.0f );
@@ -222,6 +230,8 @@ void SceneGame::Uninit()
 
 Scene::Result SceneGame::Update( float elapsedTime )
 {
+	pImpl->currentTime.Update();
+
 #if USE_IMGUI
 
 	pImpl->UseImGui();
@@ -468,6 +478,8 @@ Scene::Result SceneGame::ReturnResult()
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
+
+		StorageForScene::Get().StoreTimer( pImpl->currentTime );
 
 		Scene::Result change{};
 		change.AddRequest( Scene::Request::ADD_SCENE );

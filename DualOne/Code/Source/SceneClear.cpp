@@ -24,6 +24,8 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "StorageForScene.h"
+#include "Timer.h"
 
 #undef min
 #undef max
@@ -40,10 +42,12 @@ public:
 public:
 	size_t			sprFont;
 	Choice			choice;
+	Timer			clearTime;
 	Donya::XInput	controller;
 public:
 	Impl() : sprFont( NULL ),
 		choice( Nil ),
+		clearTime(),
 		controller( Donya::XInput::PadNumber::PAD_1 )
 	{}
 private:
@@ -70,6 +74,8 @@ void SceneClear::Init()
 	Donya::Sound::Play( Music::BGM_Clear );
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+
+	pImpl->clearTime = StorageForScene::Get().GetTimer();
 }
 
 void SceneClear::Uninit()
