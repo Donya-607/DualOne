@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 
 #include "Donya/Resource.h"
+#include "Donya/Sprite.h"	// For change the sprites depth.
 
 #include "Common.h"
 #include "Fader.h"
@@ -70,11 +71,15 @@ void SceneMng::Update( float elapsedTime )
 
 void SceneMng::Draw( float elapsedTime )
 {
+	Donya::Sprite::SetDrawDepth( 1.0f );
+
 	const auto &end = pScenes.crend();
 	for ( auto it   = pScenes.crbegin(); it != end; ++it )
 	{
 		( *it )->Draw( elapsedTime );
 	}
+
+	Donya::Sprite::SetDrawDepth( 0.0f );
 
 	Fader::Get().Draw();
 }
