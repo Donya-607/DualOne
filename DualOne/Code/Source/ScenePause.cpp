@@ -68,7 +68,7 @@ void ScenePause::Draw( float elapsedTime )
 		Common::HalfScreenHeightF(),
 		Common::ScreenWidthF(),
 		Common::ScreenHeightF(),
-		Donya::Sprite::Color::BLACK, 0.4f
+		Donya::Sprite::Color::BLACK, 0.6f
 	);
 
 	auto GetString = []( Choice choice )->std::string
