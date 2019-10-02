@@ -49,7 +49,8 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		reflectedEntities()
-	{}
+	{
+	}
 	~Impl()
 	{
 		reflectedEntities.clear();
@@ -66,30 +67,30 @@ private:
 		);
 
 		if ( 1 <= version )
-		{			
+		{
 			archive
 			(
 				CEREAL_NVP( cameraDistance ),
 				CEREAL_NVP( cameraFocus )
-			);	
+			);
 		}
 		if ( 2 <= version )
-		{			
+		{
 			/*
 			archive
 			(
 				CEREAL_NVP()
 			);
-			*/	
+			*/
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Game";
 public:
 	void LoadParameter( bool isBinary = true )
 	{
-		Serializer::Extension ext =	( isBinary )
-									? Serializer::Extension::BINARY
-									: Serializer::Extension::JSON;
+		Serializer::Extension ext = ( isBinary )
+			? Serializer::Extension::BINARY
+			: Serializer::Extension::JSON;
 		std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
 
 		Serializer seria;
@@ -97,13 +98,13 @@ public:
 	}
 	void SaveParameter()
 	{
-		Serializer::Extension bin  = Serializer::Extension::BINARY;
+		Serializer::Extension bin = Serializer::Extension::BINARY;
 		Serializer::Extension json = Serializer::Extension::JSON;
-		std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+		std::string binPath = GenerateSerializePath( SERIAL_ID, bin );
 		std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
 
 		Serializer seria;
-		seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+		seria.Save( bin, binPath.c_str(), SERIAL_ID, *this );
 		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
 	}
 public:
@@ -116,7 +117,7 @@ public:
 			if ( ImGui::TreeNode( u8"一般" ) )
 			{
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
-				ImGui::Text("");
+				ImGui::Text( "" );
 
 				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
 				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -128.0f, 128.0f );
@@ -178,7 +179,7 @@ void SceneGame::Init()
 	{
 		Donya::Vector3( -32.0f, 0.0f, 0.0f ),
 		Donya::Vector3( 0.0f, 0.0f, 0.0f ),
-		Donya::Vector3(  32.0f, 0.0f, 0.0f )
+		Donya::Vector3( 32.0f, 0.0f, 0.0f )
 	};
 #endif // DEBUG_MODE
 
@@ -236,8 +237,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		// TODO:コントローラの入力も取る
 
 		if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x = 1.0f; }
-		if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
-		
+		if ( Donya::Keyboard::Trigger( VK_LEFT ) ) { input.stick.x = -1.0f; }
+
 		if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
 
 		return input;
@@ -308,12 +309,12 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			rotation.y = diff.y * ROT_AMOUNT;
 		}
 		else
-		if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
-		{
-			constexpr float MOVE_SPEED = 0.1f;
-			movement.x = diff.x * MOVE_SPEED;
-			movement.y = diff.y * MOVE_SPEED;
-		}
+			if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
+			{
+				constexpr float MOVE_SPEED = 0.1f;
+				movement.x = diff.x * MOVE_SPEED;
+				movement.y = diff.y * MOVE_SPEED;
+			}
 
 		constexpr float FRONT_SPEED = 3.5f;
 		movement.z = FRONT_SPEED * scast<float>( Donya::Mouse::WheelRot() );
@@ -335,10 +336,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		}
 
 		Camera::Controller ctrl{};
-		ctrl.moveVelocity		= movement;
-		ctrl.rotation			= rotation;
-		ctrl.slerpPercent		= 1.0f;
-		ctrl.moveAtLocalSpace	= true;
+		ctrl.moveVelocity = movement;
+		ctrl.rotation = rotation;
+		ctrl.slerpPercent = 1.0f;
+		ctrl.moveAtLocalSpace = true;
 
 		return ctrl;
 	};
@@ -357,7 +358,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	return ReturnResult();
 }
 
-void SceneGame::Draw(float elapsedTime)
+void SceneGame::Draw( float elapsedTime )
 {
 	// Draw BackGround.
 #if DEBUG_MODE
@@ -385,25 +386,25 @@ void SceneGame::Draw(float elapsedTime)
 
 	using namespace DirectX;
 
-	auto Matrix = [](const XMFLOAT4X4 & matrix)
+	auto Matrix		= []( const XMFLOAT4X4 &matrix )
 	{
-		return XMLoadFloat4x4(&matrix);
+		return XMLoadFloat4x4( &matrix );
 	};
-	auto Float4x4 = [](const XMMATRIX & M)
+	auto Float4x4	= []( const XMMATRIX &M )
 	{
 		XMFLOAT4X4 matrix{};
-		XMStoreFloat4x4(&matrix, M);
+		XMStoreFloat4x4( &matrix, M );
 		return matrix;
 	};
-	auto ToFloat4 = [](const Donya::Vector3 & vec3, float fourthValue)
+	auto ToFloat4	= []( const Donya::Vector3 &vec3, float fourthValue )
 	{
 		return Donya::Vector4{ vec3.x, vec3.y, vec3.z, fourthValue };
 	};
 
-	XMFLOAT4X4 matView = Float4x4(pImpl->camera.CalcViewMatrix());
-	XMFLOAT4X4 matProj = Float4x4(pImpl->camera.GetProjectionMatrix());
-	Donya::Vector4 lightDir = ToFloat4(pImpl->lightDirection, 0.0f);
-	Donya::Vector4 cameraPos = ToFloat4(pImpl->camera.GetPos(), 1.0f);
+	XMFLOAT4X4 matView = Float4x4( pImpl->camera.CalcViewMatrix() );
+	XMFLOAT4X4 matProj = Float4x4( pImpl->camera.GetProjectionMatrix() );
+	Donya::Vector4 lightDir  = ToFloat4( pImpl->lightDirection, 0.0f );
+	Donya::Vector4 cameraPos = ToFloat4( pImpl->camera.GetPos(), 1.0f );
 
 	pImpl->ground.Draw( matView, matProj, lightDir, cameraPos );
 
@@ -460,15 +461,17 @@ Scene::Result SceneGame::ReturnResult()
 		pause.sceneType = Scene::Type::Pause;
 		return pause;
 	}
+	// else
 
 #if DEBUG_MODE
 	if ( Donya::Keyboard::Trigger( VK_RETURN ) )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
+		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
 
 		Scene::Result change{};
-		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
-		change.sceneType = Scene::Type::Title;
+		change.AddRequest( Scene::Request::ADD_SCENE );
+		change.sceneType = Scene::Type::Clear;
 		return change;
 	}
 	// else

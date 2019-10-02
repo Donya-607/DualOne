@@ -17,6 +17,7 @@ public:
 		Logo,
 		Title,
 		Game,
+		Clear,
 		Pause,
 	};
 	struct Result

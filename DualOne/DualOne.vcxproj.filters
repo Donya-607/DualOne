@@ -17,6 +17,7 @@
     <ClInclude Include="Code\Header\Player.h" />
     <ClInclude Include="Code\Header\Ground.h" />
     <ClInclude Include="Code\Header\Boss.h" />
+    <ClInclude Include="Code\Header\SceneClear.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -36,6 +37,7 @@
     <ClCompile Include="Code\Source\Player.cpp" />
     <ClCompile Include="Code\Source\Ground.cpp" />
     <ClCompile Include="Code\Source\Boss.cpp" />
+    <ClCompile Include="Code\Source\SceneClear.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Object">

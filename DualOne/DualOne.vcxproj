@@ -150,6 +150,7 @@
     <ClInclude Include="Code\Header\Music.h" />
     <ClInclude Include="Code\Header\Player.h" />
     <ClInclude Include="Code\Header\Scene.h" />
+    <ClInclude Include="Code\Header\SceneClear.h" />
     <ClInclude Include="Code\Header\SceneGame.h" />
     <ClInclude Include="Code\Header\SceneLogo.h" />
     <ClInclude Include="Code\Header\SceneManager.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="Code\Source\Ground.cpp" />
     <ClCompile Include="Code\Source\main.cpp" />
     <ClCompile Include="Code\Source\Player.cpp" />
+    <ClCompile Include="Code\Source\SceneClear.cpp" />
     <ClCompile Include="Code\Source\SceneGame.cpp" />
     <ClCompile Include="Code\Source\SceneLogo.cpp" />
     <ClCompile Include="Code\Source\SceneManager.cpp" />

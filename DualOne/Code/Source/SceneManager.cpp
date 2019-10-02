@@ -6,10 +6,11 @@
 #include "Common.h"
 #include "Fader.h"
 #include "Scene.h"
+#include "SceneClear.h"
 #include "SceneGame.h"
 #include "SceneLogo.h"
-#include "SceneTitle.h"
 #include "ScenePause.h"
+#include "SceneTitle.h"
 
 SceneMng::SceneMng() : pScenes()
 {
@@ -123,6 +124,11 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 		( isFront )
 		? pScenes.push_front( std::make_unique<SceneGame>() )
 		: pScenes.push_back ( std::make_unique<SceneGame>() );
+		break;
+	case Scene::Type::Clear:
+		( isFront )
+		? pScenes.push_front( std::make_unique<SceneClear>() )
+		: pScenes.push_back ( std::make_unique<SceneClear>() );
 		break;
 	case Scene::Type::Pause:
 		( isFront )
