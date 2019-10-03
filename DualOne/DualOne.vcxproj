@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Code\Header\Boss.h" />
     <ClInclude Include="Code\Header\Camera.h" />
     <ClInclude Include="Code\Header\Common.h" />
     <ClInclude Include="Code\Header\Fader.h" />
@@ -159,6 +160,7 @@
     <ResourceCompile Include="Code\Header\Icon.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Code\Source\Boss.cpp" />
     <ClCompile Include="Code\Source\Camera.cpp" />
     <ClCompile Include="Code\Source\Common.cpp" />
     <ClCompile Include="Code\Source\Fader.cpp" />
