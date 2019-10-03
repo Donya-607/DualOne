@@ -41,13 +41,17 @@ public:
 	Choice			choice;
 	Timer			clearTime;
 	Timer			bestTime;
-	std::string		timeString; // Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
+	std::string		timeString;		// Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
+	std::string		bestTimeString;	// Store the "bestTime" contents. looks like "12:34:56"(min-sec-ms).
 	Donya::XInput	controller;
+	bool			wasNewRecord;	// True if the "clearTime" faster than "bestTime".
 public:
 	Impl() : sprFont( NULL ),
 		choice( Nil ),
-		clearTime(),
-		controller( Donya::XInput::PadNumber::PAD_1 )
+		clearTime(), bestTime(),
+		timeString(), bestTimeString(),
+		controller( Donya::XInput::PadNumber::PAD_1 ),
+		wasNewRecord( false )
 	{}
 private:
 	friend class cereal::access;
@@ -96,12 +100,13 @@ public:
 			if ( ImGui::TreeNode( u8"リザルト" ) )
 			{
 				static int exCurrent{}, exSecond{}, exMinute{};
-				ImGui::SliderInt( u8"ベストタイム・ミリ秒[%02d]", &exCurrent, 0, 59 );
-				ImGui::SliderInt( u8"ベストタイム・秒[%02d]", &exSecond, 0, 59 );
-				ImGui::SliderInt( u8"ベストタイム・分[%02d]", &exMinute, 0, 99 );
+				ImGui::SliderInt( u8"ベストタイム・分",		&exMinute,  0, 99 );
+				ImGui::SliderInt( u8"ベストタイム・秒",		&exSecond,  0, 59 );
+				ImGui::SliderInt( u8"ベストタイム・ミリ秒",	&exCurrent, 0, 59 );
 				if ( ImGui::Button( u8"ベストタイム上書き" ) )
 				{
 					bestTime.Set( exMinute, exSecond, exCurrent );
+					bestTimeString = bestTime.ToStr();
 				}
 				ImGui::Text( "" );
 
@@ -150,9 +155,26 @@ void SceneClear::Init()
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 
-	pImpl->clearTime = StorageForScene::Get().GetTimer();
+	pImpl->bestTime.Set( 99, 59, 59 );
+	pImpl->LoadParameter(); // Load best-time.
 
+	pImpl->clearTime  = StorageForScene::Get().GetTimer();
 	pImpl->timeString = pImpl->clearTime.ToStr();
+
+	// If faster than bestTime.
+	if ( pImpl->clearTime < pImpl->bestTime )
+	{
+		pImpl->bestTime = pImpl->clearTime;
+		pImpl->bestTimeString = pImpl->timeString;
+
+		pImpl->SaveParameter();
+
+		pImpl->wasNewRecord = true;
+	}
+	else
+	{
+		pImpl->bestTimeString = pImpl->bestTime.ToStr();
+	}
 }
 
 void SceneClear::Uninit()
@@ -162,6 +184,12 @@ void SceneClear::Uninit()
 
 Scene::Result SceneClear::Update( float elapsedTime )
 {
+#if USE_IMGUI
+
+	pImpl->UseImGui();
+
+#endif // USE_IMGUI
+
 	pImpl->controller.Update();
 
 	UpdateChooseItem();
@@ -207,6 +235,31 @@ void SceneClear::Draw( float elapsedTime )
 		pImpl->sprFont,
 		pImpl->timeString,
 		32.0f, 64.0f,
+		32.0f, 32.0f,
+		32.0f, 32.0f
+	);
+	std::string bestTimeDesc{};
+	{
+		bestTimeDesc = "BestTime : ";
+
+		if ( pImpl->wasNewRecord )
+		{
+			bestTimeDesc += "New Record!";
+		}
+	}
+	Donya::Sprite::DrawString
+	(
+		pImpl->sprFont,
+		bestTimeDesc,
+		32.0f, 128.0f,
+		32.0f, 32.0f,
+		32.0f, 32.0f
+	);
+	Donya::Sprite::DrawString
+	(
+		pImpl->sprFont,
+		pImpl->bestTimeString,
+		32.0f, 160.0f,
 		32.0f, 32.0f,
 		32.0f, 32.0f
 	);

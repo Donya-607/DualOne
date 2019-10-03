@@ -68,10 +68,10 @@ public:
 
 static bool operator <  ( const Timer &L, const Timer &R )
 {
-	if ( R.Minute()  <  L.Minute()  ) { return false; }
-	if ( R.Second()  <  L.Second()  ) { return false; }
-	if ( R.Current() <= L.Current() ) { return false; }
-	return true;
+	if ( L.Minute()  < R.Minute()  ) { return true; }
+	if ( L.Second()  < R.Second()  ) { return true; }
+	if ( L.Current() < R.Current() ) { return true; }
+	return false;
 }
 static bool operator >  ( const Timer &L, const Timer &R ) { return R < L; }
 static bool operator <= ( const Timer &L, const Timer &R ) { return !( R < L ); }
