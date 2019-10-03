@@ -117,11 +117,8 @@ public:
 	{
 		if ( ImGui::BeginIfAllowed() )
 		{
-			if ( ImGui::TreeNode( u8"ˆê”Ê" ) )
+			if ( ImGui::TreeNode( u8"ˆê”Êİ’è" ) )
 			{
-				ImGui::Text( u8"[%02d:%02d:%02d]", currentTime.Minute(), currentTime.Second(), currentTime.Current() );
-				ImGui::Text( "" );
-
 				ImGui::SliderFloat3( u8"ƒ‰ƒCƒg‚Ì•ûŒü", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 

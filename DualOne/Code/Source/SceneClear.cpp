@@ -40,6 +40,7 @@ public:
 	size_t			sprFont;
 	Choice			choice;
 	Timer			clearTime;
+	Timer			bestTime;
 	std::string		timeString; // Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
 	Donya::XInput	controller;
 public:
@@ -53,9 +54,85 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, const std::uint32_t version )
 	{
-		// archive( CEREAL_NVP() );
+		archive( CEREAL_NVP( bestTime ) );
+
+		if ( 1 <= version )
+		{
+			/*
+			archive( CEREAL_NVP() );
+			*/
+		}
+	}
+	static constexpr const char *SERIAL_ID = "Result";
+public:
+	void LoadParameter( bool isBinary = true )
+	{
+		Serializer::Extension ext = ( isBinary )
+		? Serializer::Extension::BINARY
+		: Serializer::Extension::JSON;
+		std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+		Serializer seria;
+		seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+	}
+	void SaveParameter()
+	{
+		Serializer::Extension bin  = Serializer::Extension::BINARY;
+		Serializer::Extension json = Serializer::Extension::JSON;
+		std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+		std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+		Serializer seria;
+		seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
 	}
 public:
+#if USE_IMGUI
+
+	void UseImGui()
+	{
+		if ( ImGui::BeginIfAllowed() )
+		{
+			if ( ImGui::TreeNode( u8"リザルト" ) )
+			{
+				static int exCurrent{}, exSecond{}, exMinute{};
+				ImGui::SliderInt( u8"ベストタイム・ミリ秒[%02d]", &exCurrent, 0, 59 );
+				ImGui::SliderInt( u8"ベストタイム・秒[%02d]", &exSecond, 0, 59 );
+				ImGui::SliderInt( u8"ベストタイム・分[%02d]", &exMinute, 0, 99 );
+				if ( ImGui::Button( u8"ベストタイム上書き" ) )
+				{
+					bestTime.Set( exMinute, exSecond, exCurrent );
+				}
+				ImGui::Text( "" );
+
+				if ( ImGui::TreeNode( u8"ファイル" ) )
+				{
+					static bool isBinary = false;
+					if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+					if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+					std::string loadStr{ "読み込み " };
+					loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+					if ( ImGui::Button( u8"保存" ) )
+					{
+						SaveParameter();
+					}
+					if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+					{
+						LoadParameter( isBinary );
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::End();
+		}
+	}
+
+#endif // USE_IMGUI
 };
 
 SceneClear::SceneClear() : pImpl( std::make_unique<SceneClear::Impl>() )
