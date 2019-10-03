@@ -53,7 +53,7 @@ void SceneMng::Update( float elapsedTime )
 
 	Scene::Result message{};
 
-#if UPDATE_ALL_STACKED_SCENE
+#ifdef UPDATE_ALL_STACKED_SCENE
 
 	for ( size_t i = 0; i < pScenes.size(); ++i )
 	{
@@ -86,8 +86,60 @@ void SceneMng::Draw( float elapsedTime )
 	Fader::Get().Draw();
 }
 
+bool SceneMng::WillEmptyIfApplied( Scene::Result message ) const
+{
+	if ( message.request == Scene::Request::NONE ) { return false; }
+	// else
+
+	bool willEmpty = false;
+
+	if ( message.HasRequest( Scene::Request::REMOVE_ALL ) )
+	{
+		willEmpty = true;
+	}
+	if ( message.HasRequest( Scene::Request::REMOVE_ME ) && pScenes.size() == 1 )
+	{
+		willEmpty = true;
+	}
+
+	if ( willEmpty && message.sceneType == Scene::Type::Null )
+	{
+		return true;
+	}
+
+	return false;
+}
+bool SceneMng::ValidateMessage( Scene::Result message ) const
+{
+	if ( message.request == Scene::Request::NONE ) { return true; }
+	// else
+
+	if ( WillEmptyIfApplied( message ) )
+	{
+		return false;
+	}
+
+	return true;
+}
+Scene::Result SceneMng::ApplyFailSafe( Scene::Result wrongMessage ) const
+{
+	if ( WillEmptyIfApplied( wrongMessage ) )
+	{
+		wrongMessage.sceneType = Scene::Type::Logo;
+	}
+
+	return wrongMessage;
+}
+
 void SceneMng::ProcessMessage( Scene::Result message )
 {
+	if ( !ValidateMessage( message ) )
+	{
+		_ASSERT_EXPR( 0, L"Error: The passed message is wrong !" );
+
+		message = ApplyFailSafe( message );
+	}
+
 	// Attention to order of process message.
 	// ex) [pop_front() -> push_front()] [push_front() -> pop_front]
 
@@ -141,11 +193,6 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 		? pScenes.push_front( std::make_unique<ScenePause>() )
 		: pScenes.push_back ( std::make_unique<ScenePause>() );
 		break;
-	//case Scene::Type::Clear:
-	//	( isFront )
-	//	? pScenes.push_front( std::make_unique<SceneClear>() )
-	//	: pScenes.push_back ( std::make_unique<SceneClear>() );
-	//	break;
 	default: _ASSERT_EXPR( 0, L"Error : The scene does not exist." ); return;
 	}
 

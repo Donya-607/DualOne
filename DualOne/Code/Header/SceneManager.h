@@ -4,7 +4,7 @@
 #include <memory>
 #include <list>
 
-#include "Scene.h"	// For using Scene::Type.
+#include "Scene.h"	// Use Scene::Result, Scene::Type.
 
 /// <summary>
 /// You must call Init() when create.
@@ -28,6 +28,13 @@ public:
 
 	void Draw( float elapsedTime );
 private:
+	bool WillEmptyIfApplied( Scene::Result message ) const;
+	/// <summary>
+	/// Returns false if the message is wrong.
+	/// </summary>
+	bool ValidateMessage( Scene::Result message ) const;
+	Scene::Result ApplyFailSafe( Scene::Result wrongMessage ) const;
+
 	void ProcessMessage( Scene::Result message );
 
 	/// <summary>

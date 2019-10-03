@@ -468,7 +468,7 @@ Scene::Result SceneGame::ReturnResult()
 	}
 	// else
 
-	if ( Donya::Keyboard::Trigger( 'P' ) )
+	if ( Donya::Keyboard::Trigger( 'P' ) && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 
