@@ -1,4 +1,4 @@
-#include "SceneClear.h"
+#include "SceneOver.h"
 
 #include <algorithm>
 #include <string>
@@ -27,7 +27,7 @@
 #undef min
 #undef max
 
-class SceneClear::Impl
+class SceneOver::Impl
 {
 public:
 	enum Choice
@@ -39,13 +39,10 @@ public:
 public:
 	size_t			sprFont;
 	Choice			choice;
-	Timer			clearTime;
-	std::string		timeString; // Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
 	Donya::XInput	controller;
 public:
 	Impl() : sprFont( NULL ),
 		choice( Nil ),
-		clearTime(),
 		controller( Donya::XInput::PadNumber::PAD_1 )
 	{}
 private:
@@ -58,32 +55,28 @@ private:
 public:
 };
 
-SceneClear::SceneClear() : pImpl( std::make_unique<SceneClear::Impl>() )
+SceneOver::SceneOver() : pImpl( std::make_unique<SceneOver::Impl>() )
 {
 
 }
-SceneClear::~SceneClear()
+SceneOver::~SceneOver()
 {
 	pImpl.reset( nullptr );
 }
 
-void SceneClear::Init()
+void SceneOver::Init()
 {
-	Donya::Sound::Play( Music::BGM_Clear );
+	Donya::Sound::Play( Music::BGM_Over );
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
-
-	pImpl->clearTime = StorageForScene::Get().GetTimer();
-
-	pImpl->timeString = pImpl->clearTime.ToStr();
 }
 
-void SceneClear::Uninit()
+void SceneOver::Uninit()
 {
-	Donya::Sound::Stop( Music::BGM_Clear );
+	Donya::Sound::Stop( Music::BGM_Over );
 }
 
-Scene::Result SceneClear::Update( float elapsedTime )
+Scene::Result SceneOver::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
@@ -100,7 +93,7 @@ Scene::Result SceneClear::Update( float elapsedTime )
 	return ReturnResult();
 }
 
-void SceneClear::Draw( float elapsedTime )
+void SceneOver::Draw( float elapsedTime )
 {
 	Donya::Sprite::SetDrawDepth( 0.0f );
 
@@ -117,21 +110,12 @@ void SceneClear::Draw( float elapsedTime )
 	Donya::Sprite::DrawStringExt
 	(
 		pImpl->sprFont,
-		"Clear",
+		"Over",
 		Common::HalfScreenWidthF(),
 		64.0f,
 		32.0f, 32.0f,
 		32.0f, 32.0f,
 		2.0f, 2.0f
-	);
-
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		pImpl->timeString,
-		32.0f, 64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
 	);
 
 	auto GetString = []( Impl::Choice choice )->std::string
@@ -156,7 +140,7 @@ void SceneClear::Draw( float elapsedTime )
 	);
 }
 
-void SceneClear::UpdateChooseItem()
+void SceneOver::UpdateChooseItem()
 {
 	bool left{}, right{};
 	
@@ -203,12 +187,12 @@ void SceneClear::UpdateChooseItem()
 	pImpl->choice = scast<Impl::Choice>( index );
 }
 
-bool SceneClear::IsConrollerConnected() const
+bool SceneOver::IsConrollerConnected() const
 {
 	return pImpl->controller.IsConnected();
 }
 
-bool SceneClear::IsDecisionTriggered() const
+bool SceneOver::IsDecisionTriggered() const
 {
 	return
 	( IsConrollerConnected() )
@@ -216,7 +200,7 @@ bool SceneClear::IsDecisionTriggered() const
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
 }
 
-void SceneClear::StartFade()
+void SceneOver::StartFade()
 {
 	Fader::Configuration config{};
 	config.type			= Fader::Type::Gradually;
@@ -225,7 +209,7 @@ void SceneClear::StartFade()
 	Fader::Get().StartFadeOut( config );
 }
 
-Scene::Result SceneClear::ReturnResult()
+Scene::Result SceneOver::ReturnResult()
 {
 	if ( Fader::Get().IsClosed() )
 	{

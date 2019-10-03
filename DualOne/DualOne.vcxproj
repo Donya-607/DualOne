@@ -154,6 +154,7 @@
     <ClInclude Include="Code\Header\SceneGame.h" />
     <ClInclude Include="Code\Header\SceneLogo.h" />
     <ClInclude Include="Code\Header\SceneManager.h" />
+    <ClInclude Include="Code\Header\SceneOver.h" />
     <ClInclude Include="Code\Header\ScenePause.h" />
     <ClInclude Include="Code\Header\SceneTitle.h" />
     <ClInclude Include="Code\Header\StorageForScene.h" />
@@ -176,6 +177,7 @@
     <ClCompile Include="Code\Source\SceneGame.cpp" />
     <ClCompile Include="Code\Source\SceneLogo.cpp" />
     <ClCompile Include="Code\Source\SceneManager.cpp" />
+    <ClCompile Include="Code\Source\SceneOver.cpp" />
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
     <ClCompile Include="Code\Source\StorageForScene.cpp" />

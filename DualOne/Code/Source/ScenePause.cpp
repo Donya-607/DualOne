@@ -23,10 +23,7 @@ ScenePause::ScenePause() :
 {
 
 }
-ScenePause::~ScenePause()
-{
-
-}
+ScenePause::~ScenePause() = default;
 
 void ScenePause::Init()
 {
@@ -95,15 +92,23 @@ void ScenePause::Draw( float elapsedTime )
 void ScenePause::UpdateChooseItem()
 {
 	bool left{}, right{};
-	left  = controller.Trigger( Donya::Gamepad::Button::LEFT  ) || ( Donya::Keyboard::Trigger( VK_LEFT  ) ? true : false );
-	right = controller.Trigger( Donya::Gamepad::Button::RIGHT ) || ( Donya::Keyboard::Trigger( VK_RIGHT ) ? true : false );
-	if ( !left )
+	if ( controller.IsConnected() )
 	{
-		left  = controller.TriggerStick( Donya::Gamepad::StickDirection::LEFT );
+		left  = controller.Trigger( Donya::Gamepad::Button::LEFT );
+		right = controller.Trigger( Donya::Gamepad::Button::RIGHT );
+		if ( !left )
+		{
+			left  = controller.TriggerStick( Donya::Gamepad::StickDirection::LEFT );
+		}
+		if ( !right )
+		{
+			right = controller.TriggerStick( Donya::Gamepad::StickDirection::RIGHT );
+		}
 	}
-	if ( !right )
+	else
 	{
-		right = controller.TriggerStick( Donya::Gamepad::StickDirection::RIGHT );
+		left  = Donya::Keyboard::Trigger( VK_LEFT  ) ? true : false;
+		right = Donya::Keyboard::Trigger( VK_RIGHT ) ? true : false;
 	}
 
 	int index = scast<int>( choice );
@@ -125,12 +130,9 @@ void ScenePause::UpdateChooseItem()
 bool ScenePause::IsDecisionTriggered() const
 {
 	return
-	(
-		Donya::Keyboard::Trigger( 'Z' ) ||
-		controller.Trigger( Donya::Gamepad::A )
-	)
-	? true
-	: false;
+	( controller.IsConnected() )
+	? controller.Trigger( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
 }
 
 bool ScenePause::ShouldUseFade( Choice choice ) const

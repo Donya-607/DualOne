@@ -496,6 +496,19 @@ Scene::Result SceneGame::ReturnResult()
 		return change;
 	}
 	// else
+	if ( Donya::Keyboard::Trigger( 'Q' ) )
+	{
+		Donya::Sound::Play( Music::ItemDecision );
+		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
+
+		StorageForScene::Get().StoreTimer( pImpl->currentTime );
+
+		Scene::Result change{};
+		change.AddRequest( Scene::Request::ADD_SCENE );
+		change.sceneType = Scene::Type::Over;
+		return change;
+	}
+	// else
 #endif // DEBUG_MODE
 
 	Scene::Result noop{ Scene::Request::NONE, Scene::Type::Null };
