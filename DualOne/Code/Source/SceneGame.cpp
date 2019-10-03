@@ -52,8 +52,7 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		reflectedEntities()
-	{
-	}
+	{}
 	~Impl()
 	{
 		reflectedEntities.clear();
