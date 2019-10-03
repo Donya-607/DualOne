@@ -362,12 +362,14 @@ bool Framework::LoadSounds()
 	const std::array<Bundle, ID::TERMINATION_OF_MUSIC_ID> bandles =
 	{
 		{	// ID, FilePath, isEnableLoop
-			{ ID::BGM_Title,		"./Data/Sounds/BGM/Title.mp3",				true  },
-			{ ID::BGM_Game,			"./Data/Sounds/BGM/Game.mp3",				true  },
+			{ ID::BGM_Clear,		"./Data/Sounds/BGM/Clear.wav",				true  },
+			{ ID::BGM_Game,			"./Data/Sounds/BGM/Game.wav",				true  },
+			{ ID::BGM_Over,			"./Data/Sounds/BGM/Over.wav",				true  },
+			{ ID::BGM_Title,		"./Data/Sounds/BGM/Title.wav",				true  },
 
-			{ ID::PlayerCharge,			"./Data/Sounds/SE/Player/Charge.wav",	false },
-			{ ID::PlayerJump,			"./Data/Sounds/SE/Player/Jump.wav",		false },
-			{ ID::PlayerLanding,		"./Data/Sounds/SE/Player/Landing.wav",	false },
+			{ ID::PlayerCharge,		"./Data/Sounds/SE/Player/Charge.wav",		false },
+			{ ID::PlayerJump,		"./Data/Sounds/SE/Player/Jump.wav",			false },
+			{ ID::PlayerLanding,	"./Data/Sounds/SE/Player/Landing.wav",		false },
 
 			{ ID::ItemChoose,		"./Data/Sounds/SE/UI/ChooseItem.wav",		false },
 			{ ID::ItemDecision,		"./Data/Sounds/SE/UI/DecisionItem.wav",		false },

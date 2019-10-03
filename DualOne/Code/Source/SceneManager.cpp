@@ -1,14 +1,17 @@
 #include "SceneManager.h"
 
 #include "Donya/Resource.h"
+#include "Donya/Sprite.h"	// For change the sprites depth.
 
 #include "Common.h"
 #include "Fader.h"
 #include "Scene.h"
+#include "SceneClear.h"
 #include "SceneGame.h"
 #include "SceneLogo.h"
-#include "SceneTitle.h"
 #include "ScenePause.h"
+#include "SceneOver.h"
+#include "SceneTitle.h"
 
 SceneMng::SceneMng() : pScenes()
 {
@@ -70,11 +73,15 @@ void SceneMng::Update( float elapsedTime )
 
 void SceneMng::Draw( float elapsedTime )
 {
+	Donya::Sprite::SetDrawDepth( 1.0f );
+
 	const auto &end = pScenes.crend();
 	for ( auto it   = pScenes.crbegin(); it != end; ++it )
 	{
 		( *it )->Draw( elapsedTime );
 	}
+
+	Donya::Sprite::SetDrawDepth( 0.0f );
 
 	Fader::Get().Draw();
 }
@@ -118,6 +125,16 @@ void SceneMng::PushScene( Scene::Type type, bool isFront )
 		( isFront )
 		? pScenes.push_front( std::make_unique<SceneGame>() )
 		: pScenes.push_back ( std::make_unique<SceneGame>() );
+		break;
+	case Scene::Type::Clear:
+		( isFront )
+		? pScenes.push_front( std::make_unique<SceneClear>() )
+		: pScenes.push_back ( std::make_unique<SceneClear>() );
+		break;
+	case Scene::Type::Over:
+		( isFront )
+		? pScenes.push_front( std::make_unique<SceneOver>() )
+		: pScenes.push_back ( std::make_unique<SceneOver>() );
 		break;
 	case Scene::Type::Pause:
 		( isFront )

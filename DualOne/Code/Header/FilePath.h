@@ -18,5 +18,6 @@ enum class ModelAttribute
 {
 	Box,
 	Player,
+	ReflectedEntity,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

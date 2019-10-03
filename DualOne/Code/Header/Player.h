@@ -9,6 +9,49 @@
 #include "Donya/UseImgui.h"		// Use USE_IMGUI macro.
 #include "Donya/Vector.h"		// Also include <DirectXMath>
 
+class ReflectedEntity
+{
+private:
+	static std::shared_ptr<Donya::StaticMesh> pModel;
+	/// <summary>
+	/// Load model if has not loaded.
+	/// </summary>
+public:
+	static void LoadModel();
+private:
+	float				gravity;
+	Sphere				hitBox;
+	Donya::Vector3		wsPos;
+	Donya::Vector3		velocity;
+	Donya::Quaternion	posture;
+public:
+	ReflectedEntity();
+	~ReflectedEntity();
+public:
+	void Init( float gravity, Sphere hitBox, Donya::Vector3 wsPos, Donya::Vector3 velocity );
+	void Uninit();
+
+	void Update();
+
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const Donya::Vector4 &lightDirection,
+		const Donya::Vector4 &cameraPos
+	) const;
+public:
+	bool ShouldErase() const;
+	/// <summary>
+	/// Returns position is belong world-space.
+	/// </summary>
+	Donya::Vector3 GetPos() const { return wsPos; };
+	/// <summary>
+	/// Returns hit-box is belong world-space.
+	/// </summary>
+	Sphere GetHitBox() const;
+};
+
 class Player
 {
 public:
@@ -38,6 +81,7 @@ private:
 	State				status;
 	int					currentLane;	// 0-based, count by left.
 	int					laneCount;		// 0-based, count by left.
+	int					stunTimer;
 	float				charge;			// 0.0f ~ 1.0f.
 	AABB				hitBox;			// Local-space.
 	Donya::Vector3		pos;			// World-space.
@@ -61,6 +105,16 @@ public:
 		const Donya::Vector4		&lightDirection,
 		const Donya::Vector4		&cameraPos
 	) const;
+public:
+	struct CollideResult
+	{
+		float			gravity{};
+		Sphere			hitBox{};
+		Donya::Vector3	wsPos{};
+		Donya::Vector3	velocity{};
+		bool shouldGenerateBullet{};
+	};
+	CollideResult ReceiveImpact( bool canReflection );
 public:
 	int GetCurrentLane() const { return currentLane; }
 
@@ -88,6 +142,7 @@ private:
 	void ChargeUpdate( Input input );
 	
 	bool IsCharging() const;
+	bool IsFullCharged() const;
 
 	void ChangeLaneIfRequired( Input input );
 	/// <summary>
@@ -103,6 +158,7 @@ private:
 	float CalcGravity();
 	void JumpInit();
 	void JumpUpdate( Input input );
+	bool IsJumping() const;
 
 	void Landing();
 
@@ -110,6 +166,9 @@ private:
 	/// Add "velocity" to "pos", the "pos" is only changed by this method.
 	/// </summary>
 	void ApplyVelocity();
+
+	void MakeStun();
+	void StunUpdate( Input input );
 
 #if USE_IMGUI
 

@@ -26,5 +26,10 @@ public:
 
 	void	Draw( float elapsedTime ) override;
 private:
+	/// <summary>
+	/// Check the collision between each objects, and call appropriate method.
+	/// </summary>
+	void	DetectCollision();
+
 	Result	ReturnResult();
 };
