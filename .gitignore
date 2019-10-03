@@ -22,12 +22,12 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
+# [Dd]ebug/		using directory of my-library.
+# [Rr]elease/	using directory of my-library.
+# x64/			using directory of my-library.
+# x86/			using directory of my-library.
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/

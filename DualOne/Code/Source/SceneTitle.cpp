@@ -104,7 +104,7 @@ Scene::Result SceneTitle::ReturnResult()
 		return change;
 	}
 	// else
-	if ( Donya::Keyboard::Trigger( VK_RETURN ) )
+	if ( Donya::Keyboard::Trigger( VK_RETURN ) || Donya::Keyboard::Trigger( 'Z' ) )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 

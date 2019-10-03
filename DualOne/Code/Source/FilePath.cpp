@@ -32,3 +32,20 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 
 	return L"ERROR_ATTRIBUTE";
 }
+
+std::string GetModelPath( ModelAttribute fileAttribute )
+{
+	switch ( fileAttribute )
+	{
+	case ModelAttribute::Box:
+		return "./Data/Models/Box/Box.bin";			// break;
+	case ModelAttribute::Player:
+		return "./Data/Models/Player/Player.bin";	// break;
+	case ModelAttribute::ReflectedEntity:
+		return "./Data/Models/Player/ReflectedEntity.bin";	// break;
+	default:
+		assert( !"Error : Specified unexpect model type." ); break;
+	}
+
+	return "ERROR_ATTRIBUTE";
+}

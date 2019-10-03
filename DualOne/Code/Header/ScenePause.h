@@ -30,6 +30,10 @@ public:
 	void	Draw( float elapsedTime );
 private:
 	void	UpdateChooseItem();
+	bool	IsDecisionTriggered() const;
+
+	bool	ShouldUseFade( Choice choice ) const;
+	void	StartFade();
 
 	Result	ReturnResult();
 };

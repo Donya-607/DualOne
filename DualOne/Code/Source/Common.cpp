@@ -29,7 +29,7 @@ namespace Common
 	long	HalfScreenHeightL()		{ return SCREEN_HEIGHT_L >> 1;		}
 
 #if DEBUG_MODE
-	static bool showCollision = false;
+	static bool showCollision = true;
 #endif // DEBUG_MODE
 	void	SetShowCollision( bool newState )
 	{

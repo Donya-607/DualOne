@@ -4,9 +4,14 @@ namespace Music
 {
 	enum ID
 	{
+		BGM_Clear,
+		BGM_Game,
+		BGM_Over,
 		BGM_Title,
 
-		BGM_Game,
+		PlayerCharge,
+		PlayerJump,
+		PlayerLanding,
 
 		ItemChoose,
 		ItemDecision,
