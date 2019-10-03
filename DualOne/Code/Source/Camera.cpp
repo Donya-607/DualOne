@@ -138,7 +138,7 @@ XMMATRIX Camera::CalcViewMatrix() const
 	if ( Donya::ScreenShake::GetEnableState() )
 	{
 		shake.x = Donya::ScreenShake::GetX();
-		shake.y = Donya::ScreenShake::GetY();
+		shake.y = -Donya::ScreenShake::GetY(); // Screen-space <-> World-space
 		shake.z = 0.0f;
 
 		shake = posture.RotateVector( shake );

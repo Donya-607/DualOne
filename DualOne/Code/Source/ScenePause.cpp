@@ -160,7 +160,7 @@ Scene::Result ScenePause::ReturnResult()
 {
 	// Resume.
 	bool chooseResume	= ( !ShouldUseFade( choice ) && IsDecisionTriggered() );
-	bool pushResume		= ( Donya::Keyboard::Trigger( 'P' ) || controller.Trigger( Donya::Gamepad::Button::START ) || chooseResume );
+	bool pushResume		= ( Donya::Keyboard::Trigger( 'P' ) || controller.Trigger( Donya::Gamepad::Button::START ) || controller.Trigger( Donya::Gamepad::Button::SELECT ) || chooseResume );
 	if ( pushResume && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
