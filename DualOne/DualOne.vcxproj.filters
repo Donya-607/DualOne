@@ -15,12 +15,12 @@
     <ClInclude Include="Code\Header\SceneTitle.h" />
     <ClInclude Include="Code\Header\Camera.h" />
     <ClInclude Include="Code\Header\Player.h" />
-    <ClInclude Include="Code\Header\Ground.h" />
-    <ClInclude Include="Code\Header\Boss.h" />
-    <ClInclude Include="Code\Header\SceneClear.h" />
-    <ClInclude Include="Code\Header\Timer.h" />
-    <ClInclude Include="Code\Header\StorageForScene.h" />
-    <ClInclude Include="Code\Header\SceneOver.h" />
+    <ClInclude Include="Code\Header\Ground.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Header\Boss.h">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -38,12 +38,12 @@
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
     <ClCompile Include="Code\Source\Camera.cpp" />
     <ClCompile Include="Code\Source\Player.cpp" />
-    <ClCompile Include="Code\Source\Ground.cpp" />
-    <ClCompile Include="Code\Source\Boss.cpp" />
-    <ClCompile Include="Code\Source\SceneClear.cpp" />
-    <ClCompile Include="Code\Source\StorageForScene.cpp" />
-    <ClCompile Include="Code\Source\Timer.cpp" />
-    <ClCompile Include="Code\Source\SceneOver.cpp" />
+    <ClCompile Include="Code\Source\Ground.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Source\Boss.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Object">
