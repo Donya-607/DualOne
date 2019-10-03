@@ -68,9 +68,14 @@ public:
 
 static bool operator <  ( const Timer &L, const Timer &R )
 {
-	if ( L.Minute()  < R.Minute()  ) { return true; }
-	if ( L.Second()  < R.Second()  ) { return true; }
-	if ( L.Current() < R.Current() ) { return true; }
+	if ( L.Minute()  < R.Minute()  ) { return true;  }
+	if ( L.Minute()  > R.Minute()  ) { return false; }
+	// else
+	if ( L.Second()  < R.Second()  ) { return true;  }
+	if ( L.Second()  > R.Second()  ) { return false; }
+	// else
+	if ( L.Current() < R.Current() ) { return true;  }
+	// else
 	return false;
 }
 static bool operator >  ( const Timer &L, const Timer &R ) { return R < L; }
