@@ -31,16 +31,16 @@
 struct SceneGame::Impl
 {
 public:
-	size_t  sprFont;
-	Camera  camera;
-	Player  player;
-	Ground  ground;
+	size_t	sprFont;
+	Camera	camera;
+	Player	player;
+	Ground	ground;
 	Boss	boss;
 	Timer	currentTime;
-	Donya::Vector3 lightDirection;
-	Donya::Vector3 cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
-	Donya::Vector3 cameraFocus;		// Relative position from the camera.
-
+	Donya::Vector3	lightDirection;
+	Donya::Vector3	cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
+	Donya::Vector3	cameraFocus;	// Relative position from the camera.
+	Donya::XInput	controller;
 	std::vector<ReflectedEntity> reflectedEntities;
 public:
 	Impl() : sprFont( NULL ),
@@ -51,6 +51,7 @@ public:
 		currentTime(),
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
+		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		reflectedEntities()
 	{}
 	~Impl()
@@ -226,6 +227,8 @@ void SceneGame::Uninit()
 
 Scene::Result SceneGame::Update( float elapsedTime )
 {
+	pImpl->controller.Update();
+
 	pImpl->currentTime.Update();
 
 #if USE_IMGUI
@@ -240,18 +243,27 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	{
 		Player::Input input{};
 
-		// TODO:ƒRƒ“ƒgƒ[ƒ‰‚Ì“ü—Í‚àŽæ‚é
+		auto &ctrller = pImpl->controller;
+		if ( ctrller.IsConnected() )
+		{
+			if ( ctrller.Trigger( Donya::Gamepad::Button::LEFT  ) ) { input.stick.x =  1.0f; }
+			if ( ctrller.Trigger( Donya::Gamepad::Button::RIGHT ) ) { input.stick.x = -1.0f; }
 
-		if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x = 1.0f; }
-		if ( Donya::Keyboard::Trigger( VK_LEFT ) ) { input.stick.x = -1.0f; }
+			if ( ctrller.Press( Donya::Gamepad::Button::A ) ) { input.doCharge = true; }
+		}
+		else
+		{
+			if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x =  1.0f; }
+			if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
 
-		if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
+			if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
+		}
 
 		return input;
 	};
 	pImpl->player.Update( MakePlayerInput() );
 
-	// Update "pImpl->reflectedEntities"
+	// Update "pImpl->reflectedEntities".
 	{
 		for ( auto &it : pImpl->reflectedEntities )
 		{
@@ -467,7 +479,8 @@ Scene::Result SceneGame::ReturnResult()
 	}
 	// else
 
-	if ( Donya::Keyboard::Trigger( 'P' ) && !Fader::Get().IsExist() )
+	bool requestPause = pImpl->controller.Trigger( Donya::Gamepad::Button::START ) || pImpl->controller.Trigger( Donya::Gamepad::Button::SELECT ) || Donya::Keyboard::Trigger( 'P' );
+	if ( requestPause && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 
