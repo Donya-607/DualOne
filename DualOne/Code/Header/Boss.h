@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Donya/Collision.h"
+#include "Donya/Quaternion.h"
+#include "Donya/Serializer.h"
+#include "Donya/StaticMesh.h"
+#include "Donya/UseImgui.h"
 #include "Donya/Vector.h"
-#include "Donya/Useful.h"
-#include "Donya/GeometricPrimitive.h"
 
-class Missle
+class Missile
 {
 	enum Status
 	{
@@ -16,8 +19,6 @@ class Missle
 		END,
 	};
 
-	Donya::Geometric::Sphere sphere;
-
 	Donya::Vector3	pos;
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
@@ -27,46 +28,89 @@ class Missle
 public:
 	void Init();
 	void Uninit();
-	void Update(Donya::Vector3 bossPos);
+	void Update( Donya::Vector3 bossPos );
 	void Draw
 	(
-		const DirectX::XMFLOAT4X4& matView,
-		const DirectX::XMFLOAT4X4& matProjection,
-		const DirectX::XMFLOAT4& lightDirection,
-		const DirectX::XMFLOAT4& cameraPosition,
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
 		bool isEnableFill = true
-	);
+	) const;
 
-	void Move(Donya::Vector3 bossPos);
+	void Move( Donya::Vector3 bossPos );
 
-
-	/*------------------------------*/
-	//	Getter and Setter
-	/*------------------------------*/
 	Donya::Vector3 Getpos() { return pos; }
 };
 
 class Boss
 {
-	Donya::Geometric::Cube cube;
-	std::vector<Missle> missle;
+	AABB								hitBox;
 
-	Donya::Vector3 pos;
-	Donya::Vector3 velocity;
-	Donya::Vector3 scale;
+	Donya::Vector3						pos;
+	Donya::Vector3						velocity;
+	Donya::Quaternion					posture;
+
+	std::shared_ptr<Donya::StaticMesh>	pModel;
+
+	std::vector<Missile>				missiles;
+	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 public:
-	void Init();
-	void Uninit();
-	void Update();
-	void Draw
-	(	
-		const DirectX::XMFLOAT4X4& matView,
-		const DirectX::XMFLOAT4X4& matProjection,
-		const DirectX::XMFLOAT4& lightDirection,
-		const DirectX::XMFLOAT4& cameraPosition,
-		bool isEnableFill = true
-	);
-
+	Boss();
+	~Boss();
 private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( hitBox ),
+			CEREAL_NVP( velocity )
+		);
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "Boss";
+public:
+	void Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions );
+	void Uninit();
+
+	void Update();
+
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
+		bool isEnableFill = true
+	) const;
+public:
+	/// <summary>
+	/// Retruns position is in world-space.
+	/// </summary>
+	Donya::Vector3 GetPos() const { return pos; }
+	/// <summary>
+	/// Returns hit-box is in world-space.
+	/// </summary>
+	AABB GetHitBox() const;
+private:
+	void LoadModel();
+
 	void Move();
+
+	void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	void SaveParameter();
+
+	void UseImGui();
+
+#endif // USE_IMGUI
 };
+
+CEREAL_CLASS_VERSION( Boss, 0 )

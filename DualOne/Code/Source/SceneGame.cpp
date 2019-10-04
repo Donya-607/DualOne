@@ -31,6 +31,7 @@
 struct SceneGame::Impl
 {
 public:
+	float	initDistanceOfBoss;		// Distance from origin.
 	size_t	sprFont;
 	Camera	camera;
 	Player	player;
@@ -43,7 +44,9 @@ public:
 	Donya::XInput	controller;
 	std::vector<ReflectedEntity> reflectedEntities;
 public:
-	Impl() : sprFont( NULL ),
+	Impl() :
+		initDistanceOfBoss(),
+		sprFont( NULL ),
 		camera(),
 		player(),
 		ground(),
@@ -78,6 +81,10 @@ private:
 			);
 		}
 		if ( 2 <= version )
+		{
+			archive( CEREAL_NVP( initDistanceOfBoss ) );
+		}
+		if ( 3 <= version )
 		{
 			/*
 			archive
@@ -126,6 +133,9 @@ public:
 				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -128.0f, 128.0f );
 				ImGui::Text( "" );
 
+				ImGui::SliderFloat( u8"初期のボスとの距離", &initDistanceOfBoss, 0.01f, 512.0f );
+				ImGui::Text( "" );
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -158,7 +168,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 1 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 2 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -198,7 +208,7 @@ void SceneGame::Init()
 #endif // DEBUG_MODE
 	pImpl->player.Init( tmpLanes );
 
-	pImpl->boss.Init();
+	pImpl->boss.Init( pImpl->initDistanceOfBoss, tmpLanes );
 
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
