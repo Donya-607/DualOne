@@ -45,6 +45,8 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 		return "./Data/Models/Player/ReflectedEntity.bin";	// break;
 	case ModelAttribute::Boss:
 		return "./Data/Models/Boss/Boss.bin";				// break;
+	case ModelAttribute::Missile:
+		return "./Data/Models/Boss/Missile.bin";			// break;
 	default:
 		assert( !"Error : Specified unexpect model type." ); break;
 	}

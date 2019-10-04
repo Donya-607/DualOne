@@ -13,10 +13,10 @@ class ReflectedEntity
 {
 private:
 	static std::shared_ptr<Donya::StaticMesh> pModel;
+public:
 	/// <summary>
 	/// Load model if has not loaded.
 	/// </summary>
-public:
 	static void LoadModel();
 private:
 	float				gravity;
