@@ -1,6 +1,6 @@
 {
     "Boss": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -20,6 +20,11 @@
             "x": 0.0,
             "y": 0.0,
             "z": -4.0
+        },
+        "missileOffset": {
+            "x": 0.0,
+            "y": 12.0,
+            "z": 0.0
         }
     }
 }

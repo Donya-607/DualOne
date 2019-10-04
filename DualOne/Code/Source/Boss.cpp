@@ -283,7 +283,7 @@ void Missile::Move( Donya::Vector3 bossPos )
 
 Boss::Boss() :
 	hitBox(),
-	pos(), velocity(),
+	pos(), velocity(), missileOffset(),
 	posture(),
 	pModel( nullptr ),
 	missiles(), lanePositions()
@@ -431,10 +431,16 @@ AABB Boss::GetHitBox() const
 void Boss::ShootMissile()
 {
 #if DEBUG_MODE
+
 	_ASSERT_EXPR( 0 < lanePositions.size(), L"The lane count is must over than zero !" );
 	const size_t laneCount = lanePositions.size();
 	Donya::Vector3 appearPos = lanePositions[Donya::Random::GenerateInt( 0, laneCount )];
 	appearPos.z = pos.z;
+
+	Donya::Vector3 dir = appearPos - pos;
+	appearPos.x += missileOffset.x * Donya::SignBit( dir.x );
+	appearPos.y += missileOffset.y;
+	appearPos.z += missileOffset.z;
 
 	// Temporary setting.
 	missiles.push_back( {} );
@@ -519,6 +525,13 @@ void Boss::UseImGui()
 			{
 				ImGui::SliderFloat3( u8"移動速度", &velocity.x, 0.1f, 32.0f );
 				if ( 0.0f < velocity.z ) { velocity.z *= -1.0f; }
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"攻撃関連" ) )
+			{
+				ImGui::SliderFloat3( u8"ミサイル発射位置のオフセット", &missileOffset.x, -128.0f, 128.0f );
 
 				ImGui::TreePop();
 			}

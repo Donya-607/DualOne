@@ -112,6 +112,7 @@ class Boss
 
 	Donya::Vector3						pos;
 	Donya::Vector3						velocity;
+	Donya::Vector3						missileOffset;	// The offset of appear position of missile. the x used to [positive:outer side][negative:inner side].
 	Donya::Quaternion					posture;
 
 	std::shared_ptr<Donya::StaticMesh>	pModel;
@@ -132,6 +133,10 @@ private:
 			CEREAL_NVP( velocity )
 		);
 		if ( 1 <= version )
+		{
+			archive( CEREAL_NVP( missileOffset ) );
+		}
+		if ( 2 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -178,4 +183,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 0 )
+CEREAL_CLASS_VERSION( Boss, 1 )
