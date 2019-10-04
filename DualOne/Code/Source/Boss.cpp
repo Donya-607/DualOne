@@ -9,6 +9,7 @@
 #if DEBUG_MODE
 #include "Donya/GeometricPrimitive.h" // For drawing collision.
 #include "Donya/Keyboard.h" // For generate missile trigger.
+#include "Donya/Random.h" // For generate missile trigger.
 #endif // DEBUG_MODE
 
 #include "Common.h"
@@ -96,8 +97,10 @@ void Missile::UseImGui()
 
 			if ( ImGui::TreeNode( u8"性能" ) )
 			{
+				ImGui::SliderInt( u8"消えるまでの時間", &parameter.aliveFrame, 1, 360 );
+
 				ImGui::SliderFloat3( u8"移動速度", &parameter.velocity.x, 0.1f, 32.0f );
-				parameter.velocity.z *= -1.0f;
+				if ( 0.0f < parameter.velocity.z ) { parameter.velocity.z *= -1.0f; }
 
 				ImGui::TreePop();
 			}
@@ -133,7 +136,7 @@ void Missile::UseImGui()
 
 Missile::Missile() :
 	status( State::NOT_ENABLE ),
-	waitFrame( 0 ),
+	aliveFrame( 0 ), waitFrame( 0 ),
 	hitBox(),
 	pos(), velocity(),
 	posture(),
@@ -161,7 +164,16 @@ void Missile::Uninit()
 
 void Missile::Update( Donya::Vector3 bossPos )
 {
+	aliveFrame--;
+
 	Move( bossPos );
+
+#if DEBUG_MODE
+
+	auto rotQ = Donya::Quaternion::Make( Donya::Vector3::Front(), ToRadian( 12.0f ) );
+	posture = rotQ * posture;
+
+#endif // DEBUG_MODE
 }
 
 void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -202,7 +214,7 @@ void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
-		constexpr XMFLOAT4 colColor{ 1.0f, 0.6f, 0.2f, 0.5f };
+		constexpr XMFLOAT4 colColor{ 1.0f, 0.3f, 0.2f, 0.5f };
 
 		auto InitializedCube = []()
 		{
@@ -233,7 +245,7 @@ AABB Missile::GetHitBox() const
 
 bool Missile::ShouldErase() const
 {
-	return ( pos.y - hitBox.size.y < 0.0f ) ? true : false;
+	return ( aliveFrame <= 0 ) ? true : false;
 }
 
 void Missile::Move( Donya::Vector3 bossPos )
@@ -419,9 +431,14 @@ AABB Boss::GetHitBox() const
 void Boss::ShootMissile()
 {
 #if DEBUG_MODE
+	_ASSERT_EXPR( 0 < lanePositions.size(), L"The lane count is must over than zero !" );
+	const size_t laneCount = lanePositions.size();
+	Donya::Vector3 appearPos = lanePositions[Donya::Random::GenerateInt( 0, laneCount )];
+	appearPos.z = pos.z;
+
 	// Temporary setting.
 	missiles.push_back( {} );
-	missiles.back().Init( lanePositions.front() );
+	missiles.back().Init( appearPos );
 
 #endif // DEBUG_MODE
 
@@ -501,7 +518,7 @@ void Boss::UseImGui()
 			if ( ImGui::TreeNode( u8"身体性能" ) )
 			{
 				ImGui::SliderFloat3( u8"移動速度", &velocity.x, 0.1f, 32.0f );
-				velocity.z *= -1.0f;
+				if ( 0.0f < velocity.z ) { velocity.z *= -1.0f; }
 
 				ImGui::TreePop();
 			}

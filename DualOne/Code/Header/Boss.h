@@ -43,6 +43,7 @@ private:
 private:
 	State				status;
 
+	int					aliveFrame;
 	int					waitFrame;
 
 	AABB				hitBox;		// The position is local-space, size is world-space.
@@ -66,6 +67,10 @@ private:
 			CEREAL_NVP( velocity )
 		);
 		if ( 1 <= version )
+		{
+			archive( CEREAL_NVP( aliveFrame ) );
+		}
+		if ( 2 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -98,6 +103,8 @@ public:
 private:
 	void Move( Donya::Vector3 bossPos );
 };
+
+CEREAL_CLASS_VERSION( Missile, 1 )
 
 class Boss
 {
@@ -171,5 +178,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Missile, 0 )
 CEREAL_CLASS_VERSION( Boss, 0 )
