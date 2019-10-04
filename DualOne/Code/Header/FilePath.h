@@ -21,5 +21,6 @@ enum class ModelAttribute
 	ReflectedEntity,
 	Boss,
 	Missile,
+	Tree,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );
