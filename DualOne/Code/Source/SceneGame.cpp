@@ -502,7 +502,7 @@ void SceneGame::DetectCollision()
 	// Missiles vs Player.
 	{
 		AABB other{};
-		auto reflectableAttacks = pImpl->boss.FetchReflectableMissiles();
+		auto &reflectableAttacks = pImpl->boss.FetchReflectableMissiles();
 		for ( const auto &it : reflectableAttacks )
 		{
 			other = it.GetHitBox();
@@ -517,7 +517,7 @@ void SceneGame::DetectCollision()
 	// Obstacles vs Player.
 	{
 		AABB other{};
-		auto obstacles = pImpl->boss.FetchObstacles();
+		auto &obstacles = pImpl->boss.FetchObstacles();
 		for ( const auto &it : obstacles )
 		{
 			other = it.GetHitBox();

@@ -692,7 +692,11 @@ void Player::JumpUpdate( Input input )
 	if ( pos.y + velocity.y <= 0 )
 	{
 		Landing();
-		RunInit();
+
+		if ( !IsStunning() )
+		{
+			RunInit();
+		}
 	}
 }
 bool Player::IsJumping() const
@@ -719,14 +723,14 @@ void Player::MakeStun()
 	stunTimer = PlayerParameter::Get().stunFrame;
 
 	charge		= 0.0f;
-	velocity.x	= 0.0f;
-	velocity.y	= 0.0f;
 	velocity.z	= 0.0f;
 
 	status = State::Stun;
 }
 void Player::StunUpdate( Input input )
 {
+	HorizontalMove();
+
 	// Use falling process.
 	if ( 0.0f < pos.y )
 	{
@@ -734,7 +738,7 @@ void Player::StunUpdate( Input input )
 	}
 
 #if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( -Donya::Vector3::Right(), ToRadian( 12.0f ) );
 	posture = tmpRot * posture;
 #endif // DEBUG_MODE
 
@@ -748,6 +752,10 @@ void Player::StunUpdate( Input input )
 		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
 	#endif // DEBUG_MODE
 	}
+}
+bool Player::IsStunning() const
+{
+	return ( status == State::Stun ) ? true : false;
 }
 
 #if USE_IMGUI

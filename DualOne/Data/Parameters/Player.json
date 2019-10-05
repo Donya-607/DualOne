@@ -16,7 +16,7 @@
             },
             "exist": true
         },
-        "changeLaneSpeed": 0.06666667014360428,
+        "changeLaneSpeed": 0.10000000149011612,
         "chargeSpeed": 0.05000000074505806,
         "fallResistance": 0.5,
         "gravity": 0.800000011920929,

@@ -727,11 +727,11 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 
-	for ( auto &it : missiles )
+	for ( const auto &it : missiles )
 	{
 		it.Draw( matView, matProjection, lightDirection, cameraPosition );
 	}
-	for ( auto &it : obstacles )
+	for ( const auto &it : obstacles )
 	{
 		it.Draw( matView, matProjection, lightDirection, cameraPosition );
 	}
