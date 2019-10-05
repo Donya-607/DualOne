@@ -4,12 +4,12 @@
 
 #include "Donya/Constant.h"
 #include "Donya/Loader.h"
+#include "Donya/Random.h"
 #include "Donya/Useful.h"
 
 #if DEBUG_MODE
 #include "Donya/GeometricPrimitive.h" // For drawing collision.
 #include "Donya/Keyboard.h" // For generate missile trigger.
-#include "Donya/Random.h" // For generate missile trigger.
 #endif // DEBUG_MODE
 
 #include "Common.h"
@@ -279,9 +279,157 @@ void Missile::Move( Donya::Vector3 bossPos )
 // region Missile
 #pragma endregion
 
+#pragma region AttackParam
+
+AttackParam::AttackParam() :
+	counterMax( 0 ), untilAttackFrame( 0 ), reuseFrame( 0 ),
+	intervals(), obstaclePatterns()
+{}
+AttackParam::~AttackParam()
+{
+	obstaclePatterns.clear();
+	obstaclePatterns.shrink_to_fit();
+}
+
+void AttackParam::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void AttackParam::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void AttackParam::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ボスの攻撃パターン" ) )
+		{
+			ImGui::SliderInt( u8"攻撃条件に使うカウンタの最大値", &counterMax, 100, 2048 );
+			ImGui::SliderInt( u8"攻撃開始までの待機時間（フレーム）", &untilAttackFrame, 1, 2048 );
+			ImGui::SliderInt( u8"攻撃後の待機時間（フレーム）", &reuseFrame, 1, 2048 );
+
+			static int targetNo{};
+			std::string attackNameU8{};
+			switch ( targetNo )
+			{
+			case AttackKind::Missile:  attackNameU8 = u8"ミサイル"; break;
+			case AttackKind::Obstacle: attackNameU8 = u8"障害物"; break;
+			default: attackNameU8 = u8"Error !"; break;
+			}
+
+			std::string caption{ u8"攻撃の種類：" };
+			ImGui::SliderInt( ( caption + attackNameU8 ).c_str(), &targetNo, 0, AttackKind::ATTACK_KIND_COUNT - 1 );
+
+			ImGui::SliderInt( u8"攻撃の間隔（フレーム）", &intervals[targetNo], 1, 999 );
+
+			if ( ImGui::TreeNode( u8"障害物のパターン" ) )
+			{
+				ImGui::Text( u8"０始まり，左から数える" );
+				ImGui::Text( "" );
+
+				if ( ImGui::Button( u8"パターンを増やす" ) )
+				{
+					obstaclePatterns.push_back( {} );
+				}
+				if ( !obstaclePatterns.empty() )
+				{
+					if ( ImGui::Button( u8"パターンを減らす" ) )
+					{
+						obstaclePatterns.pop_back();
+					}
+				}
+				ImGui::Text( "" );
+
+				const size_t PATTERN_COUNT = obstaclePatterns.size();
+				for ( size_t i = 0; i < PATTERN_COUNT; ++i  )
+				{
+					std::string patternName = "パターン[" + std::to_string( i ) + "]";
+					if ( ImGui::TreeNode( Donya::MultiToUTF8( patternName ).c_str() ) )
+					{
+						auto &patterns = obstaclePatterns[i];
+
+						if ( ImGui::Button( u8"レーンを増やす" ) )
+						{
+							patterns.push_back( {} );
+						}
+						if ( !patterns.empty() )
+						{
+							if ( ImGui::Button( u8"レーンを減らす" ) )
+							{
+								patterns.pop_back();
+							}
+						}
+
+						std::string caption{};
+						const size_t COUNT = patterns.size();
+						for ( size_t j = 0; j < COUNT; ++j )
+						{
+							caption = "[" + std::to_string( j ) + "]";
+							ImGui::SliderInt( caption.c_str(), &( patterns[j] ), 0, 1 );
+						}
+
+						ImGui::TreePop();
+					}
+				}
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+// region AttackParam
+#pragma endregion
+
+
 #pragma region Boss
 
 Boss::Boss() :
+	attackTimer(), waitReuseFrame(),
 	hitBox(),
 	pos(), velocity(), missileOffset(),
 	posture(),
@@ -306,6 +454,10 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Missile::LoadParameter();
 	Missile::LoadModel();
 
+	AttackParam::Get().LoadParameter();
+
+	waitReuseFrame = AttackParam::Get().untilAttackFrame;
+
 	pos = Donya::Vector3{ 0.0f, 0.0f, initDistanceFromOrigin };
 	
 	lanePositions = registerLanePositions;
@@ -327,33 +479,17 @@ void Boss::Update()
 
 	UseImGui();
 	Missile::UseImGui();
+	AttackParam::Get().UseImGui();
 
 #endif // USE_IMGUI
 
+	// I think the attack is should use after the move.
+
 	Move();
 
-#if DEBUG_MODE
+	LotteryAttack();
 
-	if ( Donya::Keyboard::Trigger( 'F' ) )
-	{
-		ShootMissile();
-	}
-
-#endif // DEBUG_MODE
-
-	for ( auto &it : missiles )
-	{
-		it.Update( pos );
-	}
-	auto eraseItr = std::remove_if
-	(
-		missiles.begin(), missiles.end(),
-		[]( Missile &element )
-		{
-			return element.ShouldErase();
-		}
-	);
-	missiles.erase( eraseItr, missiles.end() );
+	UpdateMissiles();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -442,7 +578,6 @@ void Boss::ShootMissile()
 	appearPos.y += missileOffset.y;
 	appearPos.z += missileOffset.z;
 
-	// Temporary setting.
 	missiles.push_back( {} );
 	missiles.back().Init( appearPos );
 
@@ -466,6 +601,75 @@ void Boss::LoadModel()
 void Boss::Move()
 {
 	pos += velocity;
+}
+
+void Boss::LotteryAttack()
+{
+	if ( 0 < waitReuseFrame )
+	{
+		waitReuseFrame--;
+		return;
+	}
+	// else
+
+	attackTimer++;
+
+	constexpr int COUNT = AttackParam::AttackKind::ATTACK_KIND_COUNT;
+
+	const auto &param = AttackParam::Get();
+	std::vector<int> chosenIndices{};
+	for ( int i = 0; i < COUNT; ++i )
+	{
+		if ( attackTimer % param.intervals[i] == 0 )
+		{
+			chosenIndices.emplace_back( i );
+		}
+	}
+
+	constexpr int NOT_USE_NO = -1;
+	int useAttackNo = NOT_USE_NO;
+
+	if ( !chosenIndices.empty() )
+	{
+		if ( 1 == chosenIndices.size() )
+		{
+			useAttackNo = chosenIndices.front();
+		}
+		else
+		{
+			int random = Donya::Random::GenerateInt( chosenIndices.size() );
+			useAttackNo = chosenIndices[random];
+		}
+	}
+
+	if ( useAttackNo != NOT_USE_NO )
+	{
+		switch ( useAttackNo )
+		{
+		case AttackParam::AttackKind::Missile: ShootMissile(); break;
+		default: break;
+		}
+	}
+
+	if ( param.counterMax <= attackTimer )
+	{
+		attackTimer = 0;
+	}
+}
+
+void Boss::UpdateMissiles()
+{
+	for ( auto &it : missiles )
+	{
+		it.Update( pos );
+	}
+
+	auto eraseItr = std::remove_if
+	(
+		missiles.begin(), missiles.end(),
+		[]( Missile &element ) { return element.ShouldErase(); }
+	);
+	missiles.erase( eraseItr, missiles.end() );
 }
 
 void Boss::LoadParameter( bool isBinary )

@@ -1,11 +1,17 @@
 #pragma once
 
+#include <array>
 #include <memory>
+#include <vector>
+
+#include "cereal/types/array.hpp"
+#include "cereal/types/vector.hpp"
 
 #include "Donya/Collision.h"
 #include "Donya/Quaternion.h"
 #include "Donya/Serializer.h"
 #include "Donya/StaticMesh.h"
+#include "Donya/Template.h"
 #include "Donya/UseImgui.h"
 #include "Donya/Vector.h"
 
@@ -106,8 +112,72 @@ private:
 
 CEREAL_CLASS_VERSION( Missile, 1 )
 
+class AttackParam : public Donya::Singleton<AttackParam>
+{
+	friend Donya::Singleton<AttackParam>;
+public:
+	enum AttackKind
+	{
+		Missile = 0,
+		Obstacle,
+
+		ATTACK_KIND_COUNT
+	};
+public:
+	int counterMax;
+	int untilAttackFrame;	// Frame of begin the attack.
+	int reuseFrame;
+	std::array<int, ATTACK_KIND_COUNT> intervals;
+	std::vector<std::vector<int>> obstaclePatterns;	// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
+private:
+	AttackParam();
+public:
+	~AttackParam();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( counterMax ),
+			CEREAL_NVP( intervals ),
+			CEREAL_NVP( obstaclePatterns )
+		);
+
+		if ( 1 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( untilAttackFrame ),
+				CEREAL_NVP( reuseFrame )
+			);
+		}
+		if ( 2 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "BossAttackParameter";
+public:
+	void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	void SaveParameter();
+
+	void UseImGui();
+
+#endif // USE_IMGUI
+};
+
+CEREAL_CLASS_VERSION( AttackParam, 1 )
+
 class Boss
 {
+	int									attackTimer;
+	int									waitReuseFrame;	// Wait frame of until can reuse.
+
 	AABB								hitBox;
 
 	Donya::Vector3						pos;
@@ -171,6 +241,10 @@ private:
 	void LoadModel();
 
 	void Move();
+
+	void LotteryAttack();
+
+	void UpdateMissiles();
 
 	void LoadParameter( bool isBinary = true );
 
