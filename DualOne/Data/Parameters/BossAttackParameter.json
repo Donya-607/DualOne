@@ -1,7 +1,7 @@
 {
     "BossAttackParameter": {
         "cereal_class_version": 1,
-        "counterMax": 600,
+        "counterMax": 3600,
         "intervals": {
             "value0": 30,
             "value1": 25
@@ -19,8 +19,8 @@
             ],
             [
                 0,
-                1,
-                0
+                0,
+                1
             ],
             [
                 1,

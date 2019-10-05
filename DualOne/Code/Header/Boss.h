@@ -105,6 +105,87 @@ private:
 
 CEREAL_CLASS_VERSION( Missile, 1 )
 
+class Obstacle
+{
+private:
+	static Obstacle parameter;
+	static std::shared_ptr<Donya::StaticMesh>	pModel;
+	static constexpr const char *SERIAL_ID = "Obstacle";
+public:
+	/// <summary>
+	/// Load model if has not loaded.
+	/// </summary>
+	static void LoadModel();
+
+	static void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	static void SaveParameter();
+
+	static void UseImGui();
+
+#endif // USE_IMGUI
+private:
+	float				decelSpeed;	// Add to z-position. this works like deceleration.
+	AABB				hitBox;		// The position is local-space, size is world-space.
+	Donya::Vector3		pos;
+	Donya::Quaternion	posture;
+
+	mutable bool		wasHitToOther;
+public:
+	Obstacle();
+	~Obstacle();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( decelSpeed ),
+			CEREAL_NVP( hitBox )
+		);
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+public:
+	void Init( const Donya::Vector3 &wsAppearPos );
+	void Uninit();
+
+	void Update();
+
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
+		bool isEnableFill = true
+	) const;
+public:
+	/// <summary>
+	/// Retruns position is in world-space.
+	/// </summary>
+	Donya::Vector3 GetPos() const { return pos; }
+	/// <summary>
+	/// Returns hit-box is in world-space.
+	/// </summary>
+	AABB GetHitBox() const;
+
+	bool ShouldErase() const;
+
+	/// <summary>
+	/// Please call when hit to anything.
+	/// </summary>
+	void HitToOther() const;
+private:
+};
+
+CEREAL_CLASS_VERSION( Obstacle, 0 )
+
 class AttackParam : public Donya::Singleton<AttackParam>
 {
 	friend Donya::Singleton<AttackParam>;
@@ -178,12 +259,14 @@ class Boss
 	Donya::Vector3						pos;
 	Donya::Vector3						velocity;
 	Donya::Vector3						missileOffset;	// The offset of appear position of missile. the x used to [positive:outer side][negative:inner side].
+	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Quaternion					posture;
 
 	std::shared_ptr<Donya::StaticMesh>	pModel;
 
-	std::vector<Missile>				missiles;
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
+	std::vector<Missile>				missiles;
+	std::vector<Obstacle>				obstacles;
 public:
 	Boss();
 	~Boss();
@@ -206,6 +289,10 @@ private:
 			archive( CEREAL_NVP( maxDistanceToTarget ) );
 		}
 		if ( 3 <= version )
+		{
+			archive( CEREAL_NVP( obstacleOffset ) );
+		}
+		if ( 4 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -235,7 +322,15 @@ public:
 	/// </summary>
 	AABB GetHitBox() const;
 
+	/// <summary>
+	/// Please call Missile::HitToOther() when hit detected.
+	/// </summary>
 	const std::vector<Missile> &FetchReflectableMissiles() const;
+	/// <summary>
+	/// The obstacle can not reflection.<para></para>
+	/// Please call Obstacle::HitToOther() when hit detected.
+	/// </summary>
+	const std::vector<Obstacle> &FetchObstacles() const;
 private:
 	void LoadModel();
 
@@ -246,6 +341,9 @@ private:
 
 	void ShootMissile( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateMissiles();
+	
+	void GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos );
+	void UpdateObstacles();
 
 	void LoadParameter( bool isBinary = true );
 
@@ -258,4 +356,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 2 )
+CEREAL_CLASS_VERSION( Boss, 3 )

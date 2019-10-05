@@ -47,6 +47,8 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 		return "./Data/Models/Boss/Boss.bin";				// break;
 	case ModelAttribute::Missile:
 		return "./Data/Models/Boss/Missile.bin";			// break;
+	case ModelAttribute::Obstacle:
+		return "./Data/Models/Boss/Obstacle.bin";			// break;
 	default:
 		assert( !"Error : Specified unexpect model type." ); break;
 	}
