@@ -580,6 +580,11 @@ void Player::RunInit()
 	status = State::Run;
 
 	velocity.z = -PlayerParameter::Get().runSpeedUsual;
+
+#if DEBUG_MODE
+	// Initial posture.
+	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
+#endif // DEBUG_MODE
 }
 void Player::RunUpdate( Input input )
 {
@@ -606,6 +611,11 @@ void Player::ChargeUpdate( Input input )
 {
 	charge += PlayerParameter::Get().chargeSpeed;
 	charge = std::min( 1.0f, charge );
+
+#if DEBUG_MODE
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
+	posture = tmpRot * posture;
+#endif // DEBUG_MODE
 
 	if ( !input.doCharge )
 	{
@@ -688,6 +698,11 @@ void Player::JumpInit()
 void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
+
+#if DEBUG_MODE
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 24.0f ) );
+	posture = tmpRot * posture;
+#endif // DEBUG_MODE
 
 	if ( pos.y + velocity.y <= 0 )
 	{
