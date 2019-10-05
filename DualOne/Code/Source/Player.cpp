@@ -272,7 +272,10 @@ public:
 
 				if ( ImGui::TreeNode( u8"走行関連" ) )
 				{
-					static int changeLaneFrame = 1;
+					static int changeLaneFrame =
+					( ZeroEqual( changeLaneSpeed ) )
+					? 1
+					: scast<int>( 1.0f / changeLaneSpeed );
 					ImGui::SliderInt( u8"レーン変更にかかる時間（フレーム）", &changeLaneFrame, 1, 120 );
 					changeLaneSpeed = 1.0f / scast<float>( changeLaneFrame );
 
@@ -284,7 +287,10 @@ public:
 
 				if ( ImGui::TreeNode( u8"ジャンプ関連" ) )
 				{
-					static int chargeFrame = 1;
+					static int chargeFrame =
+					( ZeroEqual( chargeSpeed ) )
+					? 1
+					: scast<int>( 1.0f / chargeSpeed );
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 

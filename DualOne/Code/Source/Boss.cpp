@@ -135,12 +135,11 @@ void Missile::UseImGui()
 #endif // USE_IMGUI
 
 Missile::Missile() :
-	status( State::NOT_ENABLE ),
 	aliveFrame( 0 ), waitFrame( 0 ),
 	hitBox(),
 	pos(), velocity(),
 	posture(),
-	isShotFromRight( false )
+	wasHitToOther( false )
 {
 
 }
@@ -151,7 +150,6 @@ void Missile::Init( const Donya::Vector3 &wsAppearPos )
 	// Apply the external paramter.
 	*this		= parameter;
 
-	status		= State::INITIALIZE;
 	pos			= wsAppearPos;
 
 	posture		= Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
@@ -159,14 +157,14 @@ void Missile::Init( const Donya::Vector3 &wsAppearPos )
 
 void Missile::Uninit()
 {
-
+	// No op.
 }
 
-void Missile::Update( Donya::Vector3 bossPos )
+void Missile::Update()
 {
 	aliveFrame--;
 
-	Move( bossPos );
+	Move();
 
 #if DEBUG_MODE
 
@@ -209,8 +207,9 @@ void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X
 		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
 
 		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
+		// XMMATRIX colR = XMMatrixIdentity();
 		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
-		XMMATRIX colW = colS * R * colT;
+		XMMATRIX colW = colS * colT;
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
@@ -245,34 +244,16 @@ AABB Missile::GetHitBox() const
 
 bool Missile::ShouldErase() const
 {
-	return ( aliveFrame <= 0 ) ? true : false;
+	return ( aliveFrame <= 0 || wasHitToOther ) ? true : false;
 }
 
-void Missile::Move( Donya::Vector3 bossPos )
+void Missile::HitToOther() const
 {
-	switch ( status )
-	{
-	case State::NOT_ENABLE:
+	wasHitToOther = true;
+}
 
-		break;
-	case State::INITIALIZE:
-
-//		break;	意図的なコメントアウト
-	case State::PREP_MOVE:
-
-		break;
-	case State::PREP_STOP:
-
-		break;
-	case State::ATTACK_MOVE:
-
-		break;
-	case State::END:
-
-		break;
-	default:
-		break;
-	}
+void Missile::Move()
+{
 	pos += velocity;
 }
 
@@ -430,6 +411,7 @@ void AttackParam::UseImGui()
 
 Boss::Boss() :
 	attackTimer(), waitReuseFrame(),
+	maxDistanceToTarget(),
 	hitBox(),
 	pos(), velocity(), missileOffset(),
 	posture(),
@@ -473,7 +455,7 @@ void Boss::Uninit()
 	}
 }
 
-void Boss::Update()
+void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 {
 #if USE_IMGUI
 
@@ -485,9 +467,9 @@ void Boss::Update()
 
 	// I think the attack is should use after the move.
 
-	Move();
+	Move( wsAttackTargetPos );
 
-	LotteryAttack();
+	LotteryAttack( wsAttackTargetPos );
 
 	UpdateMissiles();
 }
@@ -530,8 +512,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
 
 		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
+		// XMMATRIX colR = XMMatrixIdentity();
 		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
-		XMMATRIX colW = colS * R * colT;
+		XMMATRIX colW = colS * colT;
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
@@ -564,26 +547,9 @@ AABB Boss::GetHitBox() const
 	return wsHitBox;
 }
 
-void Boss::ShootMissile()
+const std::vector<Missile> &Boss::FetchReflectableMissiles() const
 {
-#if DEBUG_MODE
-
-	_ASSERT_EXPR( 0 < lanePositions.size(), L"The lane count is must over than zero !" );
-	const size_t laneCount = lanePositions.size();
-	Donya::Vector3 appearPos = lanePositions[Donya::Random::GenerateInt( 0, laneCount )];
-	appearPos.z = pos.z;
-
-	Donya::Vector3 dir = appearPos - pos;
-	appearPos.x += missileOffset.x * Donya::SignBit( dir.x );
-	appearPos.y += missileOffset.y;
-	appearPos.z += missileOffset.z;
-
-	missiles.push_back( {} );
-	missiles.back().Init( appearPos );
-
-#endif // DEBUG_MODE
-
-
+	return missiles;
 }
 
 void Boss::LoadModel()
@@ -598,12 +564,19 @@ void Boss::LoadModel()
 	_ASSERT_EXPR( pModel, L"Failed : Load boss model." );
 }
 
-void Boss::Move()
+void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )
 {
 	pos += velocity;
+
+	float distance = wsAttackTargetPos.z - pos.z;
+	if ( maxDistanceToTarget < fabsf( distance ) )
+	{
+		// Place to back than target-position.
+		pos.z = wsAttackTargetPos.z + maxDistanceToTarget;
+	}
 }
 
-void Boss::LotteryAttack()
+void Boss::LotteryAttack( const Donya::Vector3 &wsAttackTargetPos )
 {
 	if ( 0 < waitReuseFrame )
 	{
@@ -612,11 +585,10 @@ void Boss::LotteryAttack()
 	}
 	// else
 
-	attackTimer++;
+	attackTimer++; // This timer's count does not will be zero.
 
 	constexpr int COUNT = AttackParam::AttackKind::ATTACK_KIND_COUNT;
 	const auto &PARAM = AttackParam::Get();
-
 
 	std::vector<int> chosenIndices{};
 	for ( int i = 0; i < COUNT; ++i )
@@ -647,7 +619,7 @@ void Boss::LotteryAttack()
 	{
 		switch ( useAttackNo )
 		{
-		case AttackParam::AttackKind::Missile: ShootMissile(); break;
+		case AttackParam::AttackKind::Missile: ShootMissile( wsAttackTargetPos ); break;
 		default: break;
 		}
 
@@ -660,17 +632,49 @@ void Boss::LotteryAttack()
 	}
 }
 
+Donya::Vector3 Boss::LotteryLanePosition()
+{
+	const size_t laneCount = lanePositions.size();
+	_ASSERT_EXPR( 0 < laneCount, L"The lane count is must over than zero !" );
+
+	int index = Donya::Random::GenerateInt( 0, laneCount );
+	return lanePositions[index];
+}
+
+void Boss::ShootMissile( const Donya::Vector3 &wsAttackTargetPos )
+{
+	Donya::Vector3 appearPos = LotteryLanePosition();
+	appearPos.z = pos.z;
+
+	Donya::Vector3 dir = appearPos - pos;
+	appearPos.x += missileOffset.x * Donya::SignBit( dir.x );
+	appearPos.y += missileOffset.y;
+	appearPos.z += missileOffset.z;
+
+	missiles.push_back( {} );
+	missiles.back().Init( appearPos );
+}
+
 void Boss::UpdateMissiles()
 {
 	for ( auto &it : missiles )
 	{
-		it.Update( pos );
+		it.Update();
 	}
 
 	auto eraseItr = std::remove_if
 	(
 		missiles.begin(), missiles.end(),
-		[]( Missile &element ) { return element.ShouldErase(); }
+		[]( Missile &element )
+		{
+			if ( element.ShouldErase() )
+			{
+				element.Uninit();
+				return true;
+			}
+			// else
+			return false;
+		}
 	);
 	missiles.erase( eraseItr, missiles.end() );
 }
@@ -732,6 +736,8 @@ void Boss::UseImGui()
 			{
 				ImGui::SliderFloat3( u8"移動速度", &velocity.x, 0.1f, 32.0f );
 				if ( 0.0f < velocity.z ) { velocity.z *= -1.0f; }
+
+				ImGui::SliderFloat( u8"プレイヤーとの距離の最大", &maxDistanceToTarget, 1.0f, 1024.0f );
 
 				ImGui::TreePop();
 			}

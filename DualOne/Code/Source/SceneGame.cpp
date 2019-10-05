@@ -129,8 +129,8 @@ public:
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
-				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
-				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -128.0f, 128.0f );
+				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -512.0f, 512.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -512.0f, 512.0f );
 				ImGui::Text( "" );
 
 				ImGui::SliderFloat( u8"初期のボスとの距離", &initDistanceOfBoss, 0.01f, 512.0f );
@@ -293,7 +293,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		pImpl->reflectedEntities.erase( result, pImpl->reflectedEntities.end() );
 	}
 
-	pImpl->boss.Update();
+	pImpl->boss.Update( pImpl->player.GetPos() );
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -457,11 +457,9 @@ void SceneGame::Draw( float elapsedTime )
 
 void SceneGame::DetectCollision()
 {
-#if DEBUG_MODE
-
-	if ( Donya::Keyboard::Trigger( VK_SPACE ) )
+	auto HitToPlayer = [&]( bool canReflection )
 	{
-		auto result = pImpl->player.ReceiveImpact( /* canReflection = */ true );
+		auto result = pImpl->player.ReceiveImpact( canReflection );
 		if ( result.shouldGenerateBullet )
 		{
 			pImpl->reflectedEntities.emplace_back();
@@ -473,9 +471,26 @@ void SceneGame::DetectCollision()
 				result.velocity
 			);
 		}
+	};
+
+	AABB playerBox = pImpl->player.GetHitBox();
+
+	// Missiles vs Player.
+	{
+		AABB attack{};
+		auto reflectableAttacks = pImpl->boss.FetchReflectableMissiles();
+		for ( const auto &it : reflectableAttacks )
+		{
+			attack = it.GetHitBox();
+			if ( AABB::IsHitAABB( attack, playerBox ) )
+			{
+				it.HitToOther();
+
+				HitToPlayer( /* canReflection = */ true );
+			}
+		}
 	}
 
-#endif // DEBUG_MODE
 }
 
 Scene::Result SceneGame::ReturnResult()

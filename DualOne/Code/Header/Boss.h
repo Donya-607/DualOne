@@ -37,18 +37,6 @@ public:
 
 #endif // USE_IMGUI
 private:
-	enum class State
-	{
-		NOT_ENABLE,
-		INITIALIZE,
-		PREP_MOVE,
-		PREP_STOP,
-		ATTACK_MOVE,
-		END,
-	};
-private:
-	State				status;
-
 	int					aliveFrame;
 	int					waitFrame;
 
@@ -57,7 +45,7 @@ private:
 	Donya::Vector3		velocity;
 	Donya::Quaternion	posture;
 
-	bool				isShotFromRight;
+	mutable bool		wasHitToOther;
 public:
 	Missile();
 	~Missile();
@@ -85,7 +73,7 @@ public:
 	void Init( const Donya::Vector3 &wsAppearPos );
 	void Uninit();
 
-	void Update( Donya::Vector3 bossPos );
+	void Update();
 
 	void Draw
 	(
@@ -106,8 +94,13 @@ public:
 	AABB GetHitBox() const;
 
 	bool ShouldErase() const;
+
+	/// <summary>
+	/// Please call when hit to anything.
+	/// </summary>
+	void HitToOther() const;
 private:
-	void Move( Donya::Vector3 bossPos );
+	void Move();
 };
 
 CEREAL_CLASS_VERSION( Missile, 1 )
@@ -178,6 +171,8 @@ class Boss
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 
+	float								maxDistanceToTarget;
+
 	AABB								hitBox;
 
 	Donya::Vector3						pos;
@@ -208,6 +203,10 @@ private:
 		}
 		if ( 2 <= version )
 		{
+			archive( CEREAL_NVP( maxDistanceToTarget ) );
+		}
+		if ( 3 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -216,7 +215,7 @@ public:
 	void Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions );
 	void Uninit();
 
-	void Update();
+	void Update( const Donya::Vector3 &wsAttackTargetPos );
 
 	void Draw
 	(
@@ -235,15 +234,17 @@ public:
 	/// Returns hit-box is in world-space.
 	/// </summary>
 	AABB GetHitBox() const;
-private:
-	void ShootMissile();
+
+	const std::vector<Missile> &FetchReflectableMissiles() const;
 private:
 	void LoadModel();
 
-	void Move();
+	void Move( const Donya::Vector3 &wsAttackTargetPos );
 
-	void LotteryAttack();
+	void LotteryAttack( const Donya::Vector3 &wsAttackTargetPos );
+	Donya::Vector3 LotteryLanePosition();
 
+	void ShootMissile( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateMissiles();
 
 	void LoadParameter( bool isBinary = true );
@@ -257,4 +258,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 1 )
+CEREAL_CLASS_VERSION( Boss, 2 )
