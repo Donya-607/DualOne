@@ -615,12 +615,13 @@ void Boss::LotteryAttack()
 	attackTimer++;
 
 	constexpr int COUNT = AttackParam::AttackKind::ATTACK_KIND_COUNT;
+	const auto &PARAM = AttackParam::Get();
 
-	const auto &param = AttackParam::Get();
+
 	std::vector<int> chosenIndices{};
 	for ( int i = 0; i < COUNT; ++i )
 	{
-		if ( attackTimer % param.intervals[i] == 0 )
+		if ( attackTimer % PARAM.intervals[i] == 0 )
 		{
 			chosenIndices.emplace_back( i );
 		}
@@ -649,9 +650,11 @@ void Boss::LotteryAttack()
 		case AttackParam::AttackKind::Missile: ShootMissile(); break;
 		default: break;
 		}
+
+		waitReuseFrame = PARAM.reuseFrame;
 	}
 
-	if ( param.counterMax <= attackTimer )
+	if ( PARAM.counterMax <= attackTimer )
 	{
 		attackTimer = 0;
 	}
