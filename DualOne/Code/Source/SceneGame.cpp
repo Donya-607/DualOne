@@ -247,7 +247,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 #endif // USE_IMGUI
 
-	pImpl->ground.Update();
+	pImpl->ground.Update(pImpl->player.GetPos());
 
 	auto MakePlayerInput = [&]()->Player::Input
 	{

@@ -170,6 +170,7 @@ private:
 	void MakeStun();
 	void StunUpdate( Input input );
 
+
 #if USE_IMGUI
 
 	void ShowParamToImGui() const;

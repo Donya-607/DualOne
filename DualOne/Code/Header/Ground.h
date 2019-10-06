@@ -37,13 +37,15 @@ struct Tree
 public:
 	static std::shared_ptr<Donya::StaticMesh> pModel;
 private:
-	Donya::Vector3 pos;
-	Donya::Vector3 velocity;
-	Donya::Vector3 scale;
+	Donya::Vector3	pos;
+	Donya::Vector3	velocity;
+	Donya::Vector3	scale;
+	bool			isEnable;
 public:
 	Tree();
 	Tree(Donya::Vector3 _pos);
 	~Tree();
+	void Init(Donya::Vector3 _pos);
 	void Update();
 	void Draw(
 		const DirectX::XMFLOAT4X4& matView,
@@ -53,16 +55,28 @@ public:
 		bool isEnableFill = true
 	);
 
+	bool ShouldErase(Donya::Vector3 _playerPos) const
+	{
+		return (pos.z  >= _playerPos.z + 1000) ? true : false;
+	}
+
 	void LoadModel();
 	void Move();
 
+
 	void UseImGui();
+
+	// Getter
+	bool GetIsEnable() { return isEnable; }
+	// Setter
+	void SetIsEnable(bool _result) { isEnable = _result; }
 };
 
 class Ground
 {
 	std::vector<Block>	block;
-	std::vector<Tree>	trees;
+//	std::vector<Tree>	trees;
+	std::array<Tree, 100> trees;
 	int					timer;
 public:
 	Ground();
@@ -73,6 +87,7 @@ public:
 	void Init();
 	void Uninit();
 	void Update();
+	void Update(Donya::Vector3 _playerPos);
 	void Draw
 	(
 		const DirectX::XMFLOAT4X4& matView,
@@ -81,4 +96,6 @@ public:
 		const DirectX::XMFLOAT4& cameraPosition,
 		bool isEnableFill = true
 	);
+
+	void EraseDeadTree(Donya::Vector3 _playerPos);
 };

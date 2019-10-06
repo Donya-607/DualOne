@@ -2,6 +2,7 @@
 
 #include "Donya/Loader.h"
 #include "Donya/UseImgui.h"
+#include "Donya/Collision.h"
 
 #include "FilePath.h"
 
@@ -121,7 +122,7 @@ void Ground::Uninit()
 /*-------------------------------------------------*/
 //	更新関数
 /*-------------------------------------------------*/
-void Ground::Update()
+void Ground::Update(Donya::Vector3 _playerPos)
 {
 	for (auto& it : block)
 	{
@@ -129,6 +130,7 @@ void Ground::Update()
 	}
 	for (auto& it : trees)
 	{
+		if (!it.GetIsEnable()) continue;
 		it.Update();
 	}
 
@@ -136,8 +138,15 @@ void Ground::Update()
 	{
 		timer = 0;
 		CreateBlock();
-		CreateTree(Donya::Vector3(0.0f, 0.0f, 0.0f));
+
+		Donya::Vector3 randPos;
+		randPos.x = rand() % 1000 - 500;
+		randPos.y = 0.0f;
+		randPos.z = _playerPos.z - 200.0f;
+		CreateTree(randPos);
 	}
+
+	EraseDeadTree(_playerPos);
 }
 
 /*-------------------------------------------------*/
@@ -157,6 +166,7 @@ void Ground::Draw(
 	}
 	for (auto& it : trees)
 	{
+		if (!it.GetIsEnable()) continue;
 		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
 }
@@ -176,8 +186,25 @@ void Ground::CreateBlock()
 /*-------------------------------------------------*/
 void Ground::CreateTree(Donya::Vector3 _pos)
 {
-	Tree pre(_pos);
-	trees.emplace_back(pre);
+	for (auto& it : trees)
+	{
+		if (!it.GetIsEnable())
+		{
+			it.Init(_pos);
+			break;
+		}
+	}
+}
+
+void Ground::EraseDeadTree(Donya::Vector3 _playerPos)
+{
+	for (auto& it : trees)
+	{
+		if (it.ShouldErase(_playerPos))
+		{
+			it.SetIsEnable(false);
+		}
+	}
 }
 
 
@@ -190,21 +217,14 @@ void Ground::CreateTree(Donya::Vector3 _pos)
 
 std::shared_ptr<Donya::StaticMesh> Tree::pModel{ nullptr };
 /*-------------------------------------------------*/
-//	コンストラクタとデストラクタ
+//	初期化関数
 /*-------------------------------------------------*/
 Tree::Tree()
 {
 	pos = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	velocity = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	scale = Donya::Vector3(0.0f, 0.0f, 0.0f);
-	LoadModel();
-}
-
-Tree::Tree(Donya::Vector3 _pos)
-{
-	pos = _pos;
-	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
-	scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+	isEnable = false;
 	LoadModel();
 }
 
@@ -214,14 +234,25 @@ Tree::~Tree()
 }
 
 /*-------------------------------------------------*/
+//	初期化関数
+/*-------------------------------------------------*/
+void Tree::Init(Donya::Vector3 _pos)
+{
+	pos = _pos;
+	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
+	scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+	LoadModel();
+	isEnable = true;
+}
+
+/*-------------------------------------------------*/
 //	更新関数
 /*-------------------------------------------------*/
 void Tree::Update()
 {
-	//	UseImGui();
-	//	pos += velocity;
+
 }
-#include "Donya/Collision.h"
+
 /*-------------------------------------------------*/
 //	描画関数
 /*-------------------------------------------------*/
