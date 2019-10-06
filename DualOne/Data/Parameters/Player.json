@@ -1,6 +1,6 @@
 {
     "Player": {
-        "cereal_class_version": 1,
+        "cereal_class_version": 2,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -45,6 +45,7 @@
             "x": 0.0,
             "y": 0.0,
             "z": 8.0
-        }
+        },
+        "runSpeedJump": 3.5
     }
 }

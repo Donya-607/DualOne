@@ -9,7 +9,7 @@
 
 #if DEBUG_MODE
 #include "Donya/GeometricPrimitive.h" // For drawing collision.
-#include "Donya/Keyboard.h" // For generate missile trigger.
+#include "Donya/Keyboard.h" // For debug trigger.
 #endif // DEBUG_MODE
 
 #include "Common.h"

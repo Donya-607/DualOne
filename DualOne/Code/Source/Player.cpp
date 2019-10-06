@@ -177,6 +177,7 @@ public:
 	float	jumpStrength;	// Init speed of jump. This is not affected by charge.
 	float	runSpeedUsual;	// Running speed when not charging.
 	float	runSpeedSlow;	// Running speed when charging.
+	float	runSpeedJump;	// Running speed when jumping.
 	AABB	hitBox{};		// Store local-space.
 	Donya::Vector3 generateReflectionOffset;
 	Player::CollideResult reflection;
@@ -210,6 +211,10 @@ private:
 			);
 		}
 		if ( 2 <= version )
+		{
+			archive( CEREAL_NVP( runSpeedJump ) );
+		}
+		if ( 3 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -281,6 +286,7 @@ public:
 
 					ImGui::SliderFloat( u8"手前への速度・通常",		&runSpeedUsual,	0.01f, 64.0f );
 					ImGui::SliderFloat( u8"手前への速度・チャージ中",	&runSpeedSlow,	0.01f, 64.0f );
+					ImGui::SliderFloat( u8"手前への速度・ジャンプ中",	&runSpeedJump,	0.01f, 64.0f );
 
 					ImGui::TreePop();
 				}
@@ -368,7 +374,7 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 1 )
+CEREAL_CLASS_VERSION( PlayerParameter, 2 )
 
 Player::Player() :
 	status( State::Run ),
@@ -692,6 +698,7 @@ void Player::JumpInit()
 
 	auto &param = PlayerParameter::Get();
 	velocity.y = param.jumpStrength * ( 1.0f - param.jumpResistance * charge );
+	velocity.z = -param.runSpeedJump;
 
 	Donya::Sound::Play( Music::PlayerJump );
 }
