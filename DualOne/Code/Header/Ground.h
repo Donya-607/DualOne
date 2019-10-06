@@ -6,6 +6,7 @@
 #include "Donya/GeometricPrimitive.h"
 #include "Donya/StaticMesh.h"
 
+
 class Block
 {
 private:
@@ -40,10 +41,10 @@ private:
 	Donya::Vector3	pos;
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
-	bool			isEnable;
+//	bool			isEnable;
 public:
 	Tree();
-	Tree(Donya::Vector3 _pos);
+//	Tree(Donya::Vector3 _pos);
 	~Tree();
 	void Init(Donya::Vector3 _pos);
 	void Update();
@@ -67,16 +68,16 @@ public:
 	void UseImGui();
 
 	// Getter
-	bool GetIsEnable() { return isEnable; }
+//	bool GetIsEnable() { return isEnable; }
 	// Setter
-	void SetIsEnable(bool _result) { isEnable = _result; }
+//	void SetIsEnable(bool _result) { isEnable = _result; }
 };
 
 class Ground
 {
 	std::vector<Block>	block;
-//	std::vector<Tree>	trees;
-	std::array<Tree, 100> trees;
+	std::vector<Tree>	trees;
+//	std::array<Tree, 100> trees;
 	int					timer;
 public:
 	Ground();
@@ -86,7 +87,7 @@ public:
 	void CreateTree(Donya::Vector3 _pos);
 	void Init();
 	void Uninit();
-	void Update();
+//	void Update();
 	void Update(Donya::Vector3 _playerPos);
 	void Draw
 	(

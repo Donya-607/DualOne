@@ -130,7 +130,7 @@ void Ground::Update(Donya::Vector3 _playerPos)
 	}
 	for (auto& it : trees)
 	{
-		if (!it.GetIsEnable()) continue;
+//		if (!it.GetIsEnable()) continue;
 		it.Update();
 	}
 
@@ -166,7 +166,7 @@ void Ground::Draw(
 	}
 	for (auto& it : trees)
 	{
-		if (!it.GetIsEnable()) continue;
+//		if (!it.GetIsEnable()) continue;
 		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
 }
@@ -186,25 +186,30 @@ void Ground::CreateBlock()
 /*-------------------------------------------------*/
 void Ground::CreateTree(Donya::Vector3 _pos)
 {
-	for (auto& it : trees)
-	{
-		if (!it.GetIsEnable())
-		{
-			it.Init(_pos);
-			break;
-		}
-	}
+//	for (auto& it : trees)
+//	{
+//		if (!it.GetIsEnable())
+//		{
+//			it.Init(_pos);
+//			break;
+//		}
+//	}
+	trees.push_back({});
+	trees.back().Init(_pos);
+
 }
 
 void Ground::EraseDeadTree(Donya::Vector3 _playerPos)
 {
-	for (auto& it : trees)
-	{
-		if (it.ShouldErase(_playerPos))
+	auto eraseItr = std::remove_if
+	(
+		trees.begin(), trees.end(),
+		[&](Tree & element)
 		{
-			it.SetIsEnable(false);
+			return element.ShouldErase(_playerPos);
 		}
-	}
+	);
+	trees.erase(eraseItr, trees.end());
 }
 
 
@@ -224,7 +229,7 @@ Tree::Tree()
 	pos = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	velocity = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	scale = Donya::Vector3(0.0f, 0.0f, 0.0f);
-	isEnable = false;
+//	isEnable = false;
 	LoadModel();
 }
 
@@ -242,7 +247,7 @@ void Tree::Init(Donya::Vector3 _pos)
 	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
 	scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
 	LoadModel();
-	isEnable = true;
+//	isEnable = true;
 }
 
 /*-------------------------------------------------*/
