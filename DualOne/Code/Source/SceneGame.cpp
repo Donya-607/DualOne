@@ -42,7 +42,8 @@ public:
 	Donya::Vector3	cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3	cameraFocus;	// Relative position from the camera.
 	Donya::XInput	controller;
-	std::vector<ReflectedEntity> reflectedEntities;
+	std::vector<Donya::Vector3>		lanePositions;	// Only use when initialize.
+	std::vector<ReflectedEntity>	reflectedEntities;
 public:
 	Impl() :
 		initDistanceOfBoss(),
@@ -55,10 +56,15 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
-		reflectedEntities()
-	{}
+		lanePositions(), reflectedEntities()
+	{
+		constexpr unsigned int DEFAULT_LANE_COUNT = 3;
+		lanePositions.resize( DEFAULT_LANE_COUNT );
+	}
 	~Impl()
 	{
+		lanePositions.clear();
+		lanePositions.shrink_to_fit();
 		reflectedEntities.clear();
 		reflectedEntities.shrink_to_fit();
 	}
@@ -86,11 +92,12 @@ private:
 		}
 		if ( 3 <= version )
 		{
+			archive( CEREAL_NVP( lanePositions ) );
+		}
+		if ( 4 <= version )
+		{
 			/*
-			archive
-			(
-				CEREAL_NVP()
-			);
+			archive( CEREAL_NVP() );
 			*/
 		}
 	}
@@ -106,6 +113,9 @@ public:
 		Serializer seria;
 		seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
 	}
+
+#if USE_IMGUI
+
 	void SaveParameter()
 	{
 		Serializer::Extension bin = Serializer::Extension::BINARY;
@@ -117,9 +127,7 @@ public:
 		seria.Save( bin, binPath.c_str(), SERIAL_ID, *this );
 		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
 	}
-public:
-#if USE_IMGUI
-
+	
 	void UseImGui()
 	{
 		if ( ImGui::BeginIfAllowed() )
@@ -129,12 +137,42 @@ public:
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
-				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -256.0f, 256.0f );
-				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -128.0f, 128.0f );
+				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -512.0f, 512.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -512.0f, 512.0f );
 				ImGui::Text( "" );
 
 				ImGui::SliderFloat( u8"初期のボスとの距離", &initDistanceOfBoss, 0.01f, 512.0f );
 				ImGui::Text( "" );
+
+				if ( ImGui::TreeNode( u8"レーンの設定" ) )
+				{
+					ImGui::Text( u8"０始まり，左から数える。" );
+					ImGui::Text( u8"変更はゲームシーン初期化時に反映されます。" );
+					ImGui::Text( "" );
+					
+					if ( ImGui::Button( u8"レーンを増やす" ) )
+					{
+						lanePositions.push_back( {} );
+					}
+					if ( !lanePositions.empty() )
+					{
+						if ( ImGui::Button( u8"レーンを減らす" ) )
+						{
+							lanePositions.pop_back();
+						}
+					}
+					ImGui::Text( "" );
+
+					const size_t COUNT = lanePositions.size();
+					for ( size_t i = 0; i < COUNT; ++i )
+					{
+						std::string captionU8 = "レーン[" + std::to_string( i ) + "]・座標";
+						captionU8 = Donya::MultiToUTF8( captionU8 );
+						ImGui::SliderFloat3( captionU8.c_str(), &lanePositions[i].x, -256.0f, 256.0f );
+					}
+
+					ImGui::TreePop();
+				}
 
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
@@ -168,7 +206,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 2 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 3 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -189,27 +227,13 @@ void SceneGame::Init()
 
 	pImpl->currentTime.Set( 0, 0, 0 );
 
-	/*
-	Initialize order:
-	1.ground. the player wants lane data.
-	2.player. the camera wants player position.
-	3.others. these are unrelated to anything.
-	*/
-
 	pImpl->ground.Init();
 
-#if DEBUG_MODE
-	std::vector<Donya::Vector3> tmpLanes // should be fetch from "ground".
-	{
-		Donya::Vector3( -32.0f, 0.0f, 0.0f ),
-		Donya::Vector3( 0.0f, 0.0f, 0.0f ),
-		Donya::Vector3( 32.0f, 0.0f, 0.0f )
-	};
-#endif // DEBUG_MODE
-	pImpl->player.Init( tmpLanes );
+	pImpl->player.Init( pImpl->lanePositions );
 
-	pImpl->boss.Init( pImpl->initDistanceOfBoss, tmpLanes );
+	pImpl->boss.Init( pImpl->initDistanceOfBoss, pImpl->lanePositions );
 
+	// The camera's initialize should call after player's initialize.
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
 	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
@@ -293,7 +317,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		pImpl->reflectedEntities.erase( result, pImpl->reflectedEntities.end() );
 	}
 
-	pImpl->boss.Update();
+	pImpl->boss.Update( pImpl->player.GetPos() );
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -457,11 +481,9 @@ void SceneGame::Draw( float elapsedTime )
 
 void SceneGame::DetectCollision()
 {
-#if DEBUG_MODE
-
-	if ( Donya::Keyboard::Trigger( VK_SPACE ) )
+	auto HitToPlayer = [&]( bool canReflection )
 	{
-		auto result = pImpl->player.ReceiveImpact( /* canReflection = */ true );
+		auto result = pImpl->player.ReceiveImpact( canReflection );
 		if ( result.shouldGenerateBullet )
 		{
 			pImpl->reflectedEntities.emplace_back();
@@ -473,9 +495,40 @@ void SceneGame::DetectCollision()
 				result.velocity
 			);
 		}
-	}
+	};
 
-#endif // DEBUG_MODE
+	AABB playerBox = pImpl->player.GetHitBox();
+
+	// Missiles vs Player.
+	{
+		AABB other{};
+		auto &reflectableAttacks = pImpl->boss.FetchReflectableMissiles();
+		for ( const auto &it : reflectableAttacks )
+		{
+			other = it.GetHitBox();
+			if ( AABB::IsHitAABB( other, playerBox ) )
+			{
+				it.HitToOther();
+
+				HitToPlayer( /* canReflection = */ true );
+			}
+		}
+	}
+	// Obstacles vs Player.
+	{
+		AABB other{};
+		auto &obstacles = pImpl->boss.FetchObstacles();
+		for ( const auto &it : obstacles )
+		{
+			other = it.GetHitBox();
+			if ( AABB::IsHitAABB( other, playerBox ) )
+			{
+				it.HitToOther();
+
+				HitToPlayer( /* canReflection = */ false );
+			}
+		}
+	}
 }
 
 Scene::Result SceneGame::ReturnResult()

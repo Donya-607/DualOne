@@ -272,7 +272,10 @@ public:
 
 				if ( ImGui::TreeNode( u8"走行関連" ) )
 				{
-					static int changeLaneFrame = 1;
+					static int changeLaneFrame =
+					( ZeroEqual( changeLaneSpeed ) )
+					? 1
+					: scast<int>( 1.0f / changeLaneSpeed );
 					ImGui::SliderInt( u8"レーン変更にかかる時間（フレーム）", &changeLaneFrame, 1, 120 );
 					changeLaneSpeed = 1.0f / scast<float>( changeLaneFrame );
 
@@ -284,7 +287,10 @@ public:
 
 				if ( ImGui::TreeNode( u8"ジャンプ関連" ) )
 				{
-					static int chargeFrame = 1;
+					static int chargeFrame =
+					( ZeroEqual( chargeSpeed ) )
+					? 1
+					: scast<int>( 1.0f / chargeSpeed );
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 
@@ -574,6 +580,11 @@ void Player::RunInit()
 	status = State::Run;
 
 	velocity.z = -PlayerParameter::Get().runSpeedUsual;
+
+#if DEBUG_MODE
+	// Initial posture.
+	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
+#endif // DEBUG_MODE
 }
 void Player::RunUpdate( Input input )
 {
@@ -600,6 +611,11 @@ void Player::ChargeUpdate( Input input )
 {
 	charge += PlayerParameter::Get().chargeSpeed;
 	charge = std::min( 1.0f, charge );
+
+#if DEBUG_MODE
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
+	posture = tmpRot * posture;
+#endif // DEBUG_MODE
 
 	if ( !input.doCharge )
 	{
@@ -683,10 +699,19 @@ void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
 
+#if DEBUG_MODE
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 24.0f ) );
+	posture = tmpRot * posture;
+#endif // DEBUG_MODE
+
 	if ( pos.y + velocity.y <= 0 )
 	{
 		Landing();
-		RunInit();
+
+		if ( !IsStunning() )
+		{
+			RunInit();
+		}
 	}
 }
 bool Player::IsJumping() const
@@ -713,14 +738,14 @@ void Player::MakeStun()
 	stunTimer = PlayerParameter::Get().stunFrame;
 
 	charge		= 0.0f;
-	velocity.x	= 0.0f;
-	velocity.y	= 0.0f;
 	velocity.z	= 0.0f;
 
 	status = State::Stun;
 }
 void Player::StunUpdate( Input input )
 {
+	HorizontalMove();
+
 	// Use falling process.
 	if ( 0.0f < pos.y )
 	{
@@ -728,7 +753,7 @@ void Player::StunUpdate( Input input )
 	}
 
 #if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
+	Donya::Quaternion tmpRot = Donya::Quaternion::Make( -Donya::Vector3::Right(), ToRadian( 12.0f ) );
 	posture = tmpRot * posture;
 #endif // DEBUG_MODE
 
@@ -742,6 +767,10 @@ void Player::StunUpdate( Input input )
 		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
 	#endif // DEBUG_MODE
 	}
+}
+bool Player::IsStunning() const
+{
+	return ( status == State::Stun ) ? true : false;
 }
 
 #if USE_IMGUI

@@ -1,0 +1,44 @@
+{
+    "BossAttackParameter": {
+        "cereal_class_version": 1,
+        "counterMax": 3600,
+        "intervals": {
+            "value0": 30,
+            "value1": 25
+        },
+        "obstaclePatterns": [
+            [
+                1,
+                0,
+                0
+            ],
+            [
+                0,
+                1,
+                0
+            ],
+            [
+                0,
+                0,
+                1
+            ],
+            [
+                1,
+                1,
+                0
+            ],
+            [
+                1,
+                0,
+                1
+            ],
+            [
+                0,
+                1,
+                1
+            ]
+        ],
+        "untilAttackFrame": 60,
+        "reuseFrame": 60
+    }
+}

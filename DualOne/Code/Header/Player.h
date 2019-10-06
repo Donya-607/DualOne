@@ -169,6 +169,7 @@ private:
 
 	void MakeStun();
 	void StunUpdate( Input input );
+	bool IsStunning() const;
 
 
 #if USE_IMGUI

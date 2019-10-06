@@ -1,7 +1,7 @@
 {
-    "Missile": {
-        "cereal_class_version": 1,
-        "waitFrame": 0,
+    "Obstacle": {
+        "cereal_class_version": 0,
+        "decelSpeed": 0.0,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -12,16 +12,10 @@
             },
             "size": {
                 "x": 8.0,
-                "y": 64.0,
+                "y": 8.0,
                 "z": 8.0
             },
             "exist": true
-        },
-        "velocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": -10.0
-        },
-        "aliveFrame": 120
+        }
     }
 }

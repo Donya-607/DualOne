@@ -1,6 +1,6 @@
 {
     "Game": {
-        "cereal_class_version": 2,
+        "cereal_class_version": 3,
         "lightDirection": {
             "cereal_class_version": 0,
             "x": 0.0,
@@ -17,6 +17,23 @@
             "y": 0.0,
             "z": 128.0
         },
-        "initDistanceOfBoss": 256.0
+        "initDistanceOfBoss": 256.0,
+        "lanePositions": [
+            {
+                "x": -32.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "x": 32.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        ]
     }
 }
