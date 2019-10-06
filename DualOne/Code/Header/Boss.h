@@ -198,11 +198,14 @@ public:
 		ATTACK_KIND_COUNT
 	};
 public:
+	int maxHP;				// 1-based.
 	int counterMax;
 	int untilAttackFrame;	// Frame of begin the attack.
-	int reuseFrame;
-	std::array<int, ATTACK_KIND_COUNT> intervals;
-	std::vector<std::vector<int>> obstaclePatterns;	// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
+	int resetWaitFrame;		// Use when reset the count.
+	// int reuseFrame;
+	std::vector<std::array<int, ATTACK_KIND_COUNT>> intervalsPerHP;		// Each attacks per HP(0-based).
+	std::vector<std::array<int, ATTACK_KIND_COUNT>> reuseFramesPerHP;	// Each attacks per HP(0-based).
+	std::vector<std::vector<int>> obstaclePatterns;					// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
 private:
 	AttackParam();
 public:
@@ -212,10 +215,27 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, std::uint32_t version )
 	{
+		if ( 2 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( maxHP ),
+				CEREAL_NVP( counterMax ),
+				CEREAL_NVP( untilAttackFrame ),
+				CEREAL_NVP( resetWaitFrame ),
+				CEREAL_NVP( intervalsPerHP ),
+				CEREAL_NVP( reuseFramesPerHP ),
+				CEREAL_NVP( obstaclePatterns )
+			);
+
+			return;
+		}
+		// else
+
 		archive
 		(
 			CEREAL_NVP( counterMax ),
-			CEREAL_NVP( intervals ),
+			// CEREAL_NVP( intervals ),
 			CEREAL_NVP( obstaclePatterns )
 		);
 
@@ -223,13 +243,9 @@ private:
 		{
 			archive
 			(
-				CEREAL_NVP( untilAttackFrame ),
-				CEREAL_NVP( reuseFrame )
+				CEREAL_NVP( untilAttackFrame )
+				// CEREAL_NVP( reuseFrame )
 			);
-		}
-		if ( 2 <= version )
-		{
-			// archive( CEREAL_NVP( x ) );
 		}
 	}
 	static constexpr const char *SERIAL_ID = "BossAttackParameter";
@@ -245,10 +261,11 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( AttackParam, 1 )
+CEREAL_CLASS_VERSION( AttackParam, 2 )
 
 class Boss
 {
+	int									currentHP;		// 1-based, 0 express the dead.
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 
@@ -356,4 +373,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 3 )
+CEREAL_CLASS_VERSION( Boss, 4 )

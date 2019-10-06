@@ -482,13 +482,21 @@ void Obstacle::HitToOther() const
 #pragma region AttackParam
 
 AttackParam::AttackParam() :
-	counterMax( 0 ), untilAttackFrame( 0 ), reuseFrame( 0 ),
-	intervals(), obstaclePatterns()
-{}
+	maxHP( 1 ), counterMax( 0 ), untilAttackFrame( 0 ), resetWaitFrame( 0 ),
+	intervalsPerHP(), reuseFramesPerHP(),
+	obstaclePatterns()
+{
+	intervalsPerHP.resize( maxHP );
+	reuseFramesPerHP.resize( maxHP );
+}
 AttackParam::~AttackParam()
 {
 	obstaclePatterns.clear();
 	obstaclePatterns.shrink_to_fit();
+	intervalsPerHP.clear();
+	intervalsPerHP.shrink_to_fit();
+	reuseFramesPerHP.clear();
+	reuseFramesPerHP.shrink_to_fit();
 }
 
 void AttackParam::LoadParameter( bool isBinary )
@@ -522,9 +530,18 @@ void AttackParam::UseImGui()
 	{
 		if ( ImGui::TreeNode( u8"ボスの攻撃パターン" ) )
 		{
+			int oldHP = maxHP;
+			ImGui::SliderInt( u8"体力の最大値（１始まり）", &maxHP, 1, 32 );
+			if ( oldHP != maxHP )
+			{
+				intervalsPerHP.resize( maxHP );
+				reuseFramesPerHP.resize( maxHP );
+			}
+			ImGui::Text( "" );
+
 			ImGui::SliderInt( u8"攻撃条件に使うカウンタの最大値", &counterMax, 100, 10240 );
 			ImGui::SliderInt( u8"攻撃開始までの待機時間（フレーム）", &untilAttackFrame, 1, 2048 );
-			ImGui::SliderInt( u8"攻撃後の待機時間（フレーム）", &reuseFrame, 1, 2048 );
+			ImGui::SliderInt( u8"リセット時の待機時間（フレーム）", &resetWaitFrame, 1, 2048 );
 
 			static int targetNo{};
 			std::string attackNameU8{};
@@ -538,7 +555,22 @@ void AttackParam::UseImGui()
 			std::string caption{ u8"攻撃の種類：" };
 			ImGui::SliderInt( ( caption + attackNameU8 ).c_str(), &targetNo, 0, AttackKind::ATTACK_KIND_COUNT - 1 );
 
-			ImGui::SliderInt( u8"攻撃の間隔（フレーム）", &intervals[targetNo], 1, 999 );
+			if ( ImGui::TreeNode( ( attackNameU8 + u8"・ＨＰ毎のパターン" ).c_str() ) )
+			{
+				for ( int i = maxHP - 1; 0 <= i; --i )
+				{
+					std::string strHP = "HP[" + std::to_string( i + 1 ) + "] : ";
+					strHP = Donya::MultiToUTF8( strHP );
+
+					const std::string STR_INTERVAL{ u8"攻撃の間隔（フレーム）" };
+					const std::string STR_WAIT{ u8"攻撃後の待機時間（フレーム）" };
+
+					ImGui::SliderInt( ( strHP + STR_INTERVAL ).c_str(), &intervalsPerHP[i][targetNo], 1, 2048 );
+					ImGui::SliderInt( ( strHP + STR_WAIT ).c_str(), &reuseFramesPerHP[i][targetNo], 1, 2048 );
+				}
+
+				ImGui::TreePop();
+			}
 
 			if ( ImGui::TreeNode( u8"障害物のパターン" ) )
 			{
@@ -628,6 +660,7 @@ void AttackParam::UseImGui()
 #pragma region Boss
 
 Boss::Boss() :
+	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
 	maxDistanceToTarget(),
 	hitBox(),
@@ -659,6 +692,8 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Obstacle::LoadModel();
 
 	AttackParam::Get().LoadParameter();
+
+	currentHP = AttackParam::Get().maxHP;
 
 	waitReuseFrame = AttackParam::Get().untilAttackFrame;
 
@@ -827,9 +862,13 @@ void Boss::LotteryAttack( const Donya::Vector3 &wsAttackTargetPos )
 	const auto &PARAM = AttackParam::Get();
 
 	std::vector<int> chosenIndices{};
-	for ( int i = 0; i < COUNT; ++i )
+	for ( int i = 0; i < COUNT; ++i )	// This "i" is linking to enum of AttackParam::AttackKind.
 	{
-		if ( attackTimer % PARAM.intervals[i] == 0 )
+		auto &interval = PARAM.intervalsPerHP[currentHP - 1][i];
+		if ( interval == 0 ) { continue; }
+		// else
+
+		if ( attackTimer % interval == 0 )
 		{
 			chosenIndices.emplace_back( i );
 		}
@@ -860,7 +899,7 @@ void Boss::LotteryAttack( const Donya::Vector3 &wsAttackTargetPos )
 		default: break;
 		}
 
-		waitReuseFrame = PARAM.reuseFrame;
+		waitReuseFrame = PARAM.reuseFramesPerHP[currentHP - 1][useAttackNo];
 	}
 
 	if ( PARAM.counterMax <= attackTimer )
@@ -919,6 +958,8 @@ void Boss::GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos )
 {
 	const auto &PATTERNS = AttackParam::Get().obstaclePatterns;
 	const size_t PATTERN_COUNT = PATTERNS.size();
+	if ( !PATTERN_COUNT ) { return; }
+	// else
 
 	const int RANDOM = Donya::Random::GenerateInt( 0, PATTERN_COUNT );
 	
@@ -1034,6 +1075,9 @@ void Boss::UseImGui()
 
 			if ( ImGui::TreeNode( u8"身体性能" ) )
 			{
+				ImGui::Text( u8"最大体力の設定は「攻撃パターン」欄にあります" );
+				ImGui::Text( "" );
+
 				ImGui::SliderFloat3( u8"移動速度", &velocity.x, 0.1f, 32.0f );
 				if ( 0.0f < velocity.z ) { velocity.z *= -1.0f; }
 
