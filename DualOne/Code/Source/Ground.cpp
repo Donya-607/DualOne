@@ -31,7 +31,7 @@ void Block::Init()
 	cube.Init();
 	pos = Donya::Vector3(0.0f, 0.0f, -10.0f);
 	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
-	scale = Donya::Vector3(48.5f, 1.0f, 1000.0f);
+	scale = Donya::Vector3(100.0f, 1.0f, 1000.0f);
 }
 /*-------------------------------------------------*/
 //	çXêVä÷êî
@@ -106,7 +106,7 @@ Ground::~Ground()
 void Ground::Init()
 {
 	timer = 0;
-	for (auto& it : block)
+	for (auto& it : blocks)
 	{
 		it.Init();
 	}
@@ -124,7 +124,7 @@ void Ground::Uninit()
 /*-------------------------------------------------*/
 void Ground::Update(Donya::Vector3 _playerPos)
 {
-	for (auto& it : block)
+	for (auto& it : blocks)
 	{
 		it.Update();
 	}
@@ -160,7 +160,7 @@ void Ground::Draw(
 	bool isEnableFill
 )
 {
-	for (auto& it : block)
+	for (auto& it : blocks)
 	{
 		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
@@ -178,7 +178,7 @@ void Ground::CreateBlock()
 {
 	Block pre;
 	pre.Init();
-	block.emplace_back(pre);
+	blocks.emplace_back(pre);
 }
 
 /*-------------------------------------------------*/
