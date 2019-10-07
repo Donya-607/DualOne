@@ -642,6 +642,8 @@ void Beam::Update( float wsBasePositionZ )
 	case Beam::State::Wait:		WaitUpdate();	break;
 	default: break;
 	}
+
+	CalcBeamDestination();
 }
 
 void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -671,7 +673,7 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	// pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 
-#if DEBUG_MODE
+// #if DEBUG_MODE
 
 	if ( Common::IsShowCollision() )
 	{
@@ -679,9 +681,12 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
 
 		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
-		XMMATRIX colR = XMMatrixRotationRollPitchYaw( 0.0f, beamAngle, 0.0f );
+
+		Donya::Quaternion rotQ = Donya::Quaternion::Make( -Donya::Vector3::Right(), beamAngle );
+		XMMATRIX colR = Matrix( rotQ.RequireRotationMatrix() );
+		
 		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
-		XMMATRIX colW = colS * colT;
+		XMMATRIX colW = colS * colR * colT;
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
@@ -704,13 +709,19 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	}
 
-#endif // DEBUG_MODE
+// #endif // DEBUG_MODE
 }
 
 AABB Beam::GetHitBox() const
 {
 	AABB wsHitBox = hitBox;
-	wsHitBox.pos += beamDestPos;
+	wsHitBox.pos += basePos;
+
+	Donya::Vector3 distance = beamDestPos - basePos;
+	wsHitBox.pos += distance * 0.5f;		// Store center-position.
+
+	wsHitBox.size.z += beamLength * 0.5f;	// Store half-size.
+
 	return wsHitBox;
 }
 
@@ -722,10 +733,10 @@ bool Beam::ShouldErase() const
 void Beam::AngleUpdate()
 {
 	using namespace Donya::Easing;
-	float ease = Ease( Kind::Linear, Type::In, easeParam );
+	float ease = Ease( Kind::Quadratic, Type::In, easeParam );
 	easeParam += angleIncreaseSpeed;
 
-	beamAngle = ( beamAngleEnd - beamAngleBegin ) * ease;
+	beamAngle = beamAngleBegin + ( beamAngleEnd - beamAngleBegin ) * ease;
 
 	if ( 1.0f <= easeParam )
 	{
@@ -970,6 +981,8 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Missile::LoadModel();
 	Obstacle::LoadParameter();
 	Obstacle::LoadModel();
+	Beam::LoadParameter();
+	Beam::LoadModel();
 
 	AttackParam::Get().LoadParameter();
 
@@ -1007,6 +1020,7 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 	UseImGui();
 	Missile::UseImGui();
 	Obstacle::UseImGui();
+	Beam::UseImGui();
 	AttackParam::Get().UseImGui();
 
 #endif // USE_IMGUI
@@ -1019,6 +1033,7 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 
 	UpdateMissiles();
 	UpdateObstacles();	// This method must call after we move(because doing collision-detection between myself and obstacle at it).
+	UpdateBeams();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -1346,7 +1361,7 @@ void Boss::UpdateBeams()
 {
 	for ( auto &it : beams )
 	{
-		it.Update( pos.z );
+		it.Update( pos.z + beamOffset.z );
 	}
 
 	auto eraseItr = std::remove_if
@@ -1436,7 +1451,7 @@ void Boss::UseImGui()
 			{
 				ImGui::SliderFloat3( u8"ミサイル発射位置のオフセット（相対）", &missileOffset.x, -128.0f, 128.0f );
 				ImGui::SliderFloat3( u8"障害物設置位置のオフセット（相対）", &obstacleOffset.x, -128.0f, 128.0f );
-				ImGui::SliderFloat3( u8"ビーム設置位置のオフセット（相対）", &obstacleOffset.x, -128.0f, 128.0f );
+				ImGui::SliderFloat3( u8"ビーム設置位置のオフセット（相対）", &beamOffset.x, -128.0f, 128.0f );
 
 				ImGui::TreePop();
 			}

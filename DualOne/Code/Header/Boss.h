@@ -408,6 +408,10 @@ private:
 		}
 		if ( 4 <= version )
 		{
+			archive( CEREAL_NVP( beamOffset ) );
+		}
+		if ( 5 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -473,4 +477,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 4 )
+CEREAL_CLASS_VERSION( Boss, 5 )
