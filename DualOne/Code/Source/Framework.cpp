@@ -519,30 +519,30 @@ void Framework::DebugShowInformation()
 			ImGui::TreePop();
 		}
 
-		if ( ImGui::TreeNode( "Screen Shake Test" ) )
+		if ( ImGui::TreeNode( u8"画面シェイクテスト" ) )
 		{
-			static float power = 20.0f;
-			static float decel = 5.0f;
-			static float time = 1.0f;
-			static float interval = 0.05f;
+			static float power		= 20.0f;
+			static float decel		= 5.0f;
+			static float time		= 1.0f;
+			static float interval	= 0.05f;
 			static Donya::ScreenShake::Kind kind = Donya::ScreenShake::Kind::MOMENT;
 
 			ImGui::Text( "now X : %f\n", Donya::ScreenShake::GetX() );
 			ImGui::Text( "now Y : %f\n", Donya::ScreenShake::GetY() );
 
-			ImGui::SliderFloat( "Power", &power, 6.0f, 128.0f );
-			ImGui::SliderFloat( "Deceleration", &decel, 0.2f, 64.0f );
-			ImGui::SliderFloat( "ShakeTime", &time, 0.1f, 10.0f );
-			ImGui::SliderFloat( "Interval", &interval, 0.1f, 3.0f );
-			if ( ImGui::Button( "Toggle the kind" ) )
+			ImGui::SliderFloat( u8"つよさ", &power, 0.1f, 128.0f );
+			ImGui::SliderFloat( u8"弱まり力（瞬間のみ有効）", &decel, 0.05f, 64.0f );
+			ImGui::SliderFloat( u8"揺れ時間（永続のみ有効）", &time, 0.1f, 10.0f );
+			ImGui::SliderFloat( u8"揺れの間隔", &interval, 0.0001f, 1.5f );
+			if ( ImGui::Button( u8"種類を切り替える" ) )
 			{
 				kind = ( kind == Donya::ScreenShake::MOMENT )
-					? Donya::ScreenShake::PERMANENCE
-					: Donya::ScreenShake::MOMENT;
+				? Donya::ScreenShake::PERMANENCE
+				: Donya::ScreenShake::MOMENT;
 			}
-			ImGui::Text( "Now Kind : %s", ( kind == Donya::ScreenShake::MOMENT ) ? "Moment" : "Permanence" );
+			ImGui::Text( u8"今の種類 : %s", ( kind == Donya::ScreenShake::MOMENT ) ? u8"瞬間" : u8"永続" );
 
-			if ( ImGui::Button( "Set Shake X" ) )
+			if ( ImGui::Button( u8"揺らす：Ｘ" ) )
 			{
 				if ( Donya::Keyboard::Shifts() )
 				{
@@ -553,7 +553,7 @@ void Framework::DebugShowInformation()
 					Donya::ScreenShake::SetX( kind, power, decel, time, interval );
 				}
 			}
-			if ( ImGui::Button( "Set Shake Y" ) )
+			if ( ImGui::Button( u8"揺らす：Ｙ" ) )
 			{
 				if ( Donya::Keyboard::Shifts() )
 				{
@@ -564,7 +564,7 @@ void Framework::DebugShowInformation()
 					Donya::ScreenShake::SetY( kind, power, decel, time, interval );
 				}
 			}
-			if ( ImGui::Button( "Stop Shake" ) )
+			if ( ImGui::Button( u8"ストップ" ) )
 			{
 				Donya::ScreenShake::StopX();
 				Donya::ScreenShake::StopY();

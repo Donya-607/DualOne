@@ -9,15 +9,12 @@
 #include "cereal/archives/json.hpp"
 #include "cereal/types/vector.hpp"
 
-#include "Donya/Blend.h"
 #include "Donya/GamepadXInput.h"
 #include "Donya/Keyboard.h"
-#include "Donya/Random.h"
 #include "Donya/Serializer.h"
 #include "Donya/Sound.h"
 #include "Donya/Sprite.h"
 #include "Donya/Useful.h"
-#include "Donya/UseImgui.h"
 #include "Donya/Vector.h"
 
 #include "Common.h"
@@ -32,8 +29,10 @@ class SceneTitle::Impl
 {
 public:
 	size_t	sprFont;
+	Donya::XInput	controller;
 public:
-	Impl() : sprFont( NULL )
+	Impl() : sprFont( NULL ),
+		controller( Donya::Gamepad::PadNumber::PAD_1 )
 	{}
 private:
 	friend class cereal::access;
@@ -68,6 +67,15 @@ void SceneTitle::Uninit()
 
 Scene::Result SceneTitle::Update( float elapsedTime )
 {
+	pImpl->controller.Update();
+
+	if ( IsDecisionTriggered() && !Fader::Get().IsExist() )
+	{
+		Donya::Sound::Play( Music::ItemDecision );
+
+		StartFade();
+	}
+
 	return ReturnResult();
 }
 
@@ -93,6 +101,23 @@ void SceneTitle::Draw( float elapsedTime )
 	);
 }
 
+bool SceneTitle::IsDecisionTriggered() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Trigger( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
+}
+
+void SceneTitle::StartFade()
+{
+	Fader::Configuration config{};
+	config.type			= Fader::Type::Gradually;
+	config.closeFrame	= 20;
+	config.parameter	= scast<unsigned int>( Donya::Sprite::Color::BLACK );
+	Fader::Get().StartFadeOut( config );
+}
+
 Scene::Result SceneTitle::ReturnResult()
 {
 #if DEBUG_MODE
@@ -104,25 +129,15 @@ Scene::Result SceneTitle::ReturnResult()
 		return change;
 	}
 	// else
-	if ( Donya::Keyboard::Trigger( VK_RETURN ) || Donya::Keyboard::Trigger( 'Z' ) )
-	{
-		Donya::Sound::Play( Music::ItemDecision );
+#endif // DEBUG_MODE
 
+	if ( Fader::Get().IsClosed() )
+	{
 		Scene::Result change{};
 		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
 		change.sceneType = Scene::Type::Game;
 		return change;
 	}
-	// else
-#endif // DEBUG_MODE
-
-	//if ( pImpl->changeScene )
-	//{
-	//	Scene::Result change{};
-	//	change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
-	//	change.sceneType = Scene::Type::Game;
-	//	return change;
-	//}
 	// else
 
 	Scene::Result noop{ Scene::Request::NONE, Scene::Type::Null };

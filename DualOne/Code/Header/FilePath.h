@@ -19,5 +19,10 @@ enum class ModelAttribute
 	Box,
 	Player,
 	ReflectedEntity,
+	BossBody,
+	BossFoot,
+	BossRoll,
+	Missile,
+	Obstacle,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

@@ -159,8 +159,9 @@ void ScenePause::StartFade()
 Scene::Result ScenePause::ReturnResult()
 {
 	// Resume.
-	bool chooseResume = ( !ShouldUseFade( choice ) && IsDecisionTriggered() );
-	if ( Donya::Keyboard::Trigger( 'P' ) || controller.Trigger( Donya::Gamepad::Button::START ) || chooseResume )
+	bool chooseResume	= ( !ShouldUseFade( choice ) && IsDecisionTriggered() );
+	bool pushResume		= ( Donya::Keyboard::Trigger( 'P' ) || controller.Trigger( Donya::Gamepad::Button::START ) || controller.Trigger( Donya::Gamepad::Button::SELECT ) || chooseResume );
+	if ( pushResume && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 
@@ -183,6 +184,11 @@ Scene::Result ScenePause::ReturnResult()
 		if ( choice == Choice::ReTry )
 		{
 			change.sceneType = Scene::Type::Game;
+		}
+		else
+		{
+			_ASSERT_EXPR( 0, L"Error : You chosen scene is invalid !" );
+			change.sceneType = Scene::Type::Logo; // Fail-safe
 		}
 
 		return change;
