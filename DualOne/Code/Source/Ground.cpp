@@ -3,6 +3,7 @@
 #include "Donya/Loader.h"
 #include "Donya/UseImgui.h"
 #include "Donya/Collision.h"
+#include "Donya/Random.h"
 
 #include "FilePath.h"
 
@@ -140,10 +141,10 @@ void Ground::Update(Donya::Vector3 _playerPos)
 		CreateBlock();
 
 		Donya::Vector3 randPos;
-		randPos.x = rand() % 1000 - 500;
+		randPos.x = Donya::Random::GenerateFloat( -500.0f, 500.0f );
 		randPos.y = 0.0f;
 		randPos.z = _playerPos.z - 200.0f;
-		CreateTree(randPos);
+		// CreateTree(randPos);
 	}
 
 	EraseDeadTree(_playerPos);
