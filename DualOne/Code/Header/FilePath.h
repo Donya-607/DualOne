@@ -22,5 +22,6 @@ enum class ModelAttribute
 	Boss,
 	Missile,
 	Tree,
+	Obstacle,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

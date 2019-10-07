@@ -14,7 +14,7 @@ private:
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
 	Donya::Geometric::Cube cube;
-
+	Donya::Geometric::TextureBoard billBoard;
 public:
 	Block();
 	~Block();
@@ -75,7 +75,8 @@ public:
 
 class Ground
 {
-	std::vector<Block>	block;
+	std::vector<Block>	blocks;
+//	std::array<Block*, 3> blocks;
 	std::vector<Tree>	trees;
 //	std::array<Tree, 100> trees;
 	int					timer;
