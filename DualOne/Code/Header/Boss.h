@@ -279,7 +279,9 @@ class Boss
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Quaternion					posture;
 
-	std::shared_ptr<Donya::StaticMesh>	pModel;
+	std::shared_ptr<Donya::StaticMesh>	pModelBody;
+	std::shared_ptr<Donya::StaticMesh>	pModelFoot;
+	std::shared_ptr<Donya::StaticMesh>	pModelRoll;
 
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 	std::vector<Missile>				missiles;

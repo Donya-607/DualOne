@@ -666,12 +666,14 @@ Boss::Boss() :
 	hitBox(),
 	pos(), velocity(), missileOffset(), obstacleOffset(),
 	posture(),
-	pModel( nullptr ),
+	pModelBody( nullptr ), pModelFoot( nullptr ), pModelRoll( nullptr ),
 	lanePositions(), missiles(), obstacles()
 {}
 Boss::~Boss()
 {
-	pModel.reset();
+	pModelBody.reset();
+	pModelFoot.reset();
+	pModelRoll.reset();
 
 	lanePositions.clear();
 	lanePositions.shrink_to_fit();
@@ -760,7 +762,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
-	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+	pModelBody->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+	pModelFoot->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+	pModelRoll->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 
 	for ( const auto &it : missiles )
 	{
@@ -825,14 +829,32 @@ const std::vector<Obstacle> &Boss::FetchObstacles() const
 
 void Boss::LoadModel()
 {
-	Donya::Loader loader{};
-	bool result = loader.Load( GetModelPath( ModelAttribute::Boss ), nullptr );
+	constexpr size_t MODEL_COUNT = 3;
+	const std::array<std::shared_ptr<Donya::StaticMesh> *, MODEL_COUNT> LOAD_MODELS
+	{
+		&pModelBody,
+		&pModelFoot,
+		&pModelRoll
+	};
+	const std::array<std::string, MODEL_COUNT> LOAD_PATHS
+	{
+		GetModelPath( ModelAttribute::BossBody ),
+		GetModelPath( ModelAttribute::BossFoot ),
+		GetModelPath( ModelAttribute::BossRoll )
+	};
 
-	_ASSERT_EXPR( result, L"Failed : Load boss model." );
+	for ( size_t i = 0; i < MODEL_COUNT; ++i )
+	{
+		Donya::Loader loader{};
+		bool result = loader.Load( LOAD_PATHS[i], nullptr );
 
-	pModel = Donya::StaticMesh::Create( loader );
+		_ASSERT_EXPR( result, L"Failed : Load boss model." );
 
-	_ASSERT_EXPR( pModel, L"Failed : Load boss model." );
+		auto &loadModel = *( LOAD_MODELS[i] );
+		loadModel = Donya::StaticMesh::Create( loader );
+
+		_ASSERT_EXPR( loadModel, L"Failed : Load boss model." );
+	}
 }
 
 void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )

@@ -19,7 +19,9 @@ enum class ModelAttribute
 	Box,
 	Player,
 	ReflectedEntity,
-	Boss,
+	BossBody,
+	BossFoot,
+	BossRoll,
 	Missile,
 	Obstacle,
 };
