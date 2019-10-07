@@ -1,11 +1,54 @@
 {
     "BossAttackParameter": {
-        "cereal_class_version": 1,
+        "cereal_class_version": 2,
+        "maxHP": 5,
         "counterMax": 3600,
-        "intervals": {
-            "value0": 30,
-            "value1": 25
-        },
+        "untilAttackFrame": 60,
+        "resetWaitFrame": 60,
+        "intervalsPerHP": [
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            }
+        ],
+        "reuseFramesPerHP": [
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            },
+            {
+                "value0": 30,
+                "value1": 30
+            }
+        ],
         "obstaclePatterns": [
             [
                 1,
@@ -37,8 +80,6 @@
                 1,
                 1
             ]
-        ],
-        "untilAttackFrame": 60,
-        "reuseFrame": 60
+        ]
     }
 }

@@ -20,14 +20,14 @@ class Missile
 private:
 	static Missile parameter;
 	static std::shared_ptr<Donya::StaticMesh>	pModel;
-	static constexpr const char* SERIAL_ID = "Missile";
+	static constexpr const char *SERIAL_ID = "Missile";
 public:
 	/// <summary>
 	/// Load model if has not loaded.
 	/// </summary>
 	static void LoadModel();
 
-	static void LoadParameter(bool isBinary = true);
+	static void LoadParameter( bool isBinary = true );
 
 #if USE_IMGUI
 
@@ -52,35 +52,35 @@ public:
 private:
 	friend class cereal::access;
 	template<class Archive>
-	void serialize(Archive& archive, std::uint32_t version)
+	void serialize( Archive &archive, std::uint32_t version )
 	{
 		archive
 		(
-			CEREAL_NVP(waitFrame),
-			CEREAL_NVP(hitBox),
-			CEREAL_NVP(velocity)
+			CEREAL_NVP( waitFrame ),
+			CEREAL_NVP( hitBox ),
+			CEREAL_NVP( velocity )
 		);
-		if (1 <= version)
+		if ( 1 <= version )
 		{
-			archive(CEREAL_NVP(aliveFrame));
+			archive( CEREAL_NVP( aliveFrame ) );
 		}
-		if (2 <= version)
+		if ( 2 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
 public:
-	void Init(const Donya::Vector3& wsAppearPos);
+	void Init( const Donya::Vector3 &wsAppearPos );
 	void Uninit();
 
 	void Update();
 
 	void Draw
 	(
-		const DirectX::XMFLOAT4X4& matView,
-		const DirectX::XMFLOAT4X4& matProjection,
-		const DirectX::XMFLOAT4& lightDirection,
-		const DirectX::XMFLOAT4& cameraPosition,
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
 		bool isEnableFill = true
 	) const;
 public:
@@ -103,21 +103,21 @@ private:
 	void Move();
 };
 
-CEREAL_CLASS_VERSION(Missile, 1)
+CEREAL_CLASS_VERSION( Missile, 1 )
 
 class Obstacle
 {
 private:
 	static Obstacle parameter;
 	static std::shared_ptr<Donya::StaticMesh>	pModel;
-	static constexpr const char* SERIAL_ID = "Obstacle";
+	static constexpr const char *SERIAL_ID = "Obstacle";
 public:
 	/// <summary>
 	/// Load model if has not loaded.
 	/// </summary>
 	static void LoadModel();
 
-	static void LoadParameter(bool isBinary = true);
+	static void LoadParameter( bool isBinary = true );
 
 #if USE_IMGUI
 
@@ -139,30 +139,30 @@ public:
 private:
 	friend class cereal::access;
 	template<class Archive>
-	void serialize(Archive& archive, std::uint32_t version)
+	void serialize( Archive &archive, std::uint32_t version )
 	{
 		archive
 		(
-			CEREAL_NVP(decelSpeed),
-			CEREAL_NVP(hitBox)
+			CEREAL_NVP( decelSpeed ),
+			CEREAL_NVP( hitBox )
 		);
-		if (1 <= version)
+		if ( 1 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
 public:
-	void Init(const Donya::Vector3& wsAppearPos);
+	void Init( const Donya::Vector3 &wsAppearPos );
 	void Uninit();
 
 	void Update();
 
 	void Draw
 	(
-		const DirectX::XMFLOAT4X4& matView,
-		const DirectX::XMFLOAT4X4& matProjection,
-		const DirectX::XMFLOAT4& lightDirection,
-		const DirectX::XMFLOAT4& cameraPosition,
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
 		bool isEnableFill = true
 	) const;
 public:
@@ -184,7 +184,7 @@ public:
 private:
 };
 
-CEREAL_CLASS_VERSION(Obstacle, 0)
+CEREAL_CLASS_VERSION( Obstacle, 0 )
 
 class AttackParam : public Donya::Singleton<AttackParam>
 {
@@ -198,11 +198,14 @@ public:
 		ATTACK_KIND_COUNT
 	};
 public:
+	int maxHP;				// 1-based.
 	int counterMax;
 	int untilAttackFrame;	// Frame of begin the attack.
-	int reuseFrame;
-	std::array<int, ATTACK_KIND_COUNT> intervals;
-	std::vector<std::vector<int>> obstaclePatterns;	// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
+	int resetWaitFrame;		// Use when reset the count.
+	// int reuseFrame;
+	std::vector<std::array<int, ATTACK_KIND_COUNT>> intervalsPerHP;		// Each attacks per HP(0-based).
+	std::vector<std::array<int, ATTACK_KIND_COUNT>> reuseFramesPerHP;	// Each attacks per HP(0-based).
+	std::vector<std::vector<int>> obstaclePatterns;					// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
 private:
 	AttackParam();
 public:
@@ -210,31 +213,44 @@ public:
 private:
 	friend class cereal::access;
 	template<class Archive>
-	void serialize(Archive& archive, std::uint32_t version)
+	void serialize( Archive &archive, std::uint32_t version )
 	{
-		archive
-		(
-			CEREAL_NVP(counterMax),
-			CEREAL_NVP(intervals),
-			CEREAL_NVP(obstaclePatterns)
-		);
-
-		if (1 <= version)
+		if ( 2 <= version )
 		{
 			archive
 			(
-				CEREAL_NVP(untilAttackFrame),
-				CEREAL_NVP(reuseFrame)
+				CEREAL_NVP( maxHP ),
+				CEREAL_NVP( counterMax ),
+				CEREAL_NVP( untilAttackFrame ),
+				CEREAL_NVP( resetWaitFrame ),
+				CEREAL_NVP( intervalsPerHP ),
+				CEREAL_NVP( reuseFramesPerHP ),
+				CEREAL_NVP( obstaclePatterns )
+			);
+
+			return;
+		}
+		// else
+
+		archive
+		(
+			CEREAL_NVP( counterMax ),
+			// CEREAL_NVP( intervals ),
+			CEREAL_NVP( obstaclePatterns )
+		);
+
+		if ( 1 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( untilAttackFrame )
+				// CEREAL_NVP( reuseFrame )
 			);
 		}
-		if (2 <= version)
-		{
-			// archive( CEREAL_NVP( x ) );
-		}
 	}
-	static constexpr const char* SERIAL_ID = "BossAttackParameter";
+	static constexpr const char *SERIAL_ID = "BossAttackParameter";
 public:
-	void LoadParameter(bool isBinary = true);
+	void LoadParameter( bool isBinary = true );
 
 #if USE_IMGUI
 
@@ -245,10 +261,11 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION(AttackParam, 1)
+CEREAL_CLASS_VERSION( AttackParam, 2 )
 
 class Boss
 {
+	int									currentHP;		// 1-based, 0 express the dead.
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 
@@ -262,7 +279,9 @@ class Boss
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Quaternion					posture;
 
-	std::shared_ptr<Donya::StaticMesh>	pModel;
+	std::shared_ptr<Donya::StaticMesh>	pModelBody;
+	std::shared_ptr<Donya::StaticMesh>	pModelFoot;
+	std::shared_ptr<Donya::StaticMesh>	pModelRoll;
 
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 	std::vector<Missile>				missiles;
@@ -273,43 +292,43 @@ public:
 private:
 	friend class cereal::access;
 	template<class Archive>
-	void serialize(Archive& archive, std::uint32_t version)
+	void serialize( Archive &archive, std::uint32_t version )
 	{
 		archive
 		(
-			CEREAL_NVP(hitBox),
-			CEREAL_NVP(velocity)
+			CEREAL_NVP( hitBox ),
+			CEREAL_NVP( velocity )
 		);
-		if (1 <= version)
+		if ( 1 <= version )
 		{
-			archive(CEREAL_NVP(missileOffset));
+			archive( CEREAL_NVP( missileOffset ) );
 		}
-		if (2 <= version)
+		if ( 2 <= version )
 		{
-			archive(CEREAL_NVP(maxDistanceToTarget));
+			archive( CEREAL_NVP( maxDistanceToTarget ) );
 		}
-		if (3 <= version)
+		if ( 3 <= version )
 		{
-			archive(CEREAL_NVP(obstacleOffset));
+			archive( CEREAL_NVP( obstacleOffset ) );
 		}
-		if (4 <= version)
+		if ( 4 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
-	static constexpr const char* SERIAL_ID = "Boss";
+	static constexpr const char *SERIAL_ID = "Boss";
 public:
-	void Init(float initDistanceFromOrigin, const std::vector<Donya::Vector3>& registerLanePositions);
+	void Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions );
 	void Uninit();
 
-	void Update(const Donya::Vector3& wsAttackTargetPos);
+	void Update( const Donya::Vector3 &wsAttackTargetPos );
 
 	void Draw
 	(
-		const DirectX::XMFLOAT4X4& matView,
-		const DirectX::XMFLOAT4X4& matProjection,
-		const DirectX::XMFLOAT4& lightDirection,
-		const DirectX::XMFLOAT4& cameraPosition,
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
 		bool isEnableFill = true
 	) const;
 public:
@@ -325,27 +344,27 @@ public:
 	/// <summary>
 	/// Please call Missile::HitToOther() when hit detected.
 	/// </summary>
-	const std::vector<Missile>& FetchReflectableMissiles() const;
+	const std::vector<Missile> &FetchReflectableMissiles() const;
 	/// <summary>
 	/// The obstacle can not reflection.<para></para>
 	/// Please call Obstacle::HitToOther() when hit detected.
 	/// </summary>
-	const std::vector<Obstacle>& FetchObstacles() const;
+	const std::vector<Obstacle> &FetchObstacles() const;
 private:
 	void LoadModel();
 
-	void Move(const Donya::Vector3& wsAttackTargetPos);
+	void Move( const Donya::Vector3 &wsAttackTargetPos );
 
-	void LotteryAttack(const Donya::Vector3& wsAttackTargetPos);
+	void LotteryAttack( const Donya::Vector3 &wsAttackTargetPos );
 	Donya::Vector3 LotteryLanePosition();
 
-	void ShootMissile(const Donya::Vector3& wsAttackTargetPos);
+	void ShootMissile( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateMissiles();
-
-	void GenerateObstacles(const Donya::Vector3& wsAttackTargetPos);
+	
+	void GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateObstacles();
 
-	void LoadParameter(bool isBinary = true);
+	void LoadParameter( bool isBinary = true );
 
 #if USE_IMGUI
 
@@ -356,4 +375,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION(Boss, 3)
+CEREAL_CLASS_VERSION( Boss, 4 )

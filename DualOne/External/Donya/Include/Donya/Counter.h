@@ -1,5 +1,5 @@
-#ifndef _INCLUDED_COUNTER_H_
-#define _INCLUDED_COUNTER_H_
+#ifndef INCLUDED_COUNTER_H_
+#define INCLUDED_COUNTER_H_
 
 namespace Donya
 {
@@ -55,4 +55,4 @@ namespace Donya
 	};
 }
 
-#endif // _INCLUDED_COUNTER_H_
+#endif // INCLUDED_COUNTER_H_
