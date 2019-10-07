@@ -42,10 +42,8 @@ private:
 	Donya::Vector3	pos;
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
-//	bool			isEnable;
 public:
 	Tree();
-//	Tree(Donya::Vector3 _pos);
 	~Tree();
 	void Init(Donya::Vector3 _pos);
 	void Update();
@@ -63,9 +61,6 @@ public:
 	}
 
 	void LoadModel();
-	void Move();
-
-
 	void UseImGui();
 
 	// Getter
@@ -76,16 +71,13 @@ public:
 
 class Ground
 {
-//	std::vector<Block>	blocks;
 	std::array<Block, 4> blocks;
 	std::vector<Tree>	trees;
-//	std::array<Tree, 100> trees;
 	int					timer;
 public:
 	Ground();
 	~Ground();
 
-//	void CreateBlock();
 	void CreateTree(Donya::Vector3 _pos);
 	void Init();
 	void Uninit();
