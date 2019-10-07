@@ -14,7 +14,7 @@ private:
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
 	Donya::Geometric::Cube cube;
-	Donya::Geometric::TextureBoard billBoard;
+//	Donya::Geometric::TextureBoard billBoard;
 public:
 	Block();
 	~Block();
