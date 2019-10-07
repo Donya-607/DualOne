@@ -186,6 +186,98 @@ private:
 
 CEREAL_CLASS_VERSION( Obstacle, 0 )
 
+class Beam
+{
+private:
+	static Beam parameter;
+	static constexpr const char *SERIAL_ID = "Beam";
+public:
+	/// <summary>
+	/// Load model if has not loaded.
+	/// </summary>
+	static void LoadModel();
+
+	static void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	static void SaveParameter();
+
+	static void UseImGui();
+
+#endif // USE_IMGUI
+private:
+	enum class State
+	{
+		Swing,
+		Wait,
+		End
+	};
+private:
+	State				status;
+
+	int					afterWaitFrame;		// Use after finish the rotate of angle.
+	float				angleIncreaseSpeed;	// Use for beam-angle(radian).
+	float				easeParam;			// Use for "t" of easing.
+	float				beamAngle;			// Radian. 0 is right. rotate by CCW. use at YZ-plane.
+	float				beamAngleBegin;		// Radian. 0 is right. rotate by CCW. use at YZ-plane.
+	float				beamAngleEnd;		// Radian. 0 is right. rotate by CCW. use at YZ-plane.
+	float				beamLength;
+	AABB				hitBox;				// The position is local-space, size is world-space.
+	Donya::Vector3		basePos;
+	Donya::Vector3		beamDestPos;
+public:
+	Beam();
+	~Beam();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( afterWaitFrame ),
+			CEREAL_NVP( angleIncreaseSpeed ),
+			CEREAL_NVP( beamAngleBegin ),
+			CEREAL_NVP( beamAngleEnd ),
+			CEREAL_NVP( beamLength ),
+			CEREAL_NVP( hitBox )
+		);
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+public:
+	void Init( const Donya::Vector3 &wsAppearPos );
+	void Uninit();
+
+	void Update( float wsBasePositionZ );
+
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4 &matView,
+		const DirectX::XMFLOAT4X4 &matProjection,
+		const DirectX::XMFLOAT4 &lightDirection,
+		const DirectX::XMFLOAT4 &cameraPosition,
+		bool isEnableFill = true
+	) const;
+public:
+	/// <summary>
+	/// Returns hit-box is in world-space.
+	/// </summary>
+	AABB GetHitBox() const;
+
+	bool ShouldErase() const;
+private:
+	void AngleUpdate();
+	void WaitUpdate();
+
+	void CalcBeamDestination();
+};
+
+CEREAL_CLASS_VERSION( Beam, 0 )
+
 class AttackParam : public Donya::Singleton<AttackParam>
 {
 	friend Donya::Singleton<AttackParam>;
@@ -194,6 +286,7 @@ public:
 	{
 		Missile = 0,
 		Obstacle,
+		Beam,
 
 		ATTACK_KIND_COUNT
 	};
@@ -277,6 +370,7 @@ class Boss
 	Donya::Vector3						velocity;
 	Donya::Vector3						missileOffset;	// The offset of appear position of missile. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
+	Donya::Vector3						beamOffset;		// The offset of appear position of beam. the x used to [positive:outer side][negative:inner side].
 	Donya::Quaternion					posture;
 
 	std::shared_ptr<Donya::StaticMesh>	pModelBody;
@@ -286,6 +380,7 @@ class Boss
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 	std::vector<Missile>				missiles;
 	std::vector<Obstacle>				obstacles;
+	std::vector<Beam>					beams;
 public:
 	Boss();
 	~Boss();
@@ -363,6 +458,9 @@ private:
 	
 	void GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateObstacles();
+	
+	void ShootBeam( const Donya::Vector3 &wsAttackTargetPos );
+	void UpdateBeams();
 
 	void LoadParameter( bool isBinary = true );
 
