@@ -14,13 +14,13 @@ private:
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
 	Donya::Geometric::Cube cube;
-//	Donya::Geometric::TextureBoard billBoard;
+	std::unique_ptr<Donya::Geometric::TextureBoard> billBoard;
 public:
 	Block();
 	~Block();
 
-	void Init();
-	void Update();
+	void Init(size_t _num);
+	void Update(Donya::Vector3 _playerPos);
 	void Draw
 	(
 		const DirectX::XMFLOAT4X4& matView,
@@ -31,6 +31,7 @@ public:
 	);
 
 	void Move();
+	void ApplyLoopToMap(Donya::Vector3 _playerPos);
 };
 
 struct Tree
@@ -75,8 +76,8 @@ public:
 
 class Ground
 {
-	std::vector<Block>	blocks;
-//	std::array<Block*, 3> blocks;
+//	std::vector<Block>	blocks;
+	std::array<Block, 4> blocks;
 	std::vector<Tree>	trees;
 //	std::array<Tree, 100> trees;
 	int					timer;
@@ -84,11 +85,10 @@ public:
 	Ground();
 	~Ground();
 
-	void CreateBlock();
+//	void CreateBlock();
 	void CreateTree(Donya::Vector3 _pos);
 	void Init();
 	void Uninit();
-//	void Update();
 	void Update(Donya::Vector3 _playerPos);
 	void Draw
 	(
