@@ -686,7 +686,8 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		XMMATRIX colR = Matrix( rotQ.RequireRotationMatrix() );
 		
 		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
-		XMMATRIX colW = colS * colR * colT;
+		// XMMATRIX colW = colS * colR * colT;
+		XMMATRIX colW = colS * colT;
 
 		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
 
@@ -715,12 +716,7 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 AABB Beam::GetHitBox() const
 {
 	AABB wsHitBox = hitBox;
-	wsHitBox.pos += basePos;
-
-	Donya::Vector3 distance = beamDestPos - basePos;
-	wsHitBox.pos += distance * 0.5f;		// Store center-position.
-
-	wsHitBox.size.z += beamLength * 0.5f;	// Store half-size.
+	wsHitBox.pos += beamDestPos;
 
 	return wsHitBox;
 }
@@ -756,11 +752,36 @@ void Beam::WaitUpdate()
 
 void Beam::CalcBeamDestination()
 {
-	Donya::Vector3 vector{};
-	vector.y = sinf( beamAngle ) * beamLength;
-	vector.z = cosf( beamAngle ) * beamLength;
+	Donya::Vector3 beamVec3{};
+	beamVec3.y = sinf( beamAngle ) * beamLength;
+	beamVec3.z = cosf( beamAngle ) * beamLength;
 
-	beamDestPos = basePos + vector;
+	// These Vector2 is using to (Z,Y).
+
+	Donya::Vector2 beamStart { basePos.z,  basePos.y  };
+	Donya::Vector2 beamVec2  { beamVec3.z, beamVec3.y };
+
+	float planeLength = beamLength * 2.0f;
+	Donya::Vector2 planeStart{ beamStart.x - planeLength, 0.0f };
+	Donya::Vector2 planeVec2 { planeLength * 2.0f, 0.0f };
+
+	Donya::Vector2 intersection{};
+	bool isIntersect = Common::CalcIntersectionPoint
+	(
+		planeStart, planeVec2,
+		beamStart, beamVec2,
+		&intersection
+	);
+
+	if ( isIntersect )
+	{
+		beamDestPos = Donya::Vector3{ basePos.x, intersection.y, intersection.x };
+	}
+	else
+	{
+		beamDestPos = Donya::Vector3::Zero();
+		hitBox.exist = false;
+	}
 }
 
 // region Beam
@@ -834,8 +855,9 @@ void AttackParam::UseImGui()
 			std::string attackNameU8{};
 			switch ( targetNo )
 			{
-			case AttackKind::Missile:  attackNameU8 = u8"ミサイル"; break;
-			case AttackKind::Obstacle: attackNameU8 = u8"障害物"; break;
+			case AttackKind::Missile:	attackNameU8 = u8"ミサイル";		break;
+			case AttackKind::Obstacle:	attackNameU8 = u8"障害物";		break;
+			case AttackKind::Beam:		attackNameU8 = u8"レーザー";		break;
 			default: attackNameU8 = u8"Error !"; break;
 			}
 

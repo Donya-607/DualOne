@@ -4,7 +4,7 @@
         "afterWaitFrame": 45,
         "angleIncreaseSpeed": 0.009999999776482582,
         "beamAngleBegin": 270.0,
-        "beamAngleEnd": 187.0,
+        "beamAngleEnd": 188.0,
         "beamLength": 512.0,
         "hitBox": {
             "cereal_class_version": 0,
