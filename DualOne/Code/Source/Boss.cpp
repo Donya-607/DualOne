@@ -1190,6 +1190,105 @@ void AttackParam::UseImGui()
 // region AttackParam
 #pragma endregion
 
+#pragma region CollisionDetail
+
+CollisionDetail::CollisionDetail() :
+	levelCount( LOWER_LEVEL_COUNT ),
+	levelBorders()
+{
+	levelBorders.resize( LOWER_LEVEL_COUNT );
+}
+CollisionDetail::~CollisionDetail()
+{
+	levelBorders.clear();
+	levelBorders.shrink_to_fit();
+}
+
+void CollisionDetail::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void CollisionDetail::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void CollisionDetail::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ボスの当たり判定の分割" ) )
+		{
+			int oldCount = levelCount;
+			ImGui::SliderInt( u8"段階の数（１始まり）", &levelCount, LOWER_LEVEL_COUNT, 8 );
+			if ( oldCount != levelCount )
+			{
+				levelBorders.resize( oldCount );
+			}
+
+			std::string preStrU8 { u8"威力[" };
+			std::string postStrU8{ u8"]以上" };
+			std::string numberU8{};
+			std::string caption{};
+			const size_t LEVEL_COUNT = levelBorders.size();
+			for ( size_t i = LEVEL_COUNT - 1; 0 <= i; --i ) // i is 0-based.
+			{
+				numberU8 = std::to_string( i + 1 ); // Showing number is 1-based.
+				numberU8 = Donya::MultiToUTF8( numberU8 );
+
+				caption = preStrU8 + numberU8 + postStrU8;
+
+				ImGui::SliderFloat( caption.c_str(), &levelBorders[i], 0.0f, 1.0f );
+			}
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+// region CollisionDetail
+#pragma endregion
+
 #pragma region Boss
 
 Boss::Boss() :
@@ -1235,6 +1334,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Wave::LoadModel();
 
 	AttackParam::Get().LoadParameter();
+	CollisionDetail::Get().LoadParameter();
 
 	currentHP = AttackParam::Get().maxHP;
 
@@ -1273,6 +1373,7 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 	Beam::UseImGui();
 	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
+	CollisionDetail::Get().UseImGui();
 
 #endif // USE_IMGUI
 

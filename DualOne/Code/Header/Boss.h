@@ -434,6 +434,47 @@ public:
 
 CEREAL_CLASS_VERSION( AttackParam, 2 )
 
+class CollisionDetail : public Donya::Singleton<CollisionDetail>
+{
+	friend Donya::Singleton<CollisionDetail>;
+private:
+	static constexpr int LOWER_LEVEL_COUNT = 2;
+private:
+	int					levelCount;		// 1-based.
+	std::vector<float>	levelBorders;	// [0:lv.1][1:lv.2]..., e.g.[ if ( [1] <= rhs ) { level = 2; }]
+private:
+	CollisionDetail();
+public:
+	~CollisionDetail();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( levelCount ),
+			CEREAL_NVP( levelBorders )
+		);
+
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "BossCollisionDetail";
+public:
+	void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	void SaveParameter();
+
+	void UseImGui();
+
+#endif // USE_IMGUI
+};
+
 class Boss
 {
 	int									currentHP;		// 1-based, 0 express the dead.

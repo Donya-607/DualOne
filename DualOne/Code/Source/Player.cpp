@@ -161,7 +161,7 @@ Sphere ReflectedEntity::GetHitBox() const
 	return wsHitBox;
 }
 
-// regioni ReflectedEntity
+// region ReflectedEntity
 #pragma endregion
 
 struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
