@@ -787,6 +787,229 @@ void Beam::CalcBeamDestination()
 // region Beam
 #pragma endregion
 
+#pragma region Wave
+
+Wave Wave::parameter{};
+// std::shared_ptr<Donya::StaticMesh> Wave::pModel{ nullptr };
+
+void Wave::LoadModel()
+{
+	/*
+	static bool wasLoaded = false;
+	if ( wasLoaded ) { return; }
+	// else
+
+	Donya::Loader loader{};
+	bool result = loader.Load( GetModelPath( ModelAttribute::Wave ), nullptr );
+
+	_ASSERT_EXPR( result, L"Failed : Load obstacle model." );
+
+	pModel = Donya::StaticMesh::Create( loader );
+
+	if ( !pModel )
+	{
+		_ASSERT_EXPR( 0, L"Failed : Load obstacle model." );
+		exit( -1 );
+	}
+
+	wasLoaded = true;
+	*/
+}
+
+void Wave::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, parameter );
+}
+
+#if USE_IMGUI
+
+void Wave::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, parameter );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, parameter );
+}
+
+void Wave::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ウェーブ" ) )
+		{
+			ImGui::SliderInt( u8"消えるまでの時間（フレーム）", &parameter.aliveFrame, 1, 720 );
+			ImGui::SliderFloat( u8"Ｚ軸の速度", &parameter.speed, 1.0f, 16.0f );
+			ImGui::Text( "" );
+
+			if ( ImGui::TreeNode( u8"当たり判定" ) )
+			{
+				auto EnumAABBParamToImGui = []( AABB *pAABB )
+				{
+					if ( !pAABB ) { return; }
+					// else
+
+					constexpr float RANGE = 64.0f;
+					ImGui::SliderFloat3( u8"原点のオフセット（ＸＹＺ）", &pAABB->pos.x, -RANGE, RANGE );
+					ImGui::SliderFloat3( u8"サイズの半分（ＸＹＺ）", &pAABB->size.x, 0.0f, RANGE );
+
+					bool &exist = pAABB->exist;
+					std::string caption = u8"当たり判定：";
+					caption += ( exist ) ? u8"あり" : u8"なし";
+					ImGui::Checkbox( caption.c_str(), &exist );
+				};
+
+				EnumAABBParamToImGui( &parameter.hitBox );
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+Wave::Wave() :
+	aliveFrame(),
+	speed(),
+	hitBox(),
+	pos(),
+	posture()
+{
+
+}
+Wave::~Wave() = default;
+
+void Wave::Init( const Donya::Vector3 &wsAppearPos )
+{
+	// Apply the external paramter.
+	*this = parameter;
+
+	pos = wsAppearPos;
+}
+void Wave::Uninit()
+{
+	// No op.
+}
+
+void Wave::Update()
+{
+	aliveFrame--;
+
+	pos.z -= speed; // The advance direction is back.
+}
+
+void Wave::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
+{
+	using namespace DirectX;
+
+	auto Matrix		= []( const XMFLOAT4X4 &matrix )
+	{
+		return XMLoadFloat4x4( &matrix );
+	};
+	auto Float4x4	= []( const XMMATRIX &M )
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4( &matrix, M );
+		return matrix;
+	};
+
+	/*
+	XMMATRIX S = XMMatrixIdentity();
+	XMMATRIX R = Matrix( posture.RequireRotationMatrix() );
+	XMMATRIX T = XMMatrixTranslation( pos.x, pos.y, pos.z );
+	XMMATRIX W = S * R * T;
+	XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+
+	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+	*/
+
+#if DEBUG_MODE
+
+	if ( Common::IsShowCollision() )
+	{
+		AABB wsBody = GetHitBox();
+		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
+
+		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
+		// XMMATRIX colR = XMMatrixIdentity();
+		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
+		XMMATRIX colW = colS * colT;
+
+		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
+
+		constexpr XMFLOAT4 colColor{ 1.0f, 0.1f, 0.0f, 0.5f };
+
+		auto InitializedCube = []()
+		{
+			Donya::Geometric::Cube cube{};
+			cube.Init();
+			return cube;
+		};
+		static Donya::Geometric::Cube cube = InitializedCube();
+		cube.Render
+		(
+			Float4x4( colWVP ),
+			Float4x4( colW ),
+			lightDirection,
+			colColor
+		);
+
+	}
+
+#endif // DEBUG_MODE
+}
+
+AABB Wave::GetHitBox() const
+{
+	AABB wsHitBox = hitBox;
+	wsHitBox.pos += GetPos();
+	return wsHitBox;
+}
+
+bool Wave::ShouldErase() const
+{
+	return ( aliveFrame <= 0 ) ? true : false;
+}
+
+// region Wave
+#pragma endregion
+
 #pragma region AttackParam
 
 AttackParam::AttackParam() :
@@ -858,6 +1081,7 @@ void AttackParam::UseImGui()
 			case AttackKind::Missile:	attackNameU8 = u8"ミサイル";		break;
 			case AttackKind::Obstacle:	attackNameU8 = u8"障害物";		break;
 			case AttackKind::Beam:		attackNameU8 = u8"レーザー";		break;
+			case AttackKind::Wave:		attackNameU8 = u8"ウェーブ";		break;
 			default: attackNameU8 = u8"Error !"; break;
 			}
 
@@ -973,10 +1197,10 @@ Boss::Boss() :
 	attackTimer(), waitReuseFrame(),
 	maxDistanceToTarget(),
 	hitBox(),
-	pos(), velocity(), missileOffset(), obstacleOffset(),
+	pos(), velocity(), missileOffset(), obstacleOffset(), waveOffset(),
 	posture(),
 	pModelBody( nullptr ), pModelFoot( nullptr ), pModelRoll( nullptr ),
-	lanePositions(), missiles(), obstacles(), beams()
+	lanePositions(), missiles(), obstacles(), beams(), waves()
 {}
 Boss::~Boss()
 {
@@ -992,6 +1216,8 @@ Boss::~Boss()
 	obstacles.shrink_to_fit();
 	beams.clear();
 	beams.shrink_to_fit();
+	waves.clear();
+	waves.shrink_to_fit();
 }
 
 void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions )
@@ -1005,6 +1231,8 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Obstacle::LoadModel();
 	Beam::LoadParameter();
 	Beam::LoadModel();
+	Wave::LoadParameter();
+	Wave::LoadModel();
 
 	AttackParam::Get().LoadParameter();
 
@@ -1043,6 +1271,7 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 	Missile::UseImGui();
 	Obstacle::UseImGui();
 	Beam::UseImGui();
+	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
 
 #endif // USE_IMGUI
@@ -1056,6 +1285,7 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 	UpdateMissiles();
 	UpdateObstacles();	// This method must call after we move(because doing collision-detection between myself and obstacle at it).
 	UpdateBeams();
+	UpdateWaves();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -1094,6 +1324,10 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		it.Draw( matView, matProjection, lightDirection, cameraPosition );
 	}
 	for ( const auto &it : beams )
+	{
+		it.Draw( matView, matProjection, lightDirection, cameraPosition );
+	}
+	for ( const auto &it : waves )
 	{
 		it.Draw( matView, matProjection, lightDirection, cameraPosition );
 	}
@@ -1256,6 +1490,7 @@ void Boss::LotteryAttack( const Donya::Vector3 &wsAttackTargetPos )
 		case AttackParam::AttackKind::Missile:	ShootMissile( wsAttackTargetPos );		break;
 		case AttackParam::AttackKind::Obstacle:	GenerateObstacles( wsAttackTargetPos );	break;
 		case AttackParam::AttackKind::Beam:		ShootBeam( wsAttackTargetPos );			break;
+		case AttackParam::AttackKind::Wave:		GenerateWave();							break;
 		default: break;
 		}
 
@@ -1417,6 +1652,41 @@ void Boss::UpdateBeams()
 	beams.erase( eraseItr, beams.end() );
 }
 
+void Boss::GenerateWave()
+{
+	Donya::Vector3 appearPos = pos;
+	appearPos.x = 0.0f;
+	appearPos.y = 0.0f;
+
+	appearPos += waveOffset;
+
+	waves.push_back( {} );
+	waves.back().Init( appearPos );
+}
+void Boss::UpdateWaves()
+{
+	for ( auto &it : waves )
+	{
+		it.Update();
+	}
+
+	auto eraseItr = std::remove_if
+	(
+		waves.begin(), waves.end(),
+		[]( Wave &element )
+		{
+			if ( element.ShouldErase() )
+			{
+				element.Uninit();
+				return true;
+			}
+			// else
+			return false;
+		}
+	);
+	waves.erase( eraseItr, waves.end() );
+}
+
 void Boss::LoadParameter( bool isBinary )
 {
 	Serializer::Extension ext = ( isBinary )
@@ -1488,6 +1758,7 @@ void Boss::UseImGui()
 				ImGui::SliderFloat3( u8"ミサイル発射位置のオフセット（相対）", &missileOffset.x, -128.0f, 128.0f );
 				ImGui::SliderFloat3( u8"障害物設置位置のオフセット（相対）", &obstacleOffset.x, -128.0f, 128.0f );
 				ImGui::SliderFloat3( u8"ビーム設置位置のオフセット（相対）", &beamOffset.x, -128.0f, 128.0f );
+				ImGui::SliderFloat3( u8"ウェーブ発生位置のオフセット（相対）", &waveOffset.x, -128.0f, 128.0f );
 
 				ImGui::TreePop();
 			}
