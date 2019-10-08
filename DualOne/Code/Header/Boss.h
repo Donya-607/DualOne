@@ -15,6 +15,8 @@
 #include "Donya/UseImgui.h"
 #include "Donya/Vector.h"
 
+// HACK:These object class has method is very similar, so I can put-together by Inheritance.
+
 class Missile
 {
 private:
@@ -449,6 +451,10 @@ public:
 	/// Please call Obstacle::HitToOther() when hit detected.
 	/// </summary>
 	const std::vector<Obstacle> &FetchObstacles() const;
+	/// <summary>
+	/// Returns hit-boxes is can not reflection.
+	/// </summary>
+	std::vector<AABB> FetchHitBoxes() const;
 private:
 	void LoadModel();
 

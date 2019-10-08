@@ -1149,6 +1149,20 @@ const std::vector<Obstacle> &Boss::FetchObstacles() const
 {
 	return obstacles;
 }
+std::vector<AABB> Boss::FetchHitBoxes() const
+{
+	const size_t BEAM_COUNT = beams.size();
+	const size_t WAVE_COUNT = 0; // .size();
+	std::vector<AABB> hitBoxes{};
+	hitBoxes.reserve( BEAM_COUNT + WAVE_COUNT );
+
+	for ( const auto &it : beams )
+	{
+		hitBoxes.emplace_back( it.GetHitBox() );
+	}
+
+	return hitBoxes;
+}
 
 void Boss::LoadModel()
 {

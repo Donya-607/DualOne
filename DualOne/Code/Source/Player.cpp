@@ -534,6 +534,9 @@ Player::CollideResult Player::ReceiveImpact( bool canReflection )
 	rv.wsPos = pos + PlayerParameter::Get().generateReflectionOffset;
 	rv.shouldGenerateBullet = false;
 
+	if ( IsStunning() ) { return rv; }
+	// else
+
 	if ( !canReflection || !IsJumping() )
 	{
 		MakeStun();
