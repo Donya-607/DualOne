@@ -11,6 +11,9 @@ enum class SpriteAttribute
 	FMODLogoBlack,
 	FMODLogoWhite,
 	TestFont,
+	GroundTex1,
+	GroundTex2,
+	SledEffect,
 };
 std::wstring GetSpritePath( SpriteAttribute fileAttribute );
 

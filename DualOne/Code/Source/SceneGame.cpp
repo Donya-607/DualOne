@@ -27,6 +27,7 @@
 #include "StorageForScene.h"
 #include "Timer.h"
 #include "Boss.h"
+#include "Effect.h"
 
 struct SceneGame::Impl
 {
@@ -37,6 +38,7 @@ public:
 	Player	player;
 	Ground	ground;
 	Boss	boss;
+	ParticleManager particleManager;
 	Timer	currentTime;
 	Donya::Vector3	lightDirection;
 	Donya::Vector3	cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
@@ -235,6 +237,8 @@ void SceneGame::Init()
 
 	pImpl->boss.Init( pImpl->initDistanceOfBoss, pImpl->lanePositions );
 
+	pImpl->particleManager.Init();
+
 	// The camera's initialize should call after player's initialize.
 	constexpr float FOV = ToRadian( 30.0f );
 	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
@@ -320,6 +324,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	}
 
 	pImpl->boss.Update( pImpl->player.GetPos() );
+	pImpl->particleManager.Update();
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -465,6 +470,8 @@ void SceneGame::Draw( float elapsedTime )
 	pImpl->player.Draw( matView, matProj, lightDir, cameraPos );
 
 	pImpl->boss.Draw( matView, matProj, lightDir, cameraPos );
+
+	pImpl->particleManager.Draw( matView, matProj, lightDir, cameraPos );
 
 	for ( const auto &it : pImpl->reflectedEntities )
 	{
