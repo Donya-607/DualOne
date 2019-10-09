@@ -13,6 +13,7 @@ enum class SpriteAttribute
 	TestFont,
 	GroundTex1,
 	GroundTex2,
+	SledEffect,
 };
 std::wstring GetSpritePath( SpriteAttribute fileAttribute );
 
