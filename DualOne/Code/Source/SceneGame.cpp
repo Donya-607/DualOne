@@ -536,6 +536,17 @@ void SceneGame::DetectCollision()
 			}
 		}
 	}
+	// Obstacles vs Player.
+	{
+		std::vector<AABB> hitBoxes = pImpl->boss.FetchHitBoxes();
+		for ( const auto &it : hitBoxes )
+		{
+			if ( AABB::IsHitAABB( it, playerBox ) )
+			{
+				HitToPlayer( /* canReflection = */ false );
+			}
+		}
+	}
 }
 
 Scene::Result SceneGame::ReturnResult()

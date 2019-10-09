@@ -8,45 +8,65 @@
         "intervalsPerHP": [
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             }
         ],
         "reuseFramesPerHP": [
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 30
             },
             {
                 "value0": 30,
-                "value1": 30
+                "value1": 30,
+                "value2": 30,
+                "value3": 60
             }
         ],
         "obstaclePatterns": [
