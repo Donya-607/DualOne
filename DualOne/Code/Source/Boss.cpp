@@ -1016,7 +1016,8 @@ bool Wave::ShouldErase() const
 #pragma region AttackParam
 
 AttackParam::AttackParam() :
-	maxHP( 1 ), counterMax(), untilAttackFrame(), resetWaitFrame(), damageWaitFrame(),
+	maxHP( 1 ), counterMax(), untilAttackFrame(), resetWaitFrame(),
+	damageWaitFrame(), stunFrame(),
 	intervalsPerHP(), reuseFramesPerHP(),
 	obstaclePatterns()
 {
@@ -1076,7 +1077,10 @@ void AttackParam::UseImGui()
 			ImGui::SliderInt( u8"攻撃条件に使うカウンタの最大値", &counterMax, 100, 10240 );
 			ImGui::SliderInt( u8"攻撃開始までの待機時間（フレーム）", &untilAttackFrame, 1, 2048 );
 			ImGui::SliderInt( u8"リセット時の待機時間（フレーム）", &resetWaitFrame, 1, 2048 );
+			ImGui::Text( "" );
 			ImGui::SliderInt( u8"ダメージを受けた時の待機時間（フレーム）", &damageWaitFrame, 1, 2048 );
+			ImGui::SliderInt( u8"ダメージを受けたあとの気絶時間（フレーム）", &stunFrame, 1, 2048 );
+			ImGui::Text( "" );
 
 			static int targetNo{};
 			std::string attackNameU8{};
@@ -1243,15 +1247,15 @@ void CollisionDetail::UseImGui()
 			ImGui::SliderInt( u8"段階の数（１始まり）", &levelCount, LOWER_LEVEL_COUNT, 8 );
 			if ( oldCount != levelCount )
 			{
-				levelBorders.resize( oldCount );
+				levelBorders.resize( levelCount );
 			}
 
 			std::string preStrU8 { u8"威力[" };
 			std::string postStrU8{ u8"]以上" };
 			std::string numberU8{};
 			std::string caption{};
-			const size_t LEVEL_COUNT = levelBorders.size();
-			for ( size_t i = LEVEL_COUNT - 1; 0 <= i; --i ) // i is 0-based.
+			const int LEVEL_COUNT = scast<int>( levelBorders.size() );
+			for ( int i = LEVEL_COUNT - 1; 0 <= i; --i ) // i is 0-based.
 			{
 				numberU8 = std::to_string( i + 1 ); // Showing number is 1-based.
 				numberU8 = Donya::MultiToUTF8( numberU8 );
@@ -1296,11 +1300,14 @@ void CollisionDetail::UseImGui()
 #pragma region Boss
 
 Boss::Boss() :
+	status( State::Normal ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
+	stunTimer(),
 	maxDistanceToTarget(),
 	hitBox(),
-	pos(), velocity(), missileOffset(), obstacleOffset(), waveOffset(),
+	pos(), velocity(), stunVelocity(),
+	missileOffset(), obstacleOffset(), waveOffset(),
 	posture(),
 	pModelBody( nullptr ), pModelFoot( nullptr ), pModelRoll( nullptr ),
 	lanePositions(), missiles(), obstacles(), beams(), waves()
@@ -1383,12 +1390,16 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 
 	Move( wsAttackTargetPos );
 
-	LotteryAttack( wsAttackTargetPos );
+	if ( IsStunning() )
+	{
+		StunUpdate();
+	}
+	else
+	{
+		LotteryAttack( wsAttackTargetPos );
+	}
 
-	UpdateMissiles();
-	UpdateObstacles();	// This method must call after we move(because doing collision-detection between myself and obstacle at it).
-	UpdateBeams();
-	UpdateWaves();
+	UpdateAttacks();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -1478,7 +1489,7 @@ AABB Boss::GetHitBox() const
 	return wsHitBox;
 }
 
-const std::vector<Missile> &Boss::FetchReflectableMissiles() const
+const std::vector<Missile>  &Boss::FetchReflectableMissiles() const
 {
 	return missiles;
 }
@@ -1573,7 +1584,14 @@ void Boss::LoadModel()
 
 void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )
 {
-	pos += velocity;
+	if ( IsStunning() )
+	{
+		pos += stunVelocity;
+	}
+	else
+	{
+		pos += velocity;
+	}
 
 	float distance = wsAttackTargetPos.z - pos.z;
 	if ( maxDistanceToTarget < fabsf( distance ) )
@@ -1831,14 +1849,43 @@ void Boss::UpdateWaves()
 	waves.erase( eraseItr, waves.end() );
 }
 
+void Boss::UpdateAttacks()
+{
+	UpdateMissiles();
+	UpdateObstacles();	// This method must call after we move(because doing collision-detection between myself and obstacle at it).
+	UpdateBeams();
+	UpdateWaves();
+}
+
 void Boss::ReceiveDamage( int damage )
 {
 	if ( damage <= 0 ) { return; }
 	// else
 
+	status = State::Stun;
 
+	auto &PARAM		= AttackParam::Get();
+	waitReuseFrame	= PARAM.damageWaitFrame;
+	stunTimer		= PARAM.stunFrame;
+}
 
-	waitReuseFrame = AttackParam::Get().damageWaitFrame;
+void Boss::StunUpdate()
+{
+	Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
+	posture = rotation * posture;
+
+	stunTimer--;
+	if ( stunTimer <= 0 )
+	{
+		stunTimer = 0;
+		status = State::Normal;
+
+		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	}
+}
+bool Boss::IsStunning() const
+{
+	return ( status == State::Stun ) ? true : false;
 }
 
 void Boss::LoadParameter( bool isBinary )
@@ -1897,10 +1944,13 @@ void Boss::UseImGui()
 			if ( ImGui::TreeNode( u8"身体性能" ) )
 			{
 				ImGui::Text( u8"最大体力の設定は「攻撃パターン」欄にあります" );
+				ImGui::Text( u8"ダメージを受けた際の気絶関連も「攻撃パターン」欄にあります" );
 				ImGui::Text( "" );
 
 				ImGui::SliderFloat3( u8"移動速度", &velocity.x, 0.1f, 32.0f );
-				if ( 0.0f < velocity.z ) { velocity.z *= -1.0f; }
+				ImGui::SliderFloat3( u8"気絶中の移動速度", &stunVelocity.x, 0.1f, 32.0f );
+				if ( 0.0f < velocity.z     ) { velocity.z     *= -1.0f; }
+				if ( 0.0f < stunVelocity.z ) { stunVelocity.z *= -1.0f; }
 
 				ImGui::SliderFloat( u8"プレイヤーとの距離の最大", &maxDistanceToTarget, 1.0f, 1024.0f );
 

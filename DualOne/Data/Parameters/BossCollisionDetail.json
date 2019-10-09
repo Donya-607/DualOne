@@ -1,0 +1,11 @@
+{
+    "BossCollisionDetail": {
+        "cereal_class_version": 0,
+        "levelCount": 3,
+        "levelBorders": [
+            0.0,
+            0.3540000021457672,
+            0.7200000286102295
+        ]
+    }
+}

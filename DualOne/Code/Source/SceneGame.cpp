@@ -529,7 +529,7 @@ void SceneGame::DetectCollision()
 			}
 		}
 	}
-	// Obstacles vs Player.
+	// Other-Attacks vs Player.
 	{
 		std::vector<AABB> hitBoxes = pImpl->boss.FetchHitBoxes();
 		for ( const auto &it : hitBoxes )
@@ -537,6 +537,22 @@ void SceneGame::DetectCollision()
 			if ( AABB::IsHitAABB( it, playerBox ) )
 			{
 				HitToPlayer( /* canReflection = */ false );
+			}
+		}
+	}
+
+	// Reflected-Entity vs Boss.
+	{
+		const AABB boss = pImpl->boss.GetHitBox();
+		Sphere entity{};
+		for ( const auto &it : pImpl->reflectedEntities )
+		{
+			entity = it.GetHitBox();
+			if ( AABB::IsHitSphere( boss, entity ) )
+			{
+				it.HitToOther();
+
+				pImpl->boss.ReceiveImpact( entity.pos );
 			}
 		}
 	}

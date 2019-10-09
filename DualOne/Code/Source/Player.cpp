@@ -47,7 +47,8 @@ ReflectedEntity::ReflectedEntity() :
 	gravity(),
 	hitBox(),
 	wsPos(), velocity(),
-	posture( Donya::Quaternion::Identity() )
+	posture( Donya::Quaternion::Identity() ),
+	shouldErase( false )
 {}
 ReflectedEntity::~ReflectedEntity() = default;
 
@@ -71,6 +72,10 @@ void ReflectedEntity::Update()
 	velocity.y -= gravity;
 
 	wsPos += velocity;
+	if ( wsPos.y + hitBox.radius < 0.0f )
+	{
+		shouldErase = true;
+	}
 
 	constexpr float ROT_SPEED = ToRadian( 12.0f );
 	auto rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), ROT_SPEED );
@@ -149,9 +154,9 @@ void ReflectedEntity::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::X
 #endif // DEBUG_MODE
 }
 
-bool ReflectedEntity::ShouldErase() const
+void ReflectedEntity::HitToOther() const
 {
-	return ( wsPos.y < 0.0f + hitBox.radius ) ? true : false;
+	shouldErase = true;
 }
 
 Sphere ReflectedEntity::GetHitBox() const
@@ -178,6 +183,7 @@ public:
 	float	runSpeedUsual;	// Running speed when not charging.
 	float	runSpeedSlow;	// Running speed when charging.
 	float	runSpeedJump;	// Running speed when jumping.
+	float	runSpeedStun;	// Running speed when stunning.
 	AABB	hitBox{};		// Store local-space.
 	Donya::Vector3 generateReflectionOffset;
 	Player::CollideResult reflection;
@@ -215,6 +221,10 @@ private:
 			archive( CEREAL_NVP( runSpeedJump ) );
 		}
 		if ( 3 <= version )
+		{
+			archive( CEREAL_NVP( runSpeedStun ) );
+		}
+		if ( 4 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -287,6 +297,7 @@ public:
 					ImGui::SliderFloat( u8"手前への速度・通常",		&runSpeedUsual,	0.01f, 64.0f );
 					ImGui::SliderFloat( u8"手前への速度・チャージ中",	&runSpeedSlow,	0.01f, 64.0f );
 					ImGui::SliderFloat( u8"手前への速度・ジャンプ中",	&runSpeedJump,	0.01f, 64.0f );
+					ImGui::SliderFloat( u8"手前への速度・気絶中",		&runSpeedStun,	0.01f, 64.0f );
 
 					ImGui::TreePop();
 				}
@@ -337,7 +348,7 @@ public:
 					ImGui::SliderFloat( u8"重力", &reflection.gravity, 0.01f, 64.0f );
 					ImGui::Text( "" );
 
-					ImGui::SliderFloat3( u8"生成位置のオフセット[X:%5.3f][X:%5.3f][X:%5.3f]", &generateReflectionOffset.x, -128.0f, 128.0f );
+					ImGui::SliderFloat3( u8"生成位置のオフセット（Ｙのみ絶対値）[X:%5.3f][X:%5.3f][X:%5.3f]", &generateReflectionOffset.x, -128.0f, 128.0f );
 					ImGui::SliderFloat3( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", &reflection.velocity.x, -64.0f, 64.0f );
 
 					ImGui::TreePop();
@@ -374,7 +385,7 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 2 )
+CEREAL_CLASS_VERSION( PlayerParameter, 3 )
 
 Player::Player() :
 	status( State::Run ),
@@ -531,7 +542,8 @@ Player::CollideResult MakeFetchedResult()
 Player::CollideResult Player::ReceiveImpact( bool canReflection )
 {
 	CollideResult rv = MakeFetchedResult();
-	rv.wsPos = pos + PlayerParameter::Get().generateReflectionOffset;
+	rv.wsPos	= pos + PlayerParameter::Get().generateReflectionOffset;
+	rv.wsPos.y	= PlayerParameter::Get().generateReflectionOffset.y;
 	rv.shouldGenerateBullet = false;
 
 	if ( IsStunning() ) { return rv; }
@@ -745,10 +757,10 @@ void Player::ApplyVelocity()
 
 void Player::MakeStun()
 {
-	stunTimer = PlayerParameter::Get().stunFrame;
+	stunTimer	= PlayerParameter::Get().stunFrame;
 
 	charge		= 0.0f;
-	velocity.z	= 0.0f;
+	velocity.z	= -PlayerParameter::Get().runSpeedStun;
 
 	status = State::Stun;
 }

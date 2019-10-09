@@ -24,6 +24,7 @@ private:
 	Donya::Vector3		wsPos;
 	Donya::Vector3		velocity;
 	Donya::Quaternion	posture;
+	mutable bool		shouldErase;
 public:
 	ReflectedEntity();
 	~ReflectedEntity();
@@ -41,7 +42,11 @@ public:
 		const Donya::Vector4 &cameraPos
 	) const;
 public:
-	bool ShouldErase() const;
+	/// <summary>
+	/// Please call when hit to other.
+	/// </summary>
+	void HitToOther() const;
+	bool ShouldErase() const { return shouldErase; }
 	/// <summary>
 	/// Returns position is belong world-space.
 	/// </summary>

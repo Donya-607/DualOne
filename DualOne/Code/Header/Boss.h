@@ -374,6 +374,7 @@ public:
 	int untilAttackFrame;	// Frame of begin the attack.
 	int resetWaitFrame;		// Use when reset the count.
 	int damageWaitFrame;	// Use when the boss receive a damage.
+	int stunFrame;
 	// int reuseFrame;
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> intervalsPerHP;		// Each attacks per HP(0-based).
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> reuseFramesPerHP;	// Each attacks per HP(0-based).
@@ -402,7 +403,11 @@ private:
 
 			if ( 3 <= version )
 			{
-				archive( CEREAL_NVP( damageWaitFrame ) );
+				archive
+				(
+					CEREAL_NVP( damageWaitFrame ),
+					CEREAL_NVP( stunFrame )
+				);
 			}
 			if ( 4 <= version )
 			{
@@ -489,16 +494,27 @@ CEREAL_CLASS_VERSION( CollisionDetail, 0 )
 
 class Boss
 {
+private:
+	enum class State
+	{
+		Normal,
+		Stun,
+	};
+private:
 	int									currentHP;		// 1-based, 0 express the dead.
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
+	int									stunTimer;
 
 	float								maxDistanceToTarget;
+
+	State								status;
 
 	AABB								hitBox;
 
 	Donya::Vector3						pos;
 	Donya::Vector3						velocity;
+	Donya::Vector3						stunVelocity;	// Use when stun.
 	Donya::Vector3						missileOffset;	// The offset of appear position of missile. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						beamOffset;		// The offset of appear position of beam. the x used to [positive:outer side][negative:inner side].
@@ -548,6 +564,10 @@ private:
 			archive( CEREAL_NVP( waveOffset ) );
 		}
 		if ( 6 <= version )
+		{
+			archive( CEREAL_NVP( stunVelocity ) );
+		}
+		if ( 7 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -617,7 +637,12 @@ private:
 	void GenerateWave();
 	void UpdateWaves();
 
+	void UpdateAttacks();
+
 	void ReceiveDamage( int damage );
+
+	void StunUpdate();
+	bool IsStunning() const;
 
 	void LoadParameter( bool isBinary = true );
 
