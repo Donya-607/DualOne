@@ -373,6 +373,7 @@ public:
 	int counterMax;
 	int untilAttackFrame;	// Frame of begin the attack.
 	int resetWaitFrame;		// Use when reset the count.
+	int damageWaitFrame;	// Use when the boss receive a damage.
 	// int reuseFrame;
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> intervalsPerHP;		// Each attacks per HP(0-based).
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> reuseFramesPerHP;	// Each attacks per HP(0-based).
@@ -398,6 +399,15 @@ private:
 				CEREAL_NVP( reuseFramesPerHP ),
 				CEREAL_NVP( obstaclePatterns )
 			);
+
+			if ( 3 <= version )
+			{
+				archive( CEREAL_NVP( damageWaitFrame ) );
+			}
+			if ( 4 <= version )
+			{
+				// archive( CEREAL_NVP( x ) );
+			}
 
 			return;
 		}
@@ -432,14 +442,14 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( AttackParam, 2 )
+CEREAL_CLASS_VERSION( AttackParam, 3 )
 
 class CollisionDetail : public Donya::Singleton<CollisionDetail>
 {
 	friend Donya::Singleton<CollisionDetail>;
 private:
 	static constexpr int LOWER_LEVEL_COUNT = 2;
-private:
+public:
 	int					levelCount;		// 1-based.
 	std::vector<float>	levelBorders;	// [0:lv.1][1:lv.2]..., e.g.[ if ( [1] <= rhs ) { level = 2; }]
 private:
@@ -474,6 +484,8 @@ public:
 
 #endif // USE_IMGUI
 };
+
+CEREAL_CLASS_VERSION( CollisionDetail, 0 )
 
 class Boss
 {
@@ -557,6 +569,11 @@ public:
 	) const;
 public:
 	/// <summary>
+	/// 1~ is alive. 0 is dead.
+	/// </summary>
+	/// <returns></returns>
+	int GetCurrentHP() const { return currentHP; }
+	/// <summary>
 	/// Retruns position is in world-space.
 	/// </summary>
 	Donya::Vector3 GetPos() const { return pos; }
@@ -578,6 +595,8 @@ public:
 	/// Returns hit-boxes is can not reflection.
 	/// </summary>
 	std::vector<AABB> FetchHitBoxes() const;
+
+	void ReceiveImpact( Donya::Vector3 wsCollidedPosition );
 private:
 	void LoadModel();
 
@@ -597,6 +616,8 @@ private:
 	
 	void GenerateWave();
 	void UpdateWaves();
+
+	void ReceiveDamage( int damage );
 
 	void LoadParameter( bool isBinary = true );
 

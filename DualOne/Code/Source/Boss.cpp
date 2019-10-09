@@ -1,6 +1,6 @@
 #include "Boss.h"
 
-#include <algorithm>	// Use std::remove_if.
+#include <algorithm>	// Use std::remove_if, std::max(), min().
 
 #include "Donya/Constant.h"
 #include "Donya/Easing.h"
@@ -15,6 +15,9 @@
 
 #include "Common.h"
 #include "FilePath.h"
+
+#undef max
+#undef min
 
 #pragma region Missile
 
@@ -1013,7 +1016,7 @@ bool Wave::ShouldErase() const
 #pragma region AttackParam
 
 AttackParam::AttackParam() :
-	maxHP( 1 ), counterMax( 0 ), untilAttackFrame( 0 ), resetWaitFrame( 0 ),
+	maxHP( 1 ), counterMax(), untilAttackFrame(), resetWaitFrame(), damageWaitFrame(),
 	intervalsPerHP(), reuseFramesPerHP(),
 	obstaclePatterns()
 {
@@ -1073,6 +1076,7 @@ void AttackParam::UseImGui()
 			ImGui::SliderInt( u8"攻撃条件に使うカウンタの最大値", &counterMax, 100, 10240 );
 			ImGui::SliderInt( u8"攻撃開始までの待機時間（フレーム）", &untilAttackFrame, 1, 2048 );
 			ImGui::SliderInt( u8"リセット時の待機時間（フレーム）", &resetWaitFrame, 1, 2048 );
+			ImGui::SliderInt( u8"ダメージを受けた時の待機時間（フレーム）", &damageWaitFrame, 1, 2048 );
 
 			static int targetNo{};
 			std::string attackNameU8{};
@@ -1377,8 +1381,6 @@ void Boss::Update( const Donya::Vector3 &wsAttackTargetPos )
 
 #endif // USE_IMGUI
 
-	// I think the attack is should use after the move.
-
 	Move( wsAttackTargetPos );
 
 	LotteryAttack( wsAttackTargetPos );
@@ -1503,6 +1505,42 @@ std::vector<AABB> Boss::FetchHitBoxes() const
 	return hitBoxes;
 }
 
+void Boss::ReceiveImpact( Donya::Vector3 wsCollidedPosition )
+{
+	AABB  wsHitBox  = GetHitBox();
+	float bottomPos = std::max( 0.0f, wsHitBox.pos.y - wsHitBox.size.y );
+	float hitBoxHeight = ( wsHitBox.pos.y + wsHitBox.size.y ) - bottomPos;
+	if ( ZeroEqual( hitBoxHeight ) )
+	{
+		ReceiveDamage( 0 );
+		return;
+	}
+	// else
+
+	float normalizedOtherHeight = std::min( 1.0f, wsCollidedPosition.y / hitBoxHeight );
+	if (  normalizedOtherHeight < 0.0f )
+	{
+		ReceiveDamage( 0 );
+		return;
+	}
+	// else
+
+	size_t damage = 0;
+
+	auto &levels = CollisionDetail::Get().levelBorders;
+	const size_t LEVEL_COUNT = levels.size();
+	for ( size_t i = LEVEL_COUNT - 1; 0 <= i; --i )
+	{
+		if ( levels[i] <= normalizedOtherHeight )
+		{
+			damage = i + 1; // To 1-based.
+			break;
+		}
+	}
+
+	ReceiveDamage( damage );
+}
+
 void Boss::LoadModel()
 {
 	constexpr size_t MODEL_COUNT = 3;
@@ -1605,6 +1643,7 @@ void Boss::LotteryAttack( const Donya::Vector3 &wsAttackTargetPos )
 	if ( PARAM.counterMax <= attackTimer )
 	{
 		attackTimer = 0;
+		waitReuseFrame += PARAM.resetWaitFrame;
 	}
 }
 
@@ -1666,7 +1705,7 @@ void Boss::GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos )
 	auto Generate = [&]( size_t laneIndex )
 	{
 		Donya::Vector3 wsAppearPos = lanePositions[laneIndex];
-		wsAppearPos.z += pos.z;
+		wsAppearPos.z += wsAttackTargetPos.z;
 
 		Donya::Vector3 dir = wsAppearPos - pos;
 		wsAppearPos.x += obstacleOffset.x * Donya::SignBit( dir.x );
@@ -1790,6 +1829,16 @@ void Boss::UpdateWaves()
 		}
 	);
 	waves.erase( eraseItr, waves.end() );
+}
+
+void Boss::ReceiveDamage( int damage )
+{
+	if ( damage <= 0 ) { return; }
+	// else
+
+
+
+	waitReuseFrame = AttackParam::Get().damageWaitFrame;
 }
 
 void Boss::LoadParameter( bool isBinary )
