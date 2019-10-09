@@ -1489,6 +1489,11 @@ AABB Boss::GetHitBox() const
 	return wsHitBox;
 }
 
+bool Boss::IsDead() const
+{
+	return ( GetCurrentHP() <= 0 ) ? true : false;
+}
+
 const std::vector<Missile>  &Boss::FetchReflectableMissiles() const
 {
 	return missiles;
@@ -1862,7 +1867,8 @@ void Boss::ReceiveDamage( int damage )
 	if ( damage <= 0 ) { return; }
 	// else
 
-	status = State::Stun;
+	status			= State::Stun;
+	currentHP		-= damage;
 
 	auto &PARAM		= AttackParam::Get();
 	waitReuseFrame	= PARAM.damageWaitFrame;

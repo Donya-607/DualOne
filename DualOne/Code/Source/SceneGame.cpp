@@ -44,6 +44,7 @@ public:
 	Donya::XInput	controller;
 	std::vector<Donya::Vector3>		lanePositions;	// Only use when initialize.
 	std::vector<ReflectedEntity>	reflectedEntities;
+	bool	wasTouched;		// True when detect the collision between player and boss.
 public:
 	Impl() :
 		initDistanceOfBoss(),
@@ -56,7 +57,8 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
-		lanePositions(), reflectedEntities()
+		lanePositions(), reflectedEntities(),
+		wasTouched( false )
 	{
 		constexpr unsigned int DEFAULT_LANE_COUNT = 3;
 		lanePositions.resize( DEFAULT_LANE_COUNT );
@@ -497,7 +499,7 @@ void SceneGame::DetectCollision()
 		}
 	};
 
-	AABB playerBox = pImpl->player.GetHitBox();
+	const AABB playerBox = pImpl->player.GetHitBox();
 
 	// Missiles vs Player.
 	{
@@ -556,6 +558,16 @@ void SceneGame::DetectCollision()
 			}
 		}
 	}
+
+	// Player vs Boss.
+	{
+		const AABB boss = pImpl->boss.GetHitBox();
+
+		if ( AABB::IsHitAABB( playerBox, boss ) )
+		{
+			pImpl->wasTouched = true;
+		}
+	}
 }
 
 Scene::Result SceneGame::ReturnResult()
@@ -582,7 +594,7 @@ Scene::Result SceneGame::ReturnResult()
 	// else
 
 #if DEBUG_MODE
-	if ( Donya::Keyboard::Trigger( VK_RETURN ) )
+	if ( Donya::Keyboard::Trigger( VK_RETURN ) || pImpl->boss.IsDead() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
@@ -595,7 +607,7 @@ Scene::Result SceneGame::ReturnResult()
 		return change;
 	}
 	// else
-	if ( Donya::Keyboard::Trigger( 'Q' ) )
+	if ( Donya::Keyboard::Trigger( 'Q' ) || pImpl->wasTouched )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.

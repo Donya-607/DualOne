@@ -601,6 +601,10 @@ public:
 	/// Returns hit-box is in world-space.
 	/// </summary>
 	AABB GetHitBox() const;
+	/// <summary>
+	/// if ( GetCurrentHP() == 0 )
+	/// </summary>
+	bool IsDead() const;
 
 	/// <summary>
 	/// Please call Missile::HitToOther() when hit detected.
