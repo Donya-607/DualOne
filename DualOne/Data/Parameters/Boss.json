@@ -19,18 +19,18 @@
         "velocity": {
             "x": 0.0,
             "y": 0.0,
-            "z": -3.5
+            "z": -9.0
         },
         "missileOffset": {
             "x": 0.0,
             "y": 12.0,
             "z": 0.0
         },
-        "maxDistanceToTarget": 400.0,
+        "maxDistanceToTarget": 700.0,
         "obstacleOffset": {
             "x": 0.0,
             "y": 12.0,
-            "z": -666.0
+            "z": -128.0
         },
         "beamOffset": {
             "x": 0.0,
@@ -41,6 +41,11 @@
             "x": 0.0,
             "y": 0.0,
             "z": -48.0
+        },
+        "stunVelocity": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -6.0
         }
     }
 }

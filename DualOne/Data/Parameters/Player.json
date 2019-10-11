@@ -1,6 +1,6 @@
 {
     "Player": {
-        "cereal_class_version": 2,
+        "cereal_class_version": 3,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -14,23 +14,23 @@
                 "y": 6.5,
                 "z": 2.5
             },
-            "exist": true
+            "exist": false
         },
-        "changeLaneSpeed": 0.10000000149011612,
-        "chargeSpeed": 0.05000000074505806,
+        "changeLaneSpeed": 0.125,
+        "chargeSpeed": 0.1666666716337204,
         "fallResistance": 0.5,
         "gravity": 0.800000011920929,
         "jumpResistance": 0.5,
         "jumpStrength": 12.0,
-        "runSpeedUsual": 4.0,
-        "runSpeedSlow": 3.0,
+        "runSpeedUsual": 10.0,
+        "runSpeedSlow": 7.0,
         "stunFrame": 45,
         "generateReflectionOffset": {
             "x": 0.0,
-            "y": 0.0,
+            "y": 54.0,
             "z": 0.0
         },
-        "reflection.gravity": 0.800000011920929,
+        "reflection.gravity": 0.20000000298023225,
         "reflection.hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -44,8 +44,9 @@
         "reflection.velocity": {
             "x": 0.0,
             "y": 0.0,
-            "z": 8.0
+            "z": 12.0
         },
-        "runSpeedJump": 3.5
+        "runSpeedJump": 9.0,
+        "runSpeedStun": 6.0
     }
 }

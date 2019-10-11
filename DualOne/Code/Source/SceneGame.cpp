@@ -38,7 +38,7 @@ public:
 	Player	player;
 	Ground	ground;
 	Boss	boss;
-	ParticleManager particleManager;
+//	ParticleManager particleManager;
 	Timer	currentTime;
 	Donya::Vector3	lightDirection;
 	Donya::Vector3	cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
@@ -235,7 +235,7 @@ void SceneGame::Init()
 
 	pImpl->boss.Init( pImpl->initDistanceOfBoss, pImpl->lanePositions );
 
-	pImpl->particleManager.Init();
+	ParticleManager::Get().Init();
 
 	// The camera's initialize should call after player's initialize.
 	constexpr float FOV = ToRadian( 30.0f );
@@ -322,7 +322,11 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	}
 
 	pImpl->boss.Update( pImpl->player.GetPos() );
-	pImpl->particleManager.Update();
+
+	ParticleEmitterPosition arg;
+	arg.playerPos = pImpl->player.GetPos();
+	arg.misslePos = NULL;
+	ParticleManager::Get().Update( arg );
 
 	Camera::Controller cameraController{};
 	cameraController.SetNoOperation();
@@ -469,7 +473,7 @@ void SceneGame::Draw( float elapsedTime )
 
 	pImpl->boss.Draw( matView, matProj, lightDir, cameraPos );
 
-	pImpl->particleManager.Draw( matView, matProj, lightDir, cameraPos );
+	ParticleManager::Get().Draw( matView, matProj, lightDir, cameraPos );
 
 	for ( const auto &it : pImpl->reflectedEntities )
 	{

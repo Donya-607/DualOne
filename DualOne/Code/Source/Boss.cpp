@@ -228,7 +228,6 @@ void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X
 			lightDirection,
 			colColor
 		);
-
 	}
 
 #endif // DEBUG_MODE
@@ -1528,6 +1527,9 @@ void Boss::ShootMissile( const Donya::Vector3 &wsAttackTargetPos )
 
 	missiles.push_back( {} );
 	missiles.back().Init( appearPos );
+
+	// Emit Particle
+
 }
 void Boss::UpdateMissiles()
 {
