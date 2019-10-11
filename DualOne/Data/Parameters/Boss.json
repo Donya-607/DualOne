@@ -24,7 +24,7 @@
         "missileOffset": {
             "x": 0.0,
             "y": 12.0,
-            "z": 0.0
+            "z": -64.0
         },
         "maxDistanceToTarget": 400.0,
         "obstacleOffset": {

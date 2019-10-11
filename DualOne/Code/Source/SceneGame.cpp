@@ -277,7 +277,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 #endif // USE_IMGUI
 
-	pImpl->ground.Update(pImpl->player.GetPos());
+	pImpl->ground.Update( pImpl->player.GetPos() );
 
 	auto MakePlayerInput = [&]()->Player::Input
 	{
@@ -325,7 +325,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		pImpl->reflectedEntities.erase( result, pImpl->reflectedEntities.end() );
 	}
 
-	pImpl->boss.Update( pImpl->player.GetPos() );
+	pImpl->boss.Update( pImpl->player.GetCurrentLane(), pImpl->player.GetPos() );
 	pImpl->particleManager.Update();
 
 	Camera::Controller cameraController{};
