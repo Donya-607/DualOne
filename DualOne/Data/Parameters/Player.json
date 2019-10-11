@@ -6,15 +6,15 @@
             "pos": {
                 "cereal_class_version": 0,
                 "x": 0.0,
-                "y": 12.0,
-                "z": 1.0
+                "y": 8.0,
+                "z": 4.0
             },
             "size": {
-                "x": 2.5,
-                "y": 6.5,
-                "z": 2.5
+                "x": 4.0,
+                "y": 8.0,
+                "z": 12.0
             },
-            "exist": false
+            "exist": true
         },
         "changeLaneSpeed": 0.125,
         "chargeSpeed": 0.1666666716337204,
@@ -27,10 +27,10 @@
         "stunFrame": 45,
         "generateReflectionOffset": {
             "x": 0.0,
-            "y": 54.0,
+            "y": 80.0,
             "z": 0.0
         },
-        "reflection.gravity": 0.20000000298023225,
+        "reflection.gravity": 0.4300000071525574,
         "reflection.hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -43,7 +43,7 @@
         },
         "reflection.velocity": {
             "x": 0.0,
-            "y": 0.0,
+            "y": 3.5,
             "z": 12.0
         },
         "runSpeedJump": 9.0,

@@ -29,7 +29,7 @@ struct Particle
 	Donya::Vector3			startVelocity;
 	Donya::Vector3			scale;
 	static Donya::Vector3	setVelocity;
-	float					angle;// degree
+	Donya::Vector3			angle;
 	int						existanceTime;
 	Type					type;
 
@@ -39,14 +39,13 @@ struct Particle
 	Particle& operator = (const Particle&);
 	~Particle();
 
-
+	void SetNoneElements(Donya::Vector3 _emitterPos);
 	void SetSledElements(Donya::Vector3 _emitterPos);
+	void SetBossElements(Donya::Vector3 _emitterPos);
 	void SetMissleElements(Donya::Vector3 _emitterPos);
 
 	void UpdateOfSleds();
 	void UpdateOfMissles();
-
-
 };
 
 class ParticleManager : public Donya::Singleton<ParticleManager>
@@ -122,6 +121,7 @@ public:
 	/*---------------------*/
 private:
 	void JudgeEraseSled();
+	void JudgeEraseSmokeOfMissle();
 
 #ifdef USE_IMGUI
 	void UseImGui();

@@ -1,7 +1,7 @@
 {
     "Missile": {
-        "cereal_class_version": 1,
-        "waitFrame": 0,
+        "cereal_class_version": 2,
+        "waitFrame": 60,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -20,8 +20,9 @@
         "velocity": {
             "x": 0.0,
             "y": 0.0,
-            "z": -8.0
+            "z": 18.0
         },
-        "aliveFrame": 120
+        "aliveFrame": 120,
+        "exposingLength": 80.0
     }
 }

@@ -43,6 +43,7 @@ private:
 	Donya::Vector3	pos;
 	Donya::Vector3	velocity;
 	Donya::Vector3	scale;
+	Donya::Vector3	angle;
 public:
 	Tree();
 	~Tree();
@@ -62,7 +63,6 @@ public:
 	}
 
 	void LoadModel();
-	void UseImGui();
 
 	// Getter
 //	bool GetIsEnable() { return isEnable; }
@@ -75,6 +75,9 @@ class Ground
 	std::array<Block, 4> blocks;
 	std::vector<Tree>	trees;
 	int					timer;
+public:
+	static Donya::Vector3 treeAngle;
+
 public:
 	Ground();
 	~Ground();
@@ -93,4 +96,9 @@ public:
 	);
 
 	void EraseDeadTree(Donya::Vector3 _playerPos);
+
+#ifdef USE_IMGUI
+	void UseImGui();
+#endif
+
 };

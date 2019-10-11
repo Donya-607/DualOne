@@ -15,6 +15,7 @@
 
 #include "Common.h"
 #include "FilePath.h"
+#include "Effect.h"
 
 #pragma region Missile
 
@@ -164,6 +165,8 @@ void Missile::Update()
 	aliveFrame--;
 
 	Move();
+
+	ParticleManager::Get().CreateSmokeOfMissleParticle(pos);
 
 #if DEBUG_MODE
 
