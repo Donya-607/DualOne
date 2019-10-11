@@ -34,6 +34,8 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 		return L"./Data/Images/Object/è∞2.png";		// break;
 	case SpriteAttribute::SledEffect:
 		return L"./Data/Images/Effect/snow.png";	// break;
+	case SpriteAttribute::SmokeEffect:
+		return L"./Data/Images/Effect/smoke.png";	// break;
 	default:
 		assert( !"Error : Specified unexpect sprite type." ); break;
 	}

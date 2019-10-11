@@ -15,6 +15,7 @@ enum class SpriteAttribute
 	GroundTex1,
 	GroundTex2,
 	SledEffect,
+	SmokeEffect,
 };
 std::wstring GetSpritePath( SpriteAttribute fileAttribute );
 

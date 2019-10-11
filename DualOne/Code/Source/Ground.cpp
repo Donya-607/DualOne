@@ -49,7 +49,15 @@ void Block::Init(size_t _num)
 	else
 		pos = Donya::Vector3(0.0f, 0.0f, -1500.0f);
 	velocity = Donya::Vector3(0.0f, 0.0f, 0.0f);
+
+#if 0
 	scale = Donya::Vector3(100.0f, 1.0f, 2000.0f);
+#else
+	scale = Donya::Vector3(100.0f, 500.0f, 0.1f);
+
+	if (_num % 2 == 0)
+		pos.y += -1.0f;
+#endif
 }
 /*-------------------------------------------------*/
 //	çXêVä÷êî
@@ -84,7 +92,7 @@ void Block::Draw(
 		return matrix;
 	};
 	//ãtçsóÒÇÃçÏê¨
-#if 1
+#if 0
 	DirectX::XMFLOAT4X4		view2 = matView;
 	DirectX::XMMATRIX		inv_view2;
 	view2._14 = view2._24 = view2._34 = 0.0f;
@@ -105,9 +113,9 @@ void Block::Draw(
 	XMMATRIX WVP = inv_view2 * W * VPSynthesisMatrix;
 #else
 	XMMATRIX S = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-	XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f);
+	XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw( DirectX::XMConvertToRadians(90.0f), 0.0f, 0.0f);
 	XMMATRIX T = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
-	XMMATRIX W = S * T;
+	XMMATRIX W = S * R * T;
 
 	XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
 
