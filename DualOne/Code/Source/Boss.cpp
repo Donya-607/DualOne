@@ -16,6 +16,7 @@
 
 #include "Common.h"
 #include "FilePath.h"
+#include "Effect.h"
 
 #undef max
 #undef min
@@ -288,6 +289,8 @@ void Missile::FlyUpdate()
 	aliveFrame--;
 
 	Move();
+
+	ParticleManager::Get().CreateSmokeOfMissleParticle( pos );
 
 #if DEBUG_MODE
 

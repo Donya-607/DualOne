@@ -150,6 +150,7 @@ void Block::ApplyLoopToMap(Donya::Vector3 _playerPos)
 //	Ground
 //
 /*-------------------------------------------------*/
+Donya::Vector3 Ground::treeAngle;
 /*-------------------------------------------------*/
 //	コンストラクタとデストラクタ
 /*-------------------------------------------------*/
@@ -205,6 +206,8 @@ void Ground::Update(Donya::Vector3 _playerPos)
 	}
 
 	EraseDeadTree(_playerPos);
+
+	UseImGui();
 }
 
 /*-------------------------------------------------*/
@@ -253,6 +256,23 @@ void Ground::EraseDeadTree(Donya::Vector3 _playerPos)
 	trees.erase(eraseItr, trees.end());
 }
 
+#ifdef USE_IMGUI
+void Ground::UseImGui()
+{
+	if (ImGui::BeginIfAllowed())
+	{
+		if (ImGui::TreeNode(u8"木の角度"))
+		{
+			ImGui::SliderFloat(u8"角度X", &treeAngle.x, 0.0f, 180.0f);
+			ImGui::SliderFloat(u8"角度Y", &treeAngle.y, 0.0f, 180.0f);
+			ImGui::SliderFloat(u8"角度Z", &treeAngle.z, 0.0f, 180.0f);
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
+}
+#endif
+
 
 /*-------------------------------------------------*/
 //
@@ -284,6 +304,7 @@ void Tree::Init(Donya::Vector3 _pos)
 	pos = _pos;
 	velocity = Donya::Vector3(0.0f, 0.0f, -4.0f);
 	scale = Donya::Vector3(1.8f, 1.8f, 1.8f);
+	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	LoadModel();
 }
 
@@ -321,7 +342,7 @@ void Tree::Draw
 	};
 
 	XMMATRIX S = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-	XMMATRIX R = DirectX::XMMatrixIdentity();
+	XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Ground::treeAngle.x), DirectX::XMConvertToRadians(Ground::treeAngle.y), DirectX::XMConvertToRadians(Ground::treeAngle.z));
 	XMMATRIX T = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 	XMMATRIX W = S * R * T;
 	XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
@@ -356,16 +377,3 @@ void Tree::LoadModel()
 	wasLoaded = true;
 }
 
-void Tree::UseImGui()
-{
-	if (ImGui::BeginIfAllowed())
-	{
-		ImGui::SliderFloat(u8"木の座標X", &pos.x, -100.0f, 100.f);
-		ImGui::SliderFloat(u8"木の座標Y", &pos.y, -100.0f, 100.f);
-		ImGui::SliderFloat(u8"木の座標Z", &pos.z, -100.0f, 100.f);
-		ImGui::SliderFloat(u8"木のvelocity X", &velocity.x, -100.0f, 100.f);
-		ImGui::SliderFloat(u8"木のvelocity Y", &velocity.y, -100.0f, 100.f);
-		ImGui::SliderFloat(u8"木のvelocity Z", &velocity.z, -100.0f, 100.f);
-		ImGui::End();
-	}
-}
