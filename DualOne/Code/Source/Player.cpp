@@ -311,12 +311,12 @@ public:
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 
-					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 512.0f );
-					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.01f, 512.0f );
+					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 128.0f );
+					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.0f, 128.0f );
 					ImGui::Text( u8"ジャンプ初速 ＝ ジャンプ初速 * ( 1.0f - ジャンプ抵抗力 * チャージ量 )" );
 
 					ImGui::SliderFloat( u8"重力", &gravity, 0.0f, 16.0f );
-					ImGui::SliderFloat( u8"重力抵抗力（チャージ量の影響を受ける）", &fallResistance, 0.001f, 0.99f );
+					ImGui::SliderFloat( u8"重力抵抗力（チャージ量の影響を受ける）", &fallResistance, 0.0f, 1.0f );
 					ImGui::Text( u8"重力 ＝ 重力 * ( 1.0f - 重力抵抗力 * チャージ量 )" );
 
 					ImGui::TreePop();

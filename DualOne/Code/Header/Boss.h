@@ -39,11 +39,23 @@ public:
 
 #endif // USE_IMGUI
 private:
+	enum class State
+	{
+		Expose,
+		Wait,
+		Fly
+	};
+private:
+	State				status;
+
 	int					aliveFrame;
 	int					waitFrame;
+	
+	float				exposingLength;	// Use when generated ~ wait.
 
-	AABB				hitBox;		// The position is local-space, size is world-space.
+	AABB				hitBox;			// The position is local-space, size is world-space.
 	Donya::Vector3		pos;
+	Donya::Vector3		basePos;
 	Donya::Vector3		velocity;
 	Donya::Quaternion	posture;
 
@@ -68,6 +80,10 @@ private:
 		}
 		if ( 2 <= version )
 		{
+			archive( CEREAL_NVP( exposingLength ) );
+		}
+		if ( 3 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -75,7 +91,7 @@ public:
 	void Init( const Donya::Vector3 &wsAppearPos );
 	void Uninit();
 
-	void Update();
+	void Update( float basePositionZ );
 
 	void Draw
 	(
@@ -102,10 +118,14 @@ public:
 	/// </summary>
 	void HitToOther() const;
 private:
+	void ExposeUpdate();
+	void WaitUpdate();
+	void FlyUpdate();
+
 	void Move();
 };
 
-CEREAL_CLASS_VERSION( Missile, 1 )
+CEREAL_CLASS_VERSION( Missile, 2 )
 
 class Obstacle
 {

@@ -101,7 +101,9 @@ void Missile::UseImGui()
 
 			if ( ImGui::TreeNode( u8"性能" ) )
 			{
-				ImGui::SliderInt( u8"消えるまでの時間", &parameter.aliveFrame, 1, 360 );
+				ImGui::SliderFloat( u8"顔見せ・生成から待機までの移動距離", &parameter.exposingLength, 0.0f, 256.0f );
+				ImGui::SliderInt( u8"顔見せ・待機時間（フレーム）", &parameter.waitFrame, 1, 360 );
+				ImGui::SliderInt( u8"消えるまでの時間（フレーム）", &parameter.aliveFrame, 1, 360 );
 
 				ImGui::SliderFloat3( u8"移動速度", &parameter.velocity.x, 0.1f, 32.0f );
 				if ( 0.0f < parameter.velocity.z ) { parameter.velocity.z *= -1.0f; }
@@ -139,9 +141,11 @@ void Missile::UseImGui()
 #endif // USE_IMGUI
 
 Missile::Missile() :
+	status( State::Expose ),
 	aliveFrame( 0 ), waitFrame( 0 ),
+	exposingLength(),
 	hitBox(),
-	pos(), velocity(),
+	pos(), basePos(), velocity(),
 	posture(),
 	wasHitToOther( false )
 {}
@@ -153,6 +157,7 @@ void Missile::Init( const Donya::Vector3 &wsAppearPos )
 	*this		= parameter;
 
 	pos			= wsAppearPos;
+	basePos		= wsAppearPos;
 
 	posture		= Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 }
@@ -162,18 +167,17 @@ void Missile::Uninit()
 	// No op.
 }
 
-void Missile::Update()
+void Missile::Update( float basePosZ )
 {
-	aliveFrame--;
+	basePos.z = basePosZ;
 
-	Move();
-
-#if DEBUG_MODE
-
-	auto rotQ = Donya::Quaternion::Make( Donya::Vector3::Front(), ToRadian( 12.0f ) );
-	posture = rotQ * posture;
-
-#endif // DEBUG_MODE
+	switch ( status )
+	{
+	case Missile::State::Expose:	ExposeUpdate();	break;
+	case Missile::State::Wait:		WaitUpdate();	break;
+	case Missile::State::Fly:		FlyUpdate();	break;
+	default: break;
+	}
 }
 
 void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -239,6 +243,9 @@ void Missile::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X
 
 AABB Missile::GetHitBox() const
 {
+	if ( status != State::Fly ) { return AABB::Nil(); }
+	// else
+
 	AABB wsHitBox = hitBox;
 	wsHitBox.pos += GetPos();
 	return wsHitBox;
@@ -252,6 +259,43 @@ bool Missile::ShouldErase() const
 void Missile::HitToOther() const
 {
 	wasHitToOther = true;
+}
+
+void Missile::ExposeUpdate()
+{
+	Move();
+
+	float distance = fabsf( pos.z - basePos.z );
+	if ( exposingLength <= distance )
+	{
+		pos.z = basePos.z - exposingLength;
+
+		status = State::Wait;
+	}
+}
+void Missile::WaitUpdate()
+{
+	pos.z = basePos.z - exposingLength;
+
+	waitFrame--;
+	if ( waitFrame <= 0 )
+	{
+		waitFrame = 0;
+		status = State::Fly;
+	}
+}
+void Missile::FlyUpdate()
+{
+	aliveFrame--;
+
+	Move();
+
+#if DEBUG_MODE
+
+	auto rotQ = Donya::Quaternion::Make( Donya::Vector3::Front(), ToRadian( 12.0f ) );
+	posture = rotQ * posture;
+
+#endif // DEBUG_MODE
 }
 
 void Missile::Move()
@@ -1696,7 +1740,7 @@ void Boss::UpdateMissiles()
 {
 	for ( auto &it : missiles )
 	{
-		it.Update();
+		it.Update( pos.z );
 	}
 
 	auto eraseItr = std::remove_if

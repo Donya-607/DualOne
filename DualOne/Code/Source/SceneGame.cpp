@@ -286,8 +286,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		auto &ctrller = pImpl->controller;
 		if ( ctrller.IsConnected() )
 		{
-			if ( ctrller.Trigger( Donya::Gamepad::Button::LEFT  ) ) { input.stick.x =  1.0f; }
-			if ( ctrller.Trigger( Donya::Gamepad::Button::RIGHT ) ) { input.stick.x = -1.0f; }
+			bool triggerLeft  = ctrller.Trigger( Donya::Gamepad::Button::LEFT  ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::LEFT  );
+			bool triggerRight = ctrller.Trigger( Donya::Gamepad::Button::RIGHT ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::RIGHT );
+			if ( triggerLeft  ) { input.stick.x = -1.0f; }
+			if ( triggerRight ) { input.stick.x =  1.0f; }
 
 			if ( ctrller.Press( Donya::Gamepad::Button::A ) ) { input.doCharge = true; }
 		}
@@ -601,7 +603,7 @@ Scene::Result SceneGame::ReturnResult()
 	// else
 
 #if DEBUG_MODE
-	if ( Donya::Keyboard::Trigger( VK_RETURN ) || pImpl->boss.IsDead() )
+	if ( ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) ) || pImpl->boss.IsDead() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
