@@ -329,41 +329,6 @@ void Tree::Draw
 	constexpr XMFLOAT4 color{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 	pModel->Render(Float4x4(WVP), Float4x4(W), lightDirection, color, cameraPosition);
-
-	//if (Common::IsShowCollision())
-	{
-		AABB wsBody
-		{
-			{0,0,0},
-			{scale.x, scale.y, scale.z},
-			true
-		};
-		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
-
-		XMMATRIX colS = XMMatrixScaling(wsBody.size.x, wsBody.size.y, wsBody.size.z);
-		XMMATRIX colT = XMMatrixTranslation(wsBody.pos.x, wsBody.pos.y, wsBody.pos.z);
-		XMMATRIX colW = colS * R * colT;
-
-		XMMATRIX colWVP = colW * Matrix(matView) * Matrix(matProjection);
-
-		constexpr XMFLOAT4 colColor{ 1.0f, 0.3f, 1.0f, 0.5f };
-
-		auto InitializedCube = []()
-		{
-			Donya::Geometric::Cube cube{};
-			cube.Init();
-			return cube;
-		};
-		static Donya::Geometric::Cube cube = InitializedCube();
-		cube.Render
-		(
-			Float4x4(colWVP),
-			Float4x4(colW),
-			lightDirection,
-			colColor
-		);
-
-	}
 }
 
 /*-------------------------------------------------*/
