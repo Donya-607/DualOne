@@ -1623,10 +1623,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	auto RenderModelPart = [&]( const ModelPart &mp )
 	{
-		Donya::Quaternion synthesisPosture = basePosture * mp.posture;
-		// Donya::Vector3 rotatedOffset = synthesisPosture.RotateVector( mp.offset );
-		Donya::Vector3 rotatedOffset = mp.offset;
+		Donya::Vector3 rotatedOffset = basePosture.RotateVector( mp.offset );
 		Donya::Vector3 coord = pos + rotatedOffset;
+		Donya::Quaternion synthesisPosture = basePosture * mp.posture;
 
 		XMMATRIX S = XMMatrixScaling( mp.scale.x, mp.scale.y, mp.scale.z );
 		XMMATRIX R = Matrix( synthesisPosture.RequireRotationMatrix() );

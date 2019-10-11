@@ -612,10 +612,12 @@ private:
 	Donya::Vector3						pos;
 	Donya::Vector3						velocity;
 	Donya::Vector3						stunVelocity;	// Use when stun.
+
 	Donya::Vector3						missileOffset;	// The offset of appear position of missile. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						beamOffset;		// The offset of appear position of beam. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						waveOffset;		// The offset of appear position of wave.
+
 	Donya::Quaternion					basePosture;
 
 	ModelPart							modelBody;
