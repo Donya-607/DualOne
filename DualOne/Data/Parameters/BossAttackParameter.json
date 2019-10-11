@@ -1,7 +1,7 @@
 {
     "BossAttackParameter": {
         "cereal_class_version": 3,
-        "maxHP": 5,
+        "maxHP": 10,
         "counterMax": 3600,
         "untilAttackFrame": 60,
         "resetWaitFrame": 60,
@@ -35,6 +35,36 @@
                 "value1": 9999,
                 "value2": 9999,
                 "value3": 9999
+            },
+            {
+                "value0": 0,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 450,
+                "value1": 360,
+                "value2": 600,
+                "value3": 600
+            },
+            {
+                "value0": 450,
+                "value1": 360,
+                "value2": 600,
+                "value3": 600
+            },
+            {
+                "value0": 450,
+                "value1": 360,
+                "value2": 600,
+                "value3": 600
+            },
+            {
+                "value0": 450,
+                "value1": 360,
+                "value2": 600,
+                "value3": 600
             }
         ],
         "reuseFramesPerHP": [
@@ -67,6 +97,36 @@
                 "value1": 9999,
                 "value2": 9999,
                 "value3": 9999
+            },
+            {
+                "value0": 0,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 0,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 0,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 1,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 1,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
             }
         ],
         "obstaclePatterns": [

@@ -106,8 +106,7 @@ void Missile::UseImGui()
 				ImGui::SliderInt( u8"消えるまでの時間（フレーム）", &parameter.aliveFrame, 1, 360 );
 
 				ImGui::SliderFloat3( u8"移動速度", &parameter.velocity.x, 0.1f, 32.0f );
-				if ( 0.0f < parameter.velocity.z ) { parameter.velocity.z *= -1.0f; }
-
+				
 				ImGui::TreePop();
 			}
 
@@ -300,7 +299,9 @@ void Missile::FlyUpdate()
 
 void Missile::Move()
 {
-	pos += velocity;
+	pos.x += velocity.x;
+	pos.y += velocity.y;
+	pos.z -= velocity.z;
 }
 
 // region Missile
