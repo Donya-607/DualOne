@@ -122,7 +122,7 @@ void ParticleManager::DrawSled(const DirectX::XMFLOAT4X4& matView,
 	{
 		if (it.existanceTime <= 10)
 		{
-			color.w = (it.existanceTime - 1)/10;
+			color.w = static_cast<float>( (it.existanceTime - 1)/10 );
 		}
 		else
 		{
