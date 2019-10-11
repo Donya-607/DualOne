@@ -565,6 +565,30 @@ public:
 
 CEREAL_CLASS_VERSION( CollisionDetail, 0 )
 
+struct ModelPart
+{
+public:
+	Donya::Vector3						offset{};
+	Donya::Vector3						scale{};
+	Donya::Quaternion					posture{};
+	std::shared_ptr<Donya::StaticMesh>	pModel{};
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( offset ),
+			CEREAL_NVP( scale )
+		);
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "ModelPart";
+};
 class Boss
 {
 private:
@@ -592,11 +616,11 @@ private:
 	Donya::Vector3						obstacleOffset;	// The offset of appear position of obstacle. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						beamOffset;		// The offset of appear position of beam. the x used to [positive:outer side][negative:inner side].
 	Donya::Vector3						waveOffset;		// The offset of appear position of wave.
-	Donya::Quaternion					posture;
+	Donya::Quaternion					basePosture;
 
-	std::shared_ptr<Donya::StaticMesh>	pModelBody;
-	std::shared_ptr<Donya::StaticMesh>	pModelFoot;
-	std::shared_ptr<Donya::StaticMesh>	pModelRoll;
+	ModelPart							modelBody;
+	ModelPart							modelFoot;
+	ModelPart							modelRoll;
 
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 	std::vector<Missile>				missiles;
@@ -641,6 +665,15 @@ private:
 			archive( CEREAL_NVP( stunVelocity ) );
 		}
 		if ( 7 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( modelBody ),
+				CEREAL_NVP( modelFoot ),
+				CEREAL_NVP( modelRoll )
+			);
+		}
+		if ( 8 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -697,6 +730,8 @@ public:
 private:
 	void LoadModel();
 
+	void RotateRoll();
+
 	void Move( const Donya::Vector3 &wsAttackTargetPos );
 
 	void LotteryAttack( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
@@ -733,4 +768,4 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 6 )
+CEREAL_CLASS_VERSION( Boss, 7 )

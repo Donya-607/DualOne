@@ -1,6 +1,6 @@
 {
     "Boss": {
-        "cereal_class_version": 6,
+        "cereal_class_version": 7,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -46,6 +46,43 @@
             "x": 0.0,
             "y": 0.0,
             "z": -6.0
+        },
+        "modelBody": {
+            "cereal_class_version": 0,
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "modelFoot": {
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "modelRoll": {
+            "offset": {
+                "x": 0.0,
+                "y": 21.062999725341798,
+                "z": -82.91799926757813
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
         }
     }
 }

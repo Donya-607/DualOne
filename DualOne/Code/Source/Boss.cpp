@@ -1503,15 +1503,15 @@ Boss::Boss() :
 	hitBox(),
 	pos(), velocity(), stunVelocity(),
 	missileOffset(), obstacleOffset(), waveOffset(),
-	posture(),
-	pModelBody( nullptr ), pModelFoot( nullptr ), pModelRoll( nullptr ),
+	basePosture(),
+	modelBody(), modelFoot(), modelRoll(),
 	lanePositions(), missiles(), obstacles(), beams(), waves()
 {}
 Boss::~Boss()
 {
-	pModelBody.reset();
-	pModelFoot.reset();
-	pModelRoll.reset();
+	modelBody.pModel.reset();
+	modelFoot.pModel.reset();
+	modelRoll.pModel.reset();
 
 	lanePositions.clear();
 	lanePositions.shrink_to_fit();
@@ -1553,7 +1553,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	lanePositions = registerLanePositions;
 	Obstacle::Warning::RegisterLaneCount( lanePositions.size() );
 
-	posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
 }
 
 void Boss::Uninit()
@@ -1599,6 +1599,8 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	}
 
 	UpdateAttacks();
+
+	RotateRoll();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -1616,17 +1618,27 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
-	XMMATRIX S = XMMatrixIdentity();
-	XMMATRIX R = Matrix( posture.RequireRotationMatrix() );
-	XMMATRIX T = XMMatrixTranslation( pos.x, pos.y, pos.z );
-	XMMATRIX W = S * R * T;
-	XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+	auto RenderModelPart = [&]( const ModelPart &mp )
+	{
+		Donya::Quaternion synthesisPosture = basePosture * mp.posture;
+		// Donya::Vector3 rotatedOffset = synthesisPosture.RotateVector( mp.offset );
+		Donya::Vector3 rotatedOffset = mp.offset;
+		Donya::Vector3 coord = pos + rotatedOffset;
 
-	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		XMMATRIX S = XMMatrixScaling( mp.scale.x, mp.scale.y, mp.scale.z );
+		XMMATRIX R = Matrix( synthesisPosture.RequireRotationMatrix() );
+		XMMATRIX T = XMMatrixTranslation( coord.x, coord.y, coord.z );
+		XMMATRIX W = S * R * T;
+		XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
 
-	pModelBody->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
-	pModelFoot->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
-	pModelRoll->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+		constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+		mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+	};
+
+	RenderModelPart( modelBody );
+	RenderModelPart( modelFoot );
+	RenderModelPart( modelRoll );
 
 	for ( const auto &it : missiles )
 	{
@@ -1761,9 +1773,9 @@ void Boss::LoadModel()
 	constexpr size_t MODEL_COUNT = 3;
 	const std::array<std::shared_ptr<Donya::StaticMesh> *, MODEL_COUNT> LOAD_MODELS
 	{
-		&pModelBody,
-		&pModelFoot,
-		&pModelRoll
+		&modelBody.pModel,
+		&modelFoot.pModel,
+		&modelRoll.pModel
 	};
 	const std::array<std::string, MODEL_COUNT> LOAD_PATHS
 	{
@@ -1784,6 +1796,14 @@ void Boss::LoadModel()
 
 		_ASSERT_EXPR( loadModel, L"Failed : Load boss model." );
 	}
+}
+
+void Boss::RotateRoll()
+{
+	constexpr float SPEED = ToRadian( 12.0f );
+	Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), SPEED );
+
+	modelRoll.posture = rotation * modelRoll.posture;
 }
 
 void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )
@@ -2084,7 +2104,7 @@ void Boss::ReceiveDamage( int damage )
 void Boss::StunUpdate()
 {
 	Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
-	posture = rotation * posture;
+	basePosture = rotation * basePosture;
 
 	stunTimer--;
 	if ( stunTimer <= 0 )
@@ -2092,7 +2112,7 @@ void Boss::StunUpdate()
 		stunTimer = 0;
 		status = State::Normal;
 
-		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+		basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
 	}
 }
 bool Boss::IsStunning() const
@@ -2175,6 +2195,26 @@ void Boss::UseImGui()
 				ImGui::SliderFloat3( u8"障害物設置位置のオフセット（相対）", &obstacleOffset.x, -128.0f, 128.0f );
 				ImGui::SliderFloat3( u8"ビーム設置位置のオフセット（相対）", &beamOffset.x, -128.0f, 128.0f );
 				ImGui::SliderFloat3( u8"ウェーブ発生位置のオフセット（相対）", &waveOffset.x, -128.0f, 128.0f );
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"モデル関連" ) )
+			{
+				auto ShowModelPartToGui = []( std::string name, ModelPart *pModel )
+				{
+					auto ToUTF8 = []( const std::string &str )
+					{
+						return Donya::MultiToUTF8( str );
+					};
+
+					ImGui::SliderFloat3( ToUTF8( name + "：位置のオフセット" ).c_str(), &pModel->offset.x, -128.0f, 128.0f );
+					ImGui::SliderFloat3( ToUTF8( name + "：スケール" ).c_str(), &pModel->scale.x, 0.01f, 3.0f );
+				};
+
+				ShowModelPartToGui( "体",		&modelBody );
+				ShowModelPartToGui( "足もと",	&modelFoot );
+				ShowModelPartToGui( "ローラー",	&modelRoll );
 
 				ImGui::TreePop();
 			}
