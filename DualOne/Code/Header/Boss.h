@@ -129,6 +129,57 @@ CEREAL_CLASS_VERSION( Missile, 2 )
 
 class Obstacle
 {
+public:
+	class Warning
+	{
+	private:
+		static size_t sprWarning;
+		static Warning parameter;
+	public:
+		static void RegisterLaneCount( size_t newLaneCount );
+
+		static void LoadSprite();
+
+		static void LoadParameter( bool isBinary = true );
+
+	#if USE_IMGUI
+
+		static void SaveParameter();
+
+		static void UseImGui();
+
+	#endif // USE_IMGUI
+	private:
+		int showFrame;
+		int laneNo;									// 0-based, count by left.
+		std::vector<Donya::Vector2> ssPositions;	// Screen-space.
+	public:
+		Warning();
+		~Warning();
+	private:
+		friend class cereal::access;
+		template<class Archive>
+		void serialize( Archive &archive, std::uint32_t version )
+		{
+			archive( CEREAL_NVP( showFrame ) );
+
+			if ( 1 <= version )
+			{
+				archive( CEREAL_NVP( ssPositions ) );
+			}
+			if ( 2 <= version )
+			{
+				// archive( CEREAL_NVP( x ) );
+			}
+		}
+		static constexpr const char *SERIAL_ID = "ObstacleWarning";
+	public:
+		void Init( int laneNo );
+
+		void Update();
+
+		void Draw() const;
+	};
 private:
 	static Obstacle parameter;
 	static std::shared_ptr<Donya::StaticMesh>	pModel;
@@ -151,6 +202,7 @@ public:
 private:
 	float				decelSpeed;	// Add to z-position. this works like deceleration.
 	AABB				hitBox;		// The position is local-space, size is world-space.
+	Warning				warning;
 	Donya::Vector3		pos;
 	Donya::Quaternion	posture;
 
@@ -174,7 +226,7 @@ private:
 		}
 	}
 public:
-	void Init( const Donya::Vector3 &wsAppearPos );
+	void Init( int laneNumber, const Donya::Vector3 &wsAppearPos );
 	void Uninit();
 
 	void Update();
@@ -207,6 +259,7 @@ private:
 };
 
 CEREAL_CLASS_VERSION( Obstacle, 0 )
+CEREAL_CLASS_VERSION( Obstacle::Warning, 1 )
 
 class Beam
 {

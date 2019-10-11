@@ -1,0 +1,21 @@
+{
+    "ObstacleWarning": {
+        "cereal_class_version": 1,
+        "showFrame": 240,
+        "ssPositions": [
+            {
+                "cereal_class_version": 0,
+                "x": 700.0,
+                "y": 960.0
+            },
+            {
+                "x": 960.0,
+                "y": 960.0
+            },
+            {
+                "x": 1220.0,
+                "y": 960.0
+            }
+        ]
+    }
+}

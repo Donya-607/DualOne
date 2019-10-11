@@ -6,6 +6,7 @@
 #include "Donya/Easing.h"
 #include "Donya/Loader.h"
 #include "Donya/Random.h"
+#include "Donya/Sprite.h"
 #include "Donya/Useful.h"
 
 #if DEBUG_MODE
@@ -309,6 +310,150 @@ void Missile::Move()
 
 #pragma region Obstacle
 
+#pragma region Warning
+
+size_t Obstacle::Warning::sprWarning{ NULL };
+Obstacle::Warning Obstacle::Warning::parameter{};
+
+void Obstacle::Warning::RegisterLaneCount( size_t newLaneCount )
+{
+	const size_t CURRENT_COUNT = parameter.ssPositions.size();
+	if ( CURRENT_COUNT == newLaneCount ) { return; }
+	// else
+
+	parameter.ssPositions.resize( newLaneCount );
+}
+
+void Obstacle::Warning::LoadSprite()
+{
+	if ( sprWarning != NULL ) { return; }
+	// else
+
+	sprWarning = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Warning ), 16U );
+}
+
+void Obstacle::Warning::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, parameter );
+}
+
+#if USE_IMGUI
+
+void Obstacle::Warning::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin  );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, parameter );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, parameter );
+}
+
+void Obstacle::Warning::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"障害物の警告" ) )
+		{
+			ImGui::SliderInt( u8"表示する時間（フレーム）", &parameter.showFrame, 1, 360 );
+
+			if ( ImGui::TreeNode( u8"描画位置" ) )
+			{
+				std::string caption{};
+				const size_t COUNT = parameter.ssPositions.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = std::to_string( i ) + "スクリーン座標(X,Y)";
+					caption = Donya::MultiToUTF8( caption );
+					ImGui::SliderFloat2( caption.c_str(), &parameter.ssPositions[i].x, 0.0f, 1920.0f );
+				}
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+Obstacle::Warning::Warning() :
+	showFrame(), laneNo(),
+	ssPositions()
+{}
+Obstacle::Warning::~Warning()
+{
+	ssPositions.clear();
+	ssPositions.shrink_to_fit();
+}
+
+void Obstacle::Warning::Init( int laneNumber )
+{
+	// Apply the external paramter.
+	*this = parameter;
+
+	laneNo = laneNumber;
+}
+
+void Obstacle::Warning::Update()
+{
+	showFrame--;
+}
+
+void Obstacle::Warning::Draw() const
+{
+	if ( showFrame <= 0 ) { return; }
+	if ( scast<int>( ssPositions.size() ) <= laneNo ) { return; } // safety.
+	// else
+
+	float oldDepth = Donya::Sprite::GetDrawDepth();
+	Donya::Sprite::SetDrawDepth( 0.0f );
+
+	Donya::Sprite::Draw
+	(
+		sprWarning,
+		ssPositions[laneNo].x,
+		ssPositions[laneNo].y,
+		0.0f, 0.7f
+	);
+
+	Donya::Sprite::SetDrawDepth( oldDepth );
+}
+
+// region Warning
+#pragma endregion
+
 Obstacle Obstacle::parameter{};
 std::shared_ptr<Donya::StaticMesh> Obstacle::pModel{ nullptr };
 
@@ -422,6 +567,7 @@ void Obstacle::UseImGui()
 Obstacle::Obstacle() :
 	decelSpeed(),
 	hitBox(),
+	warning(),
 	pos(),
 	posture(),
 	wasHitToOther( false )
@@ -430,12 +576,13 @@ Obstacle::Obstacle() :
 }
 Obstacle::~Obstacle() = default;
 
-void Obstacle::Init( const Donya::Vector3 &wsAppearPos )
+void Obstacle::Init( int laneNumber, const Donya::Vector3 &wsAppearPos )
 {
 	// Apply the external paramter.
 	*this		= parameter;
 
 	pos			= wsAppearPos;
+	warning.Init( laneNumber );
 }
 void Obstacle::Uninit()
 {
@@ -445,6 +592,8 @@ void Obstacle::Uninit()
 void Obstacle::Update()
 {
 	pos.z += decelSpeed;
+
+	warning.Update();
 }
 
 void Obstacle::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -471,6 +620,8 @@ void Obstacle::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+
+	warning.Draw();
 
 #if DEBUG_MODE
 
@@ -1384,6 +1535,8 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Missile::LoadModel();
 	Obstacle::LoadParameter();
 	Obstacle::LoadModel();
+	Obstacle::Warning::LoadParameter();
+	Obstacle::Warning::LoadSprite();
 	Beam::LoadParameter();
 	Beam::LoadModel();
 	Wave::LoadParameter();
@@ -1399,6 +1552,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	pos = Donya::Vector3{ 0.0f, 0.0f, initDistanceFromOrigin };
 	
 	lanePositions = registerLanePositions;
+	Obstacle::Warning::RegisterLaneCount( lanePositions.size() );
 
 	posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
 }
@@ -1426,6 +1580,7 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	UseImGui();
 	Missile::UseImGui();
 	Obstacle::UseImGui();
+	Obstacle::Warning::UseImGui();
 	Beam::UseImGui();
 	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
@@ -1589,8 +1744,8 @@ void Boss::ReceiveImpact( Donya::Vector3 wsCollidedPosition )
 	size_t damage = 0;
 
 	auto &levels = CollisionDetail::Get().levelBorders;
-	const size_t LEVEL_COUNT = levels.size();
-	for ( size_t i = LEVEL_COUNT - 1; 0 <= i; --i )
+	const int LEVEL_COUNT = scast<int>( levels.size() );
+	for ( int i = LEVEL_COUNT - 1; 0 <= i; --i )
 	{
 		if ( levels[i] <= normalizedOtherHeight )
 		{
@@ -1785,7 +1940,7 @@ void Boss::GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos )
 		wsAppearPos.z += obstacleOffset.z;
 
 		obstacles.push_back( {} );
-		obstacles.back().Init( wsAppearPos );
+		obstacles.back().Init( scast<int>( laneIndex ), wsAppearPos );
 	};
 
 	const auto &CHOSEN_LANE = PATTERNS[RANDOM];
