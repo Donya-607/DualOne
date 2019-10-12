@@ -1692,14 +1692,38 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		AABB wsBody = GetHitBox();
 		wsBody.size *= 2.0f;		// Use for scaling parameter. convert half-size to whole-size.
 
-		XMMATRIX colS = XMMatrixScaling( wsBody.size.x, wsBody.size.y, wsBody.size.z );
-		// XMMATRIX colR = XMMatrixIdentity();
-		XMMATRIX colT = XMMatrixTranslation( wsBody.pos.x, wsBody.pos.y, wsBody.pos.z );
-		XMMATRIX colW = colS * colT;
+		const auto &LEVELS = CollisionDetail::Get().levelBorders;
+		const size_t LEVEL_COUNT = LEVELS.size();
 
-		XMMATRIX colWVP = colW * Matrix( matView ) * Matrix( matProjection );
+		auto MakeBodyPart = [&wsBody, &LEVELS, &LEVEL_COUNT]( size_t index )
+		{
+			float nextHeight = ( LEVEL_COUNT - 1 <= index ) ? 1.0f : LEVELS[index + 1];
+			float heightPercent = ( nextHeight - LEVELS[index] );
 
-		constexpr XMFLOAT4 colColor{ 1.0f, 0.6f, 0.2f, 0.5f };
+			AABB wsPartBody = wsBody;
+			wsPartBody.size.y *= heightPercent;
+
+			float wsBottom = wsBody.pos.y - ( wsBody.size.y * 0.5f );
+			float wsPartBottom = wsBottom + ( wsBody.size.y * LEVELS[index] );
+			wsPartBody.pos.y = wsPartBottom + ( wsPartBody.size.y * 0.5f );
+
+			return wsPartBody;
+		};
+		auto GetColor = [&LEVEL_COUNT]( size_t index )
+		{
+			constexpr std::array<XMFLOAT4, 5> COLORS
+			{
+				XMFLOAT4{ 1.0f, 0.4f, 0.3f, 0.5f },	// Red
+				XMFLOAT4{ 0.4f, 0.6f, 1.0f, 0.5f },	// Blue
+				XMFLOAT4{ 0.5f, 1.0f, 0.6f, 0.5f },	// Green
+				XMFLOAT4{ 1.0f, 0.5f, 0.5f, 0.5f },	// Pink
+				XMFLOAT4{ 0.8f, 0.8f, 0.8f, 0.5f },	// Gray
+			};
+
+			return ( COLORS.size() <= index )
+			? XMFLOAT4{ 1.0f, 1.0f, 1.0f, 0.5f }	// White
+			: COLORS[index];
+		};
 
 		auto InitializedCube = []()
 		{
@@ -1708,14 +1732,25 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 			return cube;
 		};
 		static Donya::Geometric::Cube cube = InitializedCube();
-		cube.Render
-		(
-			Float4x4( colWVP ),
-			Float4x4( colW ),
-			lightDirection,
-			colColor
-		);
 
+		for ( size_t i = 0; i < LEVEL_COUNT; ++i )
+		{
+			AABB wsBodyPart = MakeBodyPart( i );
+
+			XMMATRIX S = XMMatrixScaling	( wsBodyPart.size.x, wsBodyPart.size.y, wsBodyPart.size.z );
+			XMMATRIX T = XMMatrixTranslation( wsBodyPart.pos.x,  wsBodyPart.pos.y,  wsBodyPart.pos.z  );
+			XMMATRIX W = S * T;
+
+			XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+
+			cube.Render
+			(
+				Float4x4( WVP ),
+				Float4x4( W ),
+				lightDirection,
+				GetColor( i )
+			);
+		}
 	}
 
 #endif // DEBUG_MODE
