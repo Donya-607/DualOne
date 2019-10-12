@@ -6,6 +6,7 @@
 #include "Donya/Easing.h"
 #include "Donya/Loader.h"
 #include "Donya/Random.h"
+#include "Donya/ScreenShake.h"
 #include "Donya/Sprite.h"
 #include "Donya/Useful.h"
 
@@ -1507,7 +1508,7 @@ Boss::Boss() :
 	pos(), velocity(), stunVelocity(),
 	missileOffset(), obstacleOffset(), waveOffset(),
 	basePosture(),
-	modelBody(), modelFoot(), modelRoll(),
+	modelBody(), modelFoot(), modelRoll(), arm(),
 	lanePositions(), missiles(), obstacles(), beams(), waves()
 {}
 Boss::~Boss()
@@ -1592,18 +1593,9 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 
 	Move( wsAttackTargetPos );
 
-	if ( IsStunning() )
-	{
-		StunUpdate();
-	}
-	else
-	{
-		LotteryAttack( targetLaneNo, wsAttackTargetPos );
-	}
+	UpdateCurrentStatus( targetLaneNo, wsAttackTargetPos );
 
 	UpdateAttacks();
-
-	RotateRoll();
 }
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
@@ -1797,6 +1789,26 @@ void Boss::LoadModel()
 		loadModel = Donya::StaticMesh::Create( loader );
 
 		_ASSERT_EXPR( loadModel, L"Failed : Load boss model." );
+	}
+}
+
+void Boss::UpdateCurrentStatus( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
+{
+	switch ( status )
+	{
+	case Boss::State::Normal:
+		LotteryAttack( targetLaneNo, wsAttackTargetPos );
+		RotateRoll();
+		break;
+	case Boss::State::Stun:
+		StunUpdate();
+		break;
+	case Boss::State::GenerateWave:
+		ArmUpdate();
+		RotateRoll();
+		break;
+	default:
+		break;
 	}
 }
 
@@ -2047,6 +2059,73 @@ void Boss::UpdateBeams()
 	beams.erase( eraseItr, beams.end() );
 }
 
+void Boss::SetWaveMode()
+{
+	status = State::GenerateWave;
+	ResetArmState();
+}
+void Boss::ResetArmState()
+{
+	arm.status		= Arm::State::Rise;
+	arm.easeParam	= 0.0f;
+	arm.radian		= 0.0f;
+}
+void Boss::ArmUpdate()
+{
+	if ( arm.status == Arm::State::Vacation ) { return; }
+	// else
+
+	auto RiseUpdate = []( Arm &arm )
+	{
+		using namespace Donya::Easing;
+		float ease = Ease( Kind::Quadratic, Type::Out, arm.easeParam );
+		arm.easeParam += arm.incrementation;
+
+		arm.radian = arm.highestAngle * ease;
+
+		if ( 1.0f <= arm.easeParam )
+		{
+			arm.status = Arm::State::Fall;
+
+			arm.easeParam	= 0.0f;
+			arm.radian		= arm.highestAngle;
+		}
+	};
+
+	auto FallUpdate = []( Arm &arm )
+	{
+		using namespace Donya::Easing;
+		float ease = Ease( Kind::Quintic, Type::In, arm.easeParam );
+		arm.easeParam += arm.incrementation;
+
+		arm.radian = arm.highestAngle - ( arm.highestAngle * ease );
+
+		if ( 1.0f <= arm.easeParam )
+		{
+			arm.status = Arm::State::Vacation;
+
+			arm.easeParam	= 0.0f;
+			arm.radian		= 0.0f;
+		}
+	};
+
+	switch ( arm.status )
+	{
+	case Arm::State::Fall:	FallUpdate( arm );	break;
+	case Arm::State::Rise:	RiseUpdate( arm );	break;
+	default: break;
+	}
+
+	// If finished the wave omen.
+	if ( arm.status == Arm::State::Vacation )
+	{
+		GenerateWave();
+
+		ResetArmState();
+
+		status = State::Normal;
+	}
+}
 void Boss::GenerateWave()
 {
 	Donya::Vector3 appearPos = pos;
@@ -2097,6 +2176,8 @@ void Boss::ReceiveDamage( int damage )
 
 	status			= State::Stun;
 	currentHP		-= damage;
+
+	ResetArmState();
 
 	auto &PARAM		= AttackParam::Get();
 	waitReuseFrame	= PARAM.damageWaitFrame;
@@ -2217,6 +2298,22 @@ void Boss::UseImGui()
 				ShowModelPartToGui( "体",		&modelBody );
 				ShowModelPartToGui( "足もと",	&modelFoot );
 				ShowModelPartToGui( "ローラー",	&modelRoll );
+
+				ImGui::TreePop();
+			}
+
+			if ( ImGui::TreeNode( u8"腕関連（ウェーブ発生前兆）" ) )
+			{
+				static int wholeFrame =
+				( ZeroEqual( arm.incrementation ) )
+				? 2
+				: scast<int>( 1.0f / arm.incrementation );
+				ImGui::SliderInt( u8"前兆の全体時間（フレーム）", &wholeFrame, 2, 600 );
+				arm.incrementation = 1.0f / scast<float>( wholeFrame );
+
+				static float highestDegree{};
+				ImGui::SliderFloat( u8"腕を振り上げる最大角度", &highestDegree, 0.0f, 360.0f );
+				arm.highestAngle = ToRadian( highestDegree );
 
 				ImGui::TreePop();
 			}

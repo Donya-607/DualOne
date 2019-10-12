@@ -591,11 +591,45 @@ private:
 };
 class Boss
 {
+public:
+	struct Arm
+	{
+	public:
+		enum class State
+		{
+			Vacation,
+			Rise,
+			Fall
+		};
+	public:
+		State status{ State::Vacation };
+		float easeParam{};			// Use for parameter of easing.
+		float radian{};
+		float incrementation{};		// Will be serialize. Use for increase the "easeParam".
+		float highestAngle{};		// Will be serialize. Radian.
+	private:
+		friend class cereal::access;
+		template<class Archive>
+		void serialize( Archive &archive, std::uint32_t version )
+		{
+			archive
+			(
+				CEREAL_NVP( incrementation ),
+				CEREAL_NVP( highestAngle )
+			);
+			if ( 1 <= version )
+			{
+				// archive( CEREAL_NVP( x ) );
+			}
+		}
+		static constexpr const char *SERIAL_ID = "BossArm";
+	};
 private:
 	enum class State
 	{
 		Normal,
 		Stun,
+		GenerateWave,
 	};
 private:
 	int									currentHP;		// 1-based, 0 express the dead.
@@ -623,6 +657,7 @@ private:
 	ModelPart							modelBody;
 	ModelPart							modelFoot;
 	ModelPart							modelRoll;
+	Arm									arm;
 
 	std::vector<Donya::Vector3>			lanePositions;	// This value only change by initialize method.
 	std::vector<Missile>				missiles;
@@ -676,6 +711,10 @@ private:
 			);
 		}
 		if ( 8 <= version )
+		{
+			archive( CEREAL_NVP( arm ) );
+		}
+		if ( 9 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -732,6 +771,8 @@ public:
 private:
 	void LoadModel();
 
+	void UpdateCurrentStatus( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
+
 	void RotateRoll();
 
 	void Move( const Donya::Vector3 &wsAttackTargetPos );
@@ -749,6 +790,9 @@ private:
 	void ShootBeam();
 	void UpdateBeams();
 	
+	void SetWaveMode();
+	void ResetArmState();
+	void ArmUpdate();
 	void GenerateWave();
 	void UpdateWaves();
 
@@ -770,4 +814,5 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 7 )
+CEREAL_CLASS_VERSION( Boss, 8 )
+CEREAL_CLASS_VERSION( Boss::Arm, 0 )
