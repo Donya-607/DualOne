@@ -291,6 +291,7 @@ private:
 private:
 	State				status;
 
+	int					easingKind;
 	int					afterWaitFrame;		// Use after finish the rotate of angle.
 	float				angleIncreaseSpeed;	// Use for beam-angle(radian).
 	float				easeParam;			// Use for "t" of easing.
@@ -319,6 +320,10 @@ private:
 			CEREAL_NVP( hitBox )
 		);
 		if ( 1 <= version )
+		{
+			archive( CEREAL_NVP( easingKind ) );
+		}
+		if ( 2 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -351,7 +356,7 @@ private:
 	void CalcBeamDestination();
 };
 
-CEREAL_CLASS_VERSION( Beam, 0 )
+CEREAL_CLASS_VERSION( Beam, 1 )
 
 class Wave
 {
@@ -603,10 +608,18 @@ public:
 		};
 	public:
 		State status{ State::Vacation };
+
 		float easeParam{};			// Use for parameter of easing.
 		float radian{};
 		float incrementation{};		// Will be serialize. Use for increase the "easeParam".
 		float highestAngle{};		// Will be serialize. Radian.
+
+		float shakeStrength{};		// Will be serialize.
+		float shakeDecel{};			// Will be serialize.
+		float shakeInterval{};		// Will be serialize.
+
+		int easingKindRise{};		// Will be serialize.
+		int easingKindFall{};		// Will be serialize.
 	private:
 		friend class cereal::access;
 		template<class Archive>
@@ -618,6 +631,23 @@ public:
 				CEREAL_NVP( highestAngle )
 			);
 			if ( 1 <= version )
+			{
+				archive
+				(
+					CEREAL_NVP( easingKindRise ),
+					CEREAL_NVP( easingKindFall )
+				);
+			}
+			if ( 2 <= version )
+			{
+				archive
+				(
+					CEREAL_NVP( shakeStrength ),
+					CEREAL_NVP( shakeDecel ),
+					CEREAL_NVP( shakeInterval )
+				);
+			}
+			if ( 3 <= version )
 			{
 				// archive( CEREAL_NVP( x ) );
 			}
@@ -815,4 +845,4 @@ private:
 };
 
 CEREAL_CLASS_VERSION( Boss, 8 )
-CEREAL_CLASS_VERSION( Boss::Arm, 0 )
+CEREAL_CLASS_VERSION( Boss::Arm, 2 )

@@ -22,6 +22,35 @@
 #undef max
 #undef min
 
+int GetEasingCount()
+{
+	return scast<int>( Donya::Easing::Kind::ENUM_TERMINATION );
+}
+std::string EasingKindToStr( int easingKind )
+{
+	using namespace Donya::Easing;
+	Kind kind = scast<Kind>( easingKind );
+	switch ( kind )
+	{
+	case Kind::Linear:			return "Linear";
+	case Kind::Back:			return "Back";
+	case Kind::Bounce:			return "Bounce";
+	case Kind::Circular:		return "Circular";
+	case Kind::Cubic:			return "Cubic";
+	case Kind::Elastic:			return "Elastic";
+	case Kind::Exponential:		return "Exponential";
+	case Kind::Quadratic:		return "Quadratic";
+	case Kind::Quartic:			return "Quartic";
+	case Kind::Quintic:			return "Quintic";
+	case Kind::Smooth:			return "Smooth";
+	case Kind::Sinusoidal:		return "Sinusoidal";
+	case Kind::SoftBack:		return "SoftBack";
+	case Kind::Step:			return "Step";
+	}
+
+	return "Error Kind !";
+}
+
 #pragma region Missile
 
 Missile Missile::parameter{};
@@ -756,6 +785,11 @@ void Beam::UseImGui()
 			ImGui::SliderFloat( u8"ビームの長さ", &parameter.beamLength, 1.0f, 512.0f );
 			ImGui::Text( "" );
 
+			ImGui::SliderInt( u8"イージングの種類", &parameter.easingKind, 0, GetEasingCount() - 1 );
+			std::string easingCaption = "イージング名：" + EasingKindToStr( parameter.easingKind ) + " In";
+			easingCaption = Donya::MultiToUTF8( easingCaption );
+			ImGui::Text( easingCaption.c_str() );
+
 			if ( ImGui::TreeNode( u8"当たり判定" ) )
 			{
 				auto EnumAABBParamToImGui = []( AABB *pAABB )
@@ -809,7 +843,7 @@ void Beam::UseImGui()
 
 Beam::Beam() :
 	status( State::Swing ),
-	afterWaitFrame(),
+	easingKind(), afterWaitFrame(),
 	angleIncreaseSpeed(), easeParam(),
 	beamAngle(), beamAngleBegin(), beamAngleEnd(),
 	beamLength(),
@@ -931,7 +965,7 @@ bool Beam::ShouldErase() const
 void Beam::AngleUpdate()
 {
 	using namespace Donya::Easing;
-	float ease = Ease( Kind::Sinusoidal, Type::In, easeParam );
+	float ease = Ease( scast<Kind>( easingKind ), Type::In, easeParam );
 	easeParam += angleIncreaseSpeed;
 
 	beamAngle = beamAngleBegin + ( beamAngleEnd - beamAngleBegin ) * ease;
@@ -1613,14 +1647,14 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
-	auto RenderModelPart = [&]( const ModelPart &mp )
+	auto RenderModelPart = [&]( const ModelPart &mp, const Donya::Quaternion &offsetRotation )
 	{
-		Donya::Vector3 rotatedOffset = basePosture.RotateVector( mp.offset );
+		Donya::Vector3 rotatedOffset = ( mp.offset.IsZero() ) ? Donya::Vector3::Zero() : offsetRotation.RotateVector( mp.offset );
 		Donya::Vector3 coord = pos + rotatedOffset;
-		Donya::Quaternion synthesisPosture = basePosture * mp.posture;
-
+		Donya::Quaternion synthesis = mp.posture * offsetRotation;
+		
 		XMMATRIX S = XMMatrixScaling( mp.scale.x, mp.scale.y, mp.scale.z );
-		XMMATRIX R = Matrix( synthesisPosture.RequireRotationMatrix() );
+		XMMATRIX R = Matrix( synthesis.RequireRotationMatrix() );
 		XMMATRIX T = XMMatrixTranslation( coord.x, coord.y, coord.z );
 		XMMATRIX W = S * R * T;
 		XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
@@ -1630,9 +1664,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 	};
 
-	RenderModelPart( modelBody );
-	RenderModelPart( modelFoot );
-	RenderModelPart( modelRoll );
+	RenderModelPart( modelFoot, basePosture );
+	RenderModelPart( modelBody, basePosture );
+	RenderModelPart( modelRoll, modelBody.posture * basePosture );
 
 	for ( const auto &it : missiles )
 	{
@@ -1815,7 +1849,7 @@ void Boss::UpdateCurrentStatus( int targetLaneNo, const Donya::Vector3 &wsAttack
 void Boss::RotateRoll()
 {
 	constexpr float SPEED = ToRadian( 12.0f );
-	Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), SPEED );
+	Donya::Quaternion rotation = Donya::Quaternion::Make( -Donya::Vector3::Right(), SPEED );
 
 	modelRoll.posture = rotation * modelRoll.posture;
 }
@@ -1886,10 +1920,10 @@ void Boss::LotteryAttack( int targetLaneNo, const Donya::Vector3 &wsAttackTarget
 	{
 		switch ( useAttackNo )
 		{
-		case AttackParam::AttackKind::Missile:	ShootMissile( targetLaneNo, wsAttackTargetPos );		break;
-		case AttackParam::AttackKind::Obstacle:	GenerateObstacles( wsAttackTargetPos );	break;
-		case AttackParam::AttackKind::Beam:		ShootBeam();			break;
-		case AttackParam::AttackKind::Wave:		GenerateWave();							break;
+		case AttackParam::AttackKind::Missile:	ShootMissile( targetLaneNo, wsAttackTargetPos );	break;
+		case AttackParam::AttackKind::Obstacle:	GenerateObstacles( wsAttackTargetPos );				break;
+		case AttackParam::AttackKind::Beam:		ShootBeam();										break;
+		case AttackParam::AttackKind::Wave:		SetWaveMode();										break;
 		default: break;
 		}
 
@@ -2069,6 +2103,8 @@ void Boss::ResetArmState()
 	arm.status		= Arm::State::Rise;
 	arm.easeParam	= 0.0f;
 	arm.radian		= 0.0f;
+
+	modelBody.posture = Donya::Quaternion::Identity();
 }
 void Boss::ArmUpdate()
 {
@@ -2078,7 +2114,7 @@ void Boss::ArmUpdate()
 	auto RiseUpdate = []( Arm &arm )
 	{
 		using namespace Donya::Easing;
-		float ease = Ease( Kind::Quadratic, Type::Out, arm.easeParam );
+		float ease = Ease( scast<Kind>( arm.easingKindRise ), Type::Out, arm.easeParam );
 		arm.easeParam += arm.incrementation;
 
 		arm.radian = arm.highestAngle * ease;
@@ -2095,7 +2131,7 @@ void Boss::ArmUpdate()
 	auto FallUpdate = []( Arm &arm )
 	{
 		using namespace Donya::Easing;
-		float ease = Ease( Kind::Quintic, Type::In, arm.easeParam );
+		float ease = Ease( scast<Kind>( arm.easingKindFall ), Type::In, arm.easeParam );
 		arm.easeParam += arm.incrementation;
 
 		arm.radian = arm.highestAngle - ( arm.highestAngle * ease );
@@ -2106,6 +2142,15 @@ void Boss::ArmUpdate()
 
 			arm.easeParam	= 0.0f;
 			arm.radian		= 0.0f;
+
+			Donya::ScreenShake::SetY
+			(
+				Donya::ScreenShake::Kind::MOMENT,
+				arm.shakeStrength,
+				arm.shakeDecel,
+				NULL,
+				arm.shakeInterval
+			);
 		}
 	};
 
@@ -2115,6 +2160,8 @@ void Boss::ArmUpdate()
 	case Arm::State::Rise:	RiseUpdate( arm );	break;
 	default: break;
 	}
+
+	modelBody.posture = Donya::Quaternion::Make( Donya::Vector3::Right(), arm.radian );
 
 	// If finished the wave omen.
 	if ( arm.status == Arm::State::Vacation )
@@ -2311,9 +2358,34 @@ void Boss::UseImGui()
 				ImGui::SliderInt( u8"前兆の全体時間（フレーム）", &wholeFrame, 2, 600 );
 				arm.incrementation = 1.0f / scast<float>( wholeFrame );
 
-				static float highestDegree{};
+				static float highestDegree = ToDegree( arm.highestAngle );
 				ImGui::SliderFloat( u8"腕を振り上げる最大角度", &highestDegree, 0.0f, 360.0f );
 				arm.highestAngle = ToRadian( highestDegree );
+				ImGui::Text( "" );
+
+				if ( ImGui::TreeNode( u8"画面シェイク" ) )
+				{
+					ImGui::SliderFloat( u8"強さ", &arm.shakeStrength, 0.01f, 64.0f );
+					ImGui::SliderFloat( u8"揺れの減衰力", &arm.shakeDecel, 0.01f, 64.0f );
+					ImGui::SliderFloat( u8"揺れる間隔", &arm.shakeInterval, 0.01f, 64.0f );
+
+					ImGui::TreePop();
+				}
+				
+				if ( ImGui::TreeNode( u8"イージングの種類" ) )
+				{
+					ImGui::SliderInt( u8"振り上げ・種類", &arm.easingKindRise, 0, GetEasingCount() - 1 );
+					std::string easingCaption = "振り上げ・名：" + EasingKindToStr( arm.easingKindRise ) + " Out";
+					easingCaption = Donya::MultiToUTF8( easingCaption );
+					ImGui::Text( easingCaption.c_str() );
+
+					ImGui::SliderInt( u8"振り降ろし・種類", &arm.easingKindFall, 0, GetEasingCount() - 1 );
+					easingCaption = "振り降ろし・名：" + EasingKindToStr( arm.easingKindFall ) + " In";
+					easingCaption = Donya::MultiToUTF8( easingCaption );
+					ImGui::Text( easingCaption.c_str() );
+
+					ImGui::TreePop();
+				}
 
 				ImGui::TreePop();
 			}

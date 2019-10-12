@@ -1,6 +1,6 @@
 {
     "Beam": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "afterWaitFrame": 1,
         "angleIncreaseSpeed": 0.0024999999441206457,
         "beamAngleBegin": 270.0,
@@ -20,6 +20,7 @@
                 "z": 8.0
             },
             "exist": true
-        }
+        },
+        "easingKind": 10
     }
 }
