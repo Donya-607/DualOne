@@ -174,17 +174,20 @@ struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
 	friend class Donya::Singleton<PlayerParameter>;
 public:
 	int		stunFrame;
-	float	changeLaneSpeed;// Horizontal move speed.
-	float	chargeSpeed;	// MAX is 1.0f.
-	float	fallResistance;	// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
-	float	gravity;		// This is not affected by charge.
-	float	jumpResistance;	// Resist to jumpStrength(will calc to "strength * ( 1 - resistance * charge )"). this will affected by charge.
-	float	jumpStrength;	// Init speed of jump. This is not affected by charge.
-	float	runSpeedUsual;	// Running speed when not charging.
-	float	runSpeedSlow;	// Running speed when charging.
-	float	runSpeedJump;	// Running speed when jumping.
-	float	runSpeedStun;	// Running speed when stunning.
-	AABB	hitBox{};		// Store local-space.
+	float	changeLaneSpeed;	// Horizontal move speed.
+	float	chargeSpeed;		// MAX is 1.0f.
+	float	fallResistance;		// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
+	float	gravity;			// This is not affected by charge.
+	float	jumpResistance;		// Resist to jumpStrength(will calc to "strength * ( 1 - resistance * charge )"). this will affected by charge.
+	float	jumpStrength;		// Init speed of jump. This is not affected by charge.
+	float	runSpeedUsual;		// Running speed when not charging.
+	float	runSpeedSlow;		// Running speed when charging.
+	float	runSpeedJump;		// Running speed when jumping.
+	float	runSpeedStun;		// Running speed when stunning.
+	float	rotateDegree;		// Base rotate speed.
+	float	rotDegMagniCharge;	// Magnification of rotate speed when full charged.
+	float	rotDegMagniJump;	// Magnification of rotate speed when jumping.
+	AABB	hitBox{};			// Store local-space.
 	Donya::Vector3 generateReflectionOffset;
 	Player::CollideResult reflection;
 private:
@@ -225,6 +228,15 @@ private:
 			archive( CEREAL_NVP( runSpeedStun ) );
 		}
 		if ( 4 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( rotateDegree ),
+				CEREAL_NVP( rotDegMagniCharge ),
+				CEREAL_NVP( rotDegMagniJump )
+			);
+		}
+		if ( 5 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -311,6 +323,10 @@ public:
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 
+					ImGui::SliderFloat( u8"チャージ中の回転速度", &rotateDegree, 0.0f, 360.0f );
+					ImGui::SliderFloat( u8"チャージ完了時の回転速度倍率", &rotDegMagniCharge, 0.1f, 3.0f );
+					ImGui::SliderFloat( u8"ジャンプ中の回転速度倍率", &rotDegMagniJump, 0.1f, 3.0f );
+
 					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 128.0f );
 					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.0f, 128.0f );
 					ImGui::Text( u8"ジャンプ初速 ＝ ジャンプ初速 * ( 1.0f - ジャンプ抵抗力 * チャージ量 )" );
@@ -385,7 +401,7 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 3 )
+CEREAL_CLASS_VERSION( PlayerParameter, 4 )
 
 Player::Player() :
 	status( State::Run ),
@@ -670,8 +686,9 @@ void Player::ChargeUpdate( Input input )
 		}
 	}
 
-	float rotateRadian = ToRadian( 12.0f ); // ( 360.deg / 30.frame ) magic-number :(
-	if ( IsFullCharged() ) { rotateRadian *= 2.0f; }
+	const auto &PARAM = PlayerParameter::Get();
+	float rotateRadian = ToRadian( PARAM.rotateDegree );
+	if ( IsFullCharged() ) { rotateRadian *= PARAM.rotDegMagniCharge; }
 	RotateYaw( rotateRadian );
 
 	if ( !input.doCharge )
@@ -759,9 +776,13 @@ void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
 
-	float rotateRadian = ToRadian( 12.0f ); // ( 360.deg / 15.frame ) magic-number :(
-	if ( IsFullCharged() ) { rotateRadian *= 2.0f; }
-	RotateYaw( rotateRadian );
+	if ( !IsStunning() )
+	{
+		const auto &PARAM = PlayerParameter::Get();
+		float rotateRadian = ToRadian( PARAM.rotateDegree * PARAM.rotDegMagniJump );
+		if ( IsFullCharged() ) { rotateRadian *= PARAM.rotDegMagniCharge; }
+		RotateYaw( rotateRadian );
+	}
 
 	if ( pos.y + velocity.y <= 0 )
 	{
@@ -812,9 +833,6 @@ void Player::StunUpdate( Input input )
 	if ( 0.0f < pos.y )
 	{
 		JumpUpdate( input );
-
-		// Cancel the jumping rotate.
-		RotateYaw( ToRadian( -24.0f ) ); // ( 360.deg / 15.frame ) magic-number :(
 	}
 
 	RotatePitch( ToRadian( 12.0f ) ); // ( 360.deg / 30.frame ) magic-number :(
