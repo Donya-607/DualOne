@@ -135,6 +135,13 @@ private:
 	void LoadModel();
 	void ApplyExternalParameter();
 
+	void StopLoopingSounds();
+
+	void ResetPosture();
+
+	void RotateYaw( float radian );
+	void RotatePitch( float radian );
+
 	void ChooseCurrentStateUpdate( Input input );
 
 	void RunInit();

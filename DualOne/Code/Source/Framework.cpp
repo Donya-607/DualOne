@@ -377,7 +377,7 @@ bool Framework::LoadSounds()
 			{ ID::PlayerCharge,			"./Data/Sounds/SE/Player/WhileCharge.wav",	true	},
 			{ ID::PlayerChargeComplete,	"./Data/Sounds/SE/Player/ChargeComplete.wav",false	},
 			{ ID::PlayerReflect,		"./Data/Sounds/SE/Player/Reflect.wav",		false	},
-			{ ID::PlayerSlipping,		"./Data/Sounds/SE/Player/Slipping.wav",		false	},
+			{ ID::PlayerSlipping,		"./Data/Sounds/SE/Player/Slipping.wav",		true	},
 			{ ID::PlayerTumble,			"./Data/Sounds/SE/Player/Tumble.wav",		false	},
 			{ ID::PlayerJump,			"./Data/Sounds/SE/Player/Jump_LaneMove.wav",false	},
 

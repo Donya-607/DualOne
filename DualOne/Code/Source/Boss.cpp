@@ -7,6 +7,7 @@
 #include "Donya/Loader.h"
 #include "Donya/Random.h"
 #include "Donya/ScreenShake.h"
+#include "Donya/Sound.h"
 #include "Donya/Sprite.h"
 #include "Donya/Useful.h"
 
@@ -18,6 +19,7 @@
 #include "Common.h"
 #include "FilePath.h"
 #include "Effect.h"
+#include "Music.h"
 
 #undef max
 #undef min
@@ -195,7 +197,7 @@ void Missile::Init( const Donya::Vector3 &wsAppearPos )
 
 void Missile::Uninit()
 {
-	// No op.
+	Donya::Sound::Stop( Music::BossShootMissile );
 }
 
 void Missile::Update( float basePosZ )
@@ -312,6 +314,8 @@ void Missile::WaitUpdate()
 	{
 		waitFrame = 0;
 		status = State::Fly;
+
+		Donya::Sound::Play( Music::BossShootMissile );
 	}
 }
 void Missile::FlyUpdate()
@@ -1592,6 +1596,8 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	Obstacle::Warning::RegisterLaneCount( lanePositions.size() );
 
 	basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+
+	Donya::Sound::Play( Music::BossEngine );
 }
 
 void Boss::Uninit()
@@ -1608,6 +1614,9 @@ void Boss::Uninit()
 	{
 		it.Uninit();
 	}
+
+	// Stop the looping sound.
+	Donya::Sound::Stop( Music::BossEngine );
 }
 
 void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
@@ -1999,7 +2008,6 @@ void Boss::ShootMissile( int targetLaneNo, const Donya::Vector3 &wsAttackTargetP
 	missiles.back().Init( appearPos );
 
 	// Emit Particle
-
 }
 void Boss::UpdateMissiles()
 {
@@ -2103,6 +2111,8 @@ void Boss::ShootBeam()
 
 	beams.push_back( {} );
 	beams.back().Init( appearPos );
+
+	Donya::Sound::Play( Music::BossBeamShoot );
 }
 void Boss::UpdateBeams()
 {
@@ -2218,6 +2228,8 @@ void Boss::GenerateWave()
 
 	waves.push_back( {} );
 	waves.back().Init( appearPos );
+
+	Donya::Sound::Play( Music::BossRushWave );
 }
 void Boss::UpdateWaves()
 {
@@ -2264,6 +2276,8 @@ void Boss::ReceiveDamage( int damage )
 	auto &PARAM		= AttackParam::Get();
 	waitReuseFrame	= PARAM.damageWaitFrame;
 	stunTimer		= PARAM.stunFrame;
+
+	Donya::Sound::Play( Music::BossReceiveDamage );
 }
 
 void Boss::StunUpdate()

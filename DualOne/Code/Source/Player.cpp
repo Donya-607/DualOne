@@ -423,13 +423,13 @@ void Player::Init( const std::vector<Donya::Vector3> &lanes )
 
 	ApplyExternalParameter();
 
-	posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	ResetPosture();
 
 	RunInit();
 }
 void Player::Uninit()
 {
-	// No op.
+	StopLoopingSounds();
 }
 
 #if DEBUG_MODE
@@ -563,6 +563,7 @@ Player::CollideResult Player::ReceiveImpact( bool canReflection )
 	}
 	// else
 
+	Donya::Sound::Play( Music::PlayerReflect );
 	rv.shouldGenerateBullet = true;
 	return rv;
 }
@@ -582,6 +583,28 @@ void Player::LoadModel()
 void Player::ApplyExternalParameter()
 {
 	hitBox = PlayerParameter::Get().hitBox;
+}
+
+void Player::StopLoopingSounds()
+{
+	Donya::Sound::Stop( Music::PlayerCharge );
+	Donya::Sound::Stop( Music::PlayerSlipping );
+}
+
+void Player::ResetPosture()
+{
+	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
+}
+
+void Player::RotateYaw( float radian )
+{
+	Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Up(), radian );
+	posture = rotation * posture;
+}
+void Player::RotatePitch( float radian )
+{
+	Donya::Quaternion rotation = Donya::Quaternion::Make( -Donya::Vector3::Right(), radian );
+	posture = rotation * posture;
 }
 
 void Player::ChooseCurrentStateUpdate( Input input )
@@ -606,6 +629,10 @@ void Player::RunInit()
 	// Initial posture.
 	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 #endif // DEBUG_MODE
+
+	// Prevent doubly playing sound.
+	Donya::Sound::Stop( Music::PlayerSlipping );
+	Donya::Sound::Play( Music::PlayerSlipping );
 }
 void Player::RunUpdate( Input input )
 {
@@ -626,17 +653,24 @@ void Player::ChargeInit()
 
 	velocity.z = -PlayerParameter::Get().runSpeedSlow;
 
+	// Prevent doubly playing sound.
+	Donya::Sound::Stop( Music::PlayerCharge );
 	Donya::Sound::Play( Music::PlayerCharge );
 }
 void Player::ChargeUpdate( Input input )
 {
-	charge += PlayerParameter::Get().chargeSpeed;
-	charge = std::min( 1.0f, charge );
+	if ( charge < 1.0f )
+	{
+		charge += PlayerParameter::Get().chargeSpeed;
+		if ( 1.0f <= charge )
+		{
+			charge = 1.0f;
+			Donya::Sound::Stop( Music::PlayerCharge );
+			Donya::Sound::Play( Music::PlayerChargeComplete );
+		}
+	}
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	RotateYaw( ToRadian( 12.0f ) ); // ( 360.deg / 30.frame ) magic-number :(
 
 	if ( !input.doCharge )
 	{
@@ -678,6 +712,7 @@ void Player::ChangeLaneIfRequired( Input input )
 	velocity.x = distanceBetweenLane * PlayerParameter::Get().changeLaneSpeed * moveSign;
 
 	currentLane += moveSign;
+	Donya::Sound::Play( Music::PlayerLaneMove );
 }
 void Player::HorizontalMove()
 {
@@ -715,16 +750,14 @@ void Player::JumpInit()
 	velocity.y = param.jumpStrength * ( 1.0f - param.jumpResistance * charge );
 	velocity.z = -param.runSpeedJump;
 
+	StopLoopingSounds();
 	Donya::Sound::Play( Music::PlayerJump );
 }
 void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 24.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	RotateYaw( ToRadian( 24.0f ) ); // ( 360.deg / 15.frame ) magic-number :(
 
 	if ( pos.y + velocity.y <= 0 )
 	{
@@ -746,8 +779,6 @@ void Player::Landing()
 	charge		= 0.0f;
 	pos.y		= 0.0f;
 	velocity.y	= 0.0f;
-
-	Donya::Sound::Play( Music::PlayerLanding );
 }
 
 void Player::ApplyVelocity()
@@ -763,6 +794,11 @@ void Player::MakeStun()
 	velocity.z	= -PlayerParameter::Get().runSpeedStun;
 
 	status = State::Stun;
+
+	ResetPosture();
+
+	StopLoopingSounds();
+	Donya::Sound::Play( Music::PlayerTumble );
 }
 void Player::StunUpdate( Input input )
 {
@@ -772,12 +808,12 @@ void Player::StunUpdate( Input input )
 	if ( 0.0f < pos.y )
 	{
 		JumpUpdate( input );
+
+		// Cancel the jumping rotate.
+		RotateYaw( ToRadian( -24.0f ) ); // ( 360.deg / 15.frame ) magic-number :(
 	}
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( -Donya::Vector3::Right(), ToRadian( 12.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	RotatePitch( ToRadian( 12.0f ) ); // ( 360.deg / 30.frame ) magic-number :(
 
 	stunTimer--;
 	if ( stunTimer <= 0 )
@@ -785,9 +821,7 @@ void Player::StunUpdate( Input input )
 		stunTimer = 0;
 		RunInit();
 
-	#if DEBUG_MODE
-		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
-	#endif // DEBUG_MODE
+		ResetPosture();
 	}
 }
 bool Player::IsStunning() const
