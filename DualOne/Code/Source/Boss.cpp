@@ -866,10 +866,12 @@ void Beam::Init( const Donya::Vector3 &wsAppearPos )
 	beamAngleBegin		= ToRadian( beamAngleBegin		);	// These angles stored by degree.
 	beamAngleEnd		= ToRadian( beamAngleEnd		);	// These angles stored by degree.
 	beamAngle			= beamAngleBegin;
+
+	Donya::Sound::Play( Music::BossBeamShoot );
 }
 void Beam::Uninit()
 {
-	// No op.
+	Donya::Sound::Stop( Music::BossBeamShoot );
 }
 
 void Beam::Update( float wsBasePositionZ )
@@ -2111,8 +2113,6 @@ void Boss::ShootBeam()
 
 	beams.push_back( {} );
 	beams.back().Init( appearPos );
-
-	Donya::Sound::Play( Music::BossBeamShoot );
 }
 void Boss::UpdateBeams()
 {
