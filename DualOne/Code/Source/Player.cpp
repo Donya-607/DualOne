@@ -659,10 +659,10 @@ void Player::ChargeInit()
 }
 void Player::ChargeUpdate( Input input )
 {
-	if ( charge < 1.0f )
+	if ( !IsFullCharged() )
 	{
 		charge += PlayerParameter::Get().chargeSpeed;
-		if ( 1.0f <= charge )
+		if ( IsFullCharged() )
 		{
 			charge = 1.0f;
 			Donya::Sound::Stop( Music::PlayerCharge );
@@ -670,7 +670,9 @@ void Player::ChargeUpdate( Input input )
 		}
 	}
 
-	RotateYaw( ToRadian( 12.0f ) ); // ( 360.deg / 30.frame ) magic-number :(
+	float rotateRadian = ToRadian( 12.0f ); // ( 360.deg / 30.frame ) magic-number :(
+	if ( IsFullCharged() ) { rotateRadian *= 2.0f; }
+	RotateYaw( rotateRadian );
 
 	if ( !input.doCharge )
 	{
@@ -757,7 +759,9 @@ void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
 
-	RotateYaw( ToRadian( 24.0f ) ); // ( 360.deg / 15.frame ) magic-number :(
+	float rotateRadian = ToRadian( 12.0f ); // ( 360.deg / 15.frame ) magic-number :(
+	if ( IsFullCharged() ) { rotateRadian *= 2.0f; }
+	RotateYaw( rotateRadian );
 
 	if ( pos.y + velocity.y <= 0 )
 	{
