@@ -382,6 +382,8 @@ bool Framework::LoadSounds()
 			{ ID::PlayerTumble,			"./Data/Sounds/SE/Player/Tumble.wav",		false	},
 			{ ID::PlayerJump,			"./Data/Sounds/SE/Player/Jump_LaneMove.wav",false	},
 
+			{ ID::ObjBreakObstacle,		"./Data/Sounds/SE/Object/BreakObstacle.wav",false	},
+
 			{ ID::ItemChoose,			"./Data/Sounds/SE/UI/ChooseItem.wav",		false	},
 			{ ID::ItemDecision,			"./Data/Sounds/SE/UI/DecisionItem.wav",		false	},
 		},

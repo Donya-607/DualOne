@@ -25,6 +25,8 @@ namespace Music
 		PlayerJump,
 		PlayerLaneMove = PlayerJump,
 
+		ObjBreakObstacle,
+
 		ItemChoose,
 		ItemDecision,
 

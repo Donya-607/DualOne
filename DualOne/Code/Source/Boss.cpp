@@ -2150,6 +2150,7 @@ void Boss::UpdateObstacles()
 		if ( AABB::IsHitAABB( wsBody, obstacleBox ) )
 		{
 			it.HitToOther();
+			Donya::Sound::Play( Music::ObjBreakObstacle );
 		}
 	}
 
