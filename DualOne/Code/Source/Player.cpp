@@ -641,10 +641,7 @@ void Player::RunInit()
 
 	velocity.z = -PlayerParameter::Get().runSpeedUsual;
 
-#if DEBUG_MODE
-	// Initial posture.
-	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
-#endif // DEBUG_MODE
+	ResetPosture();
 
 	// Prevent doubly playing sound.
 	Donya::Sound::Stop( Music::PlayerSlipping );

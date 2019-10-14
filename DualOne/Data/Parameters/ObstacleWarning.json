@@ -1,7 +1,7 @@
 {
     "ObstacleWarning": {
         "cereal_class_version": 1,
-        "showFrame": 240,
+        "showFrame": 40,
         "ssPositions": [
             {
                 "cereal_class_version": 0,

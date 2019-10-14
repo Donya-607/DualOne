@@ -43,7 +43,7 @@
         },
         "reflection.velocity": {
             "x": 0.0,
-            "y": 3.0,
+            "y": 3.5,
             "z": 12.0
         },
         "runSpeedJump": 9.0,
