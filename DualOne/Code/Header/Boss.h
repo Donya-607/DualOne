@@ -667,12 +667,18 @@ private:
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 	int									stunTimer;
+	int									bounceTimer;
 
 	float								maxDistanceToTarget;
+	float								gravity;
+	float								initBouncePower;
 
 	State								status;
 
 	AABB								hitBox;
+
+	Donya::Vector2						bounceAppearTimeRange;	// Use to ( min, max )
+	Donya::Vector2						bouncePowerRange;		// Use to ( min, max )
 
 	Donya::Vector3						pos;
 	Donya::Vector3						velocity;
@@ -695,6 +701,8 @@ private:
 	std::vector<Obstacle>				obstacles;
 	std::vector<Beam>					beams;
 	std::vector<Wave>					waves;
+
+	bool								isLanding;
 public:
 	Boss();
 	~Boss();
@@ -746,6 +754,16 @@ private:
 			archive( CEREAL_NVP( arm ) );
 		}
 		if ( 9 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( gravity ),
+				CEREAL_NVP( initBouncePower ),
+				CEREAL_NVP( bounceAppearTimeRange ),
+				CEREAL_NVP( bouncePowerRange )
+			);
+		}
+		if ( 10 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -810,6 +828,9 @@ private:
 
 	void Move( const Donya::Vector3 &wsAttackTargetPos );
 
+	void UpdateVertical();
+	void Bounce();
+
 	void LotteryAttack( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
 
 	Donya::Vector3 LotteryLanePosition();
@@ -847,5 +868,5 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 8 )
+CEREAL_CLASS_VERSION( Boss, 9 )
 CEREAL_CLASS_VERSION( Boss::Arm, 2 )

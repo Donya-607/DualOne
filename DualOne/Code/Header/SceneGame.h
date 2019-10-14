@@ -30,6 +30,8 @@ private:
 	/// </summary>
 	bool	IsDecisionTriggered() const;
 
+	bool	IsDoneCameraMove() const;
+
 	void	UpdateCamera();
 
 	/// <summary>

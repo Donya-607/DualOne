@@ -113,6 +113,7 @@ public:
 	std::vector<ReflectedEntity>	reflectedEntities;
 
 	bool	wasTouched;		// True when detect the collision between player and boss.
+	bool	wasRetried;		// True if initialized from retry.
 public:
 	Impl() :
 		status( State::Title ),
@@ -129,7 +130,7 @@ public:
 		titleCameraDistance( 0.0f, 1.0f, -1.0f ), titleCameraFocus( 0.0f, -0.5f, 1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		lanePositions(), reflectedEntities(),
-		wasTouched( false )
+		wasTouched( false ), wasRetried( false )
 	{
 		constexpr unsigned int DEFAULT_LANE_COUNT = 3;
 		lanePositions.resize( DEFAULT_LANE_COUNT );
@@ -244,6 +245,7 @@ public:
 
 					ImGui::TreePop();
 				}
+				ImGui::Text( "" );
 
 				ImGui::SliderFloat( u8"‰Šú‚Ìƒ{ƒX‚Æ‚Ì‹——£", &initDistanceOfBoss, 0.01f, 512.0f );
 				ImGui::Text( "" );
@@ -349,6 +351,9 @@ void SceneGame::Init()
 		pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->titleCameraFocus );
 		pImpl->camera.SetPosition( cameraPosition );
 	}
+
+	pImpl->wasRetried = StorageForScene::Get().GetRetryFlag();
+	StorageForScene::Get().StoreRetryFlag( false );
 }
 
 void SceneGame::Uninit()
@@ -374,7 +379,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
-	if ( IsDecisionTriggered() && pImpl->status == Impl::State::Title )
+	if ( ( IsDecisionTriggered() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
 	{
 		pImpl->status = Impl::State::Game;
 		pImpl->boss.StartUp( pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
@@ -538,6 +543,11 @@ bool SceneGame::IsDecisionTriggered() const
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
 }
 
+bool SceneGame::IsDoneCameraMove() const
+{
+	return ( pImpl->cameraLerpFactor < 1.0f ) ? false : true;
+}
+
 void SceneGame::UpdateCamera()
 {
 	Camera::Controller cameraController{};
@@ -625,7 +635,7 @@ void SceneGame::UpdateCamera()
 	Donya::Vector3 nowCameraFocus		= pImpl->titleCameraFocus;
 	if ( pImpl->status != Impl::State::Title )
 	{
-		if ( pImpl->cameraLerpFactor < 1.0f )
+		if ( !IsDoneCameraMove() )
 		{
 			Donya::Easing::Kind kind = scast<Donya::Easing::Kind>( pImpl->cameraEaseKind );
 			Donya::Easing::Type type = scast<Donya::Easing::Type>( pImpl->cameraEaseType );
@@ -755,7 +765,7 @@ Scene::Result SceneGame::ReturnResult()
 	// else
 
 	bool requestPause = pImpl->controller.Trigger( Donya::Gamepad::Button::START ) || pImpl->controller.Trigger( Donya::Gamepad::Button::SELECT ) || Donya::Keyboard::Trigger( 'P' );
-	if ( requestPause && !Fader::Get().IsExist() )
+	if ( requestPause && IsDoneCameraMove() && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 

@@ -370,6 +370,7 @@ bool Framework::LoadSounds()
 			{ ID::BossBeamCharge,		"./Data/Sounds/SE/Boss/BeamCharge.wav",		false	},
 			{ ID::BossBeamShoot,		"./Data/Sounds/SE/Boss/BeamShoot.wav",		true	},
 			{ ID::BossEngine,			"./Data/Sounds/SE/Boss/Engine.wav",			true	},
+			{ ID::BossImpact,			"./Data/Sounds/SE/Boss/Impact.wav",			false	},
 			{ ID::BossReceiveDamage,	"./Data/Sounds/SE/Boss/ReceiveDamage.wav",	false	},
 			{ ID::BossRushWave,			"./Data/Sounds/SE/Boss/RushWave.wav",		false	},
 			{ ID::BossShootMissile,		"./Data/Sounds/SE/Boss/ShootMissile.wav",	false	},

@@ -12,6 +12,7 @@ namespace Music
 		BossBeamCharge,
 		BossBeamShoot,
 		BossEngine,
+		BossImpact,
 		BossReceiveDamage,
 		BossRushWave,
 		BossShootMissile,

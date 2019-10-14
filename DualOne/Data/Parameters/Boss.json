@@ -1,6 +1,6 @@
 {
     "Boss": {
-        "cereal_class_version": 8,
+        "cereal_class_version": 9,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -93,6 +93,17 @@
             "shakeStrength": 3.5,
             "shakeDecel": 2.5,
             "shakeInterval": 0.029999999329447748
+        },
+        "gravity": 0.4000000059604645,
+        "initBouncePower": 16.0,
+        "bounceAppearTimeRange": {
+            "cereal_class_version": 0,
+            "x": 0.0,
+            "y": 0.0
+        },
+        "bouncePowerRange": {
+            "x": 0.0,
+            "y": 0.0
         }
     }
 }

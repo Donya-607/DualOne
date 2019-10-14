@@ -1542,14 +1542,16 @@ Boss::Boss() :
 	status( State::Hidden ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
-	stunTimer(),
-	maxDistanceToTarget(),
+	stunTimer(), bounceTimer(),
+	maxDistanceToTarget(), gravity(), initBouncePower(),
 	hitBox(),
+	bounceAppearTimeRange(), bouncePowerRange(),
 	pos(), velocity(), stunVelocity(),
 	missileOffset(), obstacleOffset(), waveOffset(),
 	basePosture(),
 	modelBody(), modelFoot(), modelRoll(), arm(),
-	lanePositions(), missiles(), obstacles(), beams(), waves()
+	lanePositions(), missiles(), obstacles(), beams(), waves(),
+	isLanding( true )
 {}
 Boss::~Boss()
 {
@@ -1624,6 +1626,8 @@ void Boss::StartUp( float appearPositionZ )
 	waitReuseFrame = AttackParam::Get().untilAttackFrame;
 
 	pos = Donya::Vector3{ 0.0f, 0.0f, appearPositionZ };
+	velocity.y = initBouncePower;
+	isLanding = false;
 
 	Donya::Sound::Play( Music::BossEngine );
 }
@@ -1647,6 +1651,8 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	// else
 
 	Move( wsAttackTargetPos );
+
+	UpdateVertical();
 
 	UpdateCurrentStatus( targetLaneNo, wsAttackTargetPos );
 
@@ -1918,13 +1924,17 @@ void Boss::RotateRoll()
 
 void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )
 {
+	// The position.y will changed at UpdateVertical().
+
 	if ( IsStunning() )
 	{
-		pos += stunVelocity;
+		pos.x += stunVelocity.x;
+		pos.z += stunVelocity.z;
 	}
 	else
 	{
-		pos += velocity;
+		pos.x += velocity.x;
+		pos.z += velocity.z;
 	}
 
 	float distance = wsAttackTargetPos.z - pos.z;
@@ -1932,6 +1942,44 @@ void Boss::Move( const Donya::Vector3 &wsAttackTargetPos )
 	{
 		// Place to back than target-position.
 		pos.z = wsAttackTargetPos.z + maxDistanceToTarget;
+	}
+}
+
+void Boss::UpdateVertical()
+{
+	if ( !isLanding )
+	{
+		velocity.y -= gravity;
+		pos.y += velocity.y;
+
+		if ( pos.y < 0.0f )
+		{
+			pos.y		= 0.0f;
+			velocity.y	= 0.0f;
+			isLanding	= true;
+
+			Donya::ScreenShake::SetY( Donya::ScreenShake::Kind::MOMENT, 2.0f, 2.0f, NULL, 0.03f );
+			Donya::Sound::Play( Music::BossImpact );
+		}
+	}
+
+	Bounce();
+}
+void Boss::Bounce()
+{
+	bool isAllowedBounce = ( status == State::Normal ) && ZeroEqual( pos.y );
+	if ( isAllowedBounce )
+	{
+		bounceTimer--;
+
+		if ( bounceTimer <= 0 )
+		{
+			float power = Donya::Random::GenerateFloat( bouncePowerRange.x, bouncePowerRange.y );
+			velocity.y = power;
+
+			float time = Donya::Random::GenerateFloat( bounceAppearTimeRange.x, bounceAppearTimeRange.y );
+			bounceTimer = scast<int>( floorf( time ) );
+		}
 	}
 }
 
@@ -2212,6 +2260,7 @@ void Boss::ArmUpdate()
 				NULL,
 				arm.shakeInterval
 			);
+			Donya::Sound::Play( Music::BossImpact );
 		}
 	};
 
@@ -2346,6 +2395,14 @@ void Boss::UseImGui()
 	{
 		if ( ImGui::TreeNode( u8"ボス" ) )
 		{
+			if ( ImGui::TreeNode( u8"パラメータ表示" ) )
+			{
+				ImGui::Text( u8"位置[X:%5.3f][Y:%5.3f][Z:%5.3f]", pos.x, pos.y, pos.z );
+				ImGui::Text( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", velocity.x, velocity.y, velocity.z );
+
+				ImGui::TreePop();
+			}
+
 			if ( ImGui::TreeNode( u8"当たり判定" ) )
 			{
 				auto EnumAABBParamToImGui = []( AABB *pAABB )
@@ -2378,6 +2435,12 @@ void Boss::UseImGui()
 				ImGui::SliderFloat3( u8"気絶中の移動速度", &stunVelocity.x, 0.1f, 32.0f );
 				if ( 0.0f < velocity.z     ) { velocity.z     *= -1.0f; }
 				if ( 0.0f < stunVelocity.z ) { stunVelocity.z *= -1.0f; }
+				ImGui::Text( "" );
+
+				ImGui::SliderFloat( u8"重力", &gravity, 0.0f, 16.0f );
+				ImGui::SliderFloat( u8"登場時の跳ねる強さ", &initBouncePower, 1.0f, 512.0f );
+				ImGui::SliderFloat2( u8"跳ねる間隔（フレーム）（Min, Max）", &bounceAppearTimeRange.x, 1.0f, 5120.0f );
+				ImGui::SliderFloat2( u8"跳ねる強さ（Min, Max）", &bouncePowerRange.x, 1.0f, 512.0f );
 
 				ImGui::SliderFloat( u8"プレイヤーとの距離の最大", &maxDistanceToTarget, 1.0f, 1024.0f );
 

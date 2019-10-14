@@ -1,7 +1,7 @@
 #include "StorageForScene.h"
 
 StorageForScene::StorageForScene() :
-	timer()
+	timer(), wasRetried( false )
 {}
 StorageForScene::~StorageForScene() = default;
 
@@ -17,4 +17,13 @@ void  StorageForScene::StoreTimer( Timer storeData )
 Timer StorageForScene::GetTimer() const
 {
 	return timer;
+}
+
+void StorageForScene::StoreRetryFlag( bool flag )
+{
+	wasRetried = flag;
+}
+bool StorageForScene::GetRetryFlag() const
+{
+	return wasRetried;
 }

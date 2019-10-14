@@ -8,7 +8,8 @@ class StorageForScene final : public Donya::Singleton<StorageForScene>
 {
 	friend class Donya::Singleton<StorageForScene>;
 private:
-	Timer timer;
+	Timer	timer;
+	bool	wasRetried;
 private:
 	StorageForScene();
 public:
@@ -18,4 +19,7 @@ public:
 
 	void  StoreTimer( Timer storeData );
 	Timer GetTimer() const;
+
+	void StoreRetryFlag( bool flag );
+	bool GetRetryFlag() const;
 };
