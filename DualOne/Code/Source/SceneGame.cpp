@@ -331,7 +331,6 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	{
 		ParticleEmitterPosition arg;
 		arg.playerPos = pImpl->player.GetPos();
-		arg.misslePos = NULL;
 		ParticleManager::Get().Update( arg );
 	}
 

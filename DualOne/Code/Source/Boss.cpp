@@ -930,7 +930,7 @@ bool Beam::ShouldErase() const
 void Beam::AngleUpdate()
 {
 	using namespace Donya::Easing;
-	float ease = Ease( Kind::Quadratic, Type::In, easeParam );
+	float ease = Ease( Kind::Sinusoidal, Type::In, easeParam );
 	easeParam += angleIncreaseSpeed;
 
 	beamAngle = beamAngleBegin + ( beamAngleEnd - beamAngleBegin ) * ease;
@@ -1129,6 +1129,11 @@ void Wave::Uninit()
 void Wave::Update()
 {
 	aliveFrame--;
+	// Emit Particles
+	if (aliveFrame % 5 == 0)
+	{
+		ParticleManager::Get().CreateShockWaveParticle(pos);
+	}
 
 	pos.z -= speed; // The advance direction is back.
 }

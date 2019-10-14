@@ -112,7 +112,7 @@ void Camera::ResetPerspectiveProjection()
 	_ASSERT_EXPR( !ZeroEqual( screenSize.y ), L"Zero-divide detected!" );
 	float aspectRatio	= screenSize.x / screenSize.y;
 	float mostNear		= 0.1f;
-	float mostFar		= 1000.0f;
+	float mostFar		= 10000.0f;
 
 	SetPerspectiveProjectionMatrix( scopeAngle, aspectRatio, mostNear, mostFar );
 }

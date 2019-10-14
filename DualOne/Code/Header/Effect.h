@@ -11,7 +11,6 @@
 struct ParticleEmitterPosition
 {
 	Donya::Vector3 playerPos;
-	Donya::Vector3 misslePos;
 };
 
 struct Particle
@@ -23,7 +22,11 @@ struct Particle
 		SLED_EFFECT,
 		BOSS_EFFECT,
 		MISSLE_EFFECT,
+		SHOCKWAVE_EFFECT,
 	};
+	/*----------------------------------------*/
+	//	Variables
+	/*----------------------------------------*/
 	Donya::Vector3			pos;
 	Donya::Vector3			velocity;
 	Donya::Vector3			startVelocity;
@@ -33,19 +36,27 @@ struct Particle
 	int						existanceTime;
 	Type					type;
 
+	/*----------------------------------------*/
+	//	Fanctions
+	/*----------------------------------------*/
 	Particle();
 	Particle(Donya::Vector3 _emitterPos, Type _type);
 	Particle(const Particle&);
 	Particle& operator = (const Particle&);
 	~Particle();
 
+	// Update fanction
+	void UpdateOfSleds();
+	void UpdateOfMissles();
+	void UpdateOfShockWave();
+
+	//	Set Parameter fanction
 	void SetNoneElements(Donya::Vector3 _emitterPos);
 	void SetSledElements(Donya::Vector3 _emitterPos);
 	void SetBossElements(Donya::Vector3 _emitterPos);
 	void SetMissleElements(Donya::Vector3 _emitterPos);
+	void SetShockWaveElements(Donya::Vector3 _emitterPos);
 
-	void UpdateOfSleds();
-	void UpdateOfMissles();
 };
 
 class ParticleManager : public Donya::Singleton<ParticleManager>
@@ -63,6 +74,7 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	/*---------------------------------*/
 	std::vector<Particle> sledEffects;
 	std::vector<Particle> missleEffects;
+	std::vector<Particle> shockWaveEffects;
 
 	int				timer;
 
@@ -108,6 +120,16 @@ public:
 		bool isEnableFill = true
 	);
 
+	void DrawShockWave
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
+
 
 
 	/*---------------------*/
@@ -115,13 +137,15 @@ public:
 	/*---------------------*/
 	void CreateSledParticle(Donya::Vector3 _pos);
 	void CreateSmokeOfMissleParticle(Donya::Vector3 _pos);
+	void CreateShockWaveParticle(Donya::Vector3 _pos);
 
 	/*---------------------*/
-	//	Create fanction
+	//	Judge erase fanction
 	/*---------------------*/
 private:
 	void JudgeEraseSled();
 	void JudgeEraseSmokeOfMissle();
+	void JudgeEraseShockWave();
 
 #ifdef USE_IMGUI
 	void UseImGui();
