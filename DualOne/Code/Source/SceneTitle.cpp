@@ -105,6 +105,13 @@ bool SceneTitle::IsDecisionTriggered() const
 	? pImpl->controller.Trigger( Donya::Gamepad::A )
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
 }
+bool SceneTitle::IsDecisionReleased() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Release( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Release( 'Z' ) ) ? true : false;
+}
 
 void SceneTitle::StartFade()
 {
@@ -139,7 +146,7 @@ Scene::Result SceneTitle::ReturnResult()
 	}
 
 	// if ( Fader::Get().IsClosed() )
-	if ( IsDecisionTriggered() )
+	if ( IsDecisionReleased() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 

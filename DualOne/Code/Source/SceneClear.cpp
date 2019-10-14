@@ -370,6 +370,7 @@ Scene::Result SceneClear::ReturnResult()
 		if ( pImpl->choice == Impl::Choice::ReTry )
 		{
 			change.sceneType = Scene::Type::Game;
+			StorageForScene::Get().StoreRetryFlag( true );
 		}
 		else
 		{

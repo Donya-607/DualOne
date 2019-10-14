@@ -29,6 +29,7 @@ private:
 	/// This method is linking to title-scene's method.
 	/// </summary>
 	bool	IsDecisionTriggered() const;
+	bool	IsDecisionReleased() const;
 
 	bool	IsDoneCameraMove() const;
 

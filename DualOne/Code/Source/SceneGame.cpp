@@ -379,7 +379,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
-	if ( ( IsDecisionTriggered() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
+	if ( ( IsDecisionReleased() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
 	{
 		pImpl->status = Impl::State::Game;
 		pImpl->boss.StartUp( pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
@@ -402,9 +402,6 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	{
 		Player::Input input{};
 
-		if ( pImpl->status == Impl::State::Title ) { return input; }
-		// else
-
 		auto &ctrller = pImpl->controller;
 		if ( ctrller.IsConnected() )
 		{
@@ -421,6 +418,11 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
 
 			if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
+		}
+
+		if ( pImpl->status == Impl::State::Title )
+		{
+			input.stick = 0.0f;
 		}
 
 		return input;
@@ -540,6 +542,13 @@ bool SceneGame::IsDecisionTriggered() const
 	( pImpl->controller.IsConnected() )
 	? pImpl->controller.Trigger( Donya::Gamepad::A )
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
+}
+bool SceneGame::IsDecisionReleased() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Release( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Release( 'Z' ) ) ? true : false;
 }
 
 bool SceneGame::IsDoneCameraMove() const
