@@ -6,10 +6,12 @@ public:
 	enum class Request : int
 	{
 		NONE				= 0,
-		ADD_SCENE			= 1 << 0,
-		REMOVE_ME			= 1 << 1,
-		REMOVE_ALL			= 1 << 2,
+		ADD_SCENE			= 1 << 0,	// Add a scene to front.
+		APPEND_SCENE		= 1 << 1,	// Add a scene to back.
+		REMOVE_ME			= 1 << 2,	// Remove the scene. If specify this request, you must be careful for the scene-stack do not empty.
+		REMOVE_ALL			= 1 << 3,	// Remove all scene. If specify this request, you must be careful for the scene-stack do not empty.
 		ASSIGN				= REMOVE_ALL | ADD_SCENE,	// Doing REMOVE_ALL and ADD_SCENE.
+		UPDATE_NEXT			= 1 << 4,	// Also Update the next stacked scene.
 	};
 	enum class Type : int
 	{

@@ -30,15 +30,15 @@
 #include "Timer.h"
 #include "Boss.h"
 
-int GetEasingKindCount()
+static int GetEasingKindCount()
 {
 	return scast<int>( Donya::Easing::Kind::ENUM_TERMINATION );
 }
-int GetEasingTypeCount()
+static int GetEasingTypeCount()
 {
 	return 3; // scast<int>( Donya::Easing::Type::InOut ) + 1;
 }
-std::string EasingKindToStr( int easingKind )
+static std::string EasingKindToStr( int easingKind )
 {
 	using namespace Donya::Easing;
 	Kind kind = scast<Kind>( easingKind );
@@ -62,7 +62,7 @@ std::string EasingKindToStr( int easingKind )
 
 	return "Error Kind !";
 }
-std::string EasingTypeToStr( int easingType )
+static std::string EasingTypeToStr( int easingType )
 {
 	using namespace Donya::Easing;
 	Type type = scast<Type>( easingType );
@@ -341,12 +341,12 @@ void SceneGame::Init()
 
 	// The camera's initialize should call after player's initialize.
 	{
-		Donya::Vector3 cameraPosition = pImpl->cameraDistance;
+		Donya::Vector3 cameraPosition = pImpl->titleCameraDistance;
 		cameraPosition.z += pImpl->player.GetPos().z;
 
 		constexpr float FOV = ToRadian( 30.0f );
 		pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
-		pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
+		pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->titleCameraFocus );
 		pImpl->camera.SetPosition( cameraPosition );
 	}
 }
@@ -374,7 +374,16 @@ Scene::Result SceneGame::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
-	pImpl->currentTime.Update();
+	if ( IsDecisionTriggered() && pImpl->status == Impl::State::Title )
+	{
+		pImpl->status = Impl::State::Game;
+		pImpl->boss.StartUp( pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
+	}
+
+	if ( pImpl->status != Impl::State::Title )
+	{
+		pImpl->currentTime.Update();
+	}
 
 #if USE_IMGUI
 
@@ -521,6 +530,14 @@ void SceneGame::Draw( float elapsedTime )
 	);
 }
 
+bool SceneGame::IsDecisionTriggered() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Trigger( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
+}
+
 void SceneGame::UpdateCamera()
 {
 	Camera::Controller cameraController{};
@@ -610,10 +627,14 @@ void SceneGame::UpdateCamera()
 	{
 		if ( pImpl->cameraLerpFactor < 1.0f )
 		{
+			Donya::Easing::Kind kind = scast<Donya::Easing::Kind>( pImpl->cameraEaseKind );
+			Donya::Easing::Type type = scast<Donya::Easing::Type>( pImpl->cameraEaseType );
+			float ease = Ease( kind, type, pImpl->cameraLerpFactor );
+
 			Donya::Vector3 distVec  = pImpl->cameraDistance	- pImpl->titleCameraDistance;
 			Donya::Vector3 focusVec = pImpl->cameraFocus	- pImpl->titleCameraFocus;
-			distVec  *= pImpl->cameraLerpFactor;
-			focusVec *= pImpl->cameraLerpFactor;
+			distVec  *= ease;
+			focusVec *= ease;
 			nowCameraDistance	+= distVec;
 			nowCameraFocus		+= focusVec;
 

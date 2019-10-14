@@ -35,7 +35,7 @@ private:
 	bool ValidateMessage( Scene::Result message ) const;
 	Scene::Result ApplyFailSafe( Scene::Result wrongMessage ) const;
 
-	void ProcessMessage( Scene::Result message );
+	void ProcessMessage( Scene::Result message, int &refUpdateCount, int &refLoopIndex );
 
 	/// <summary>
 	/// Also doing scene initialize.

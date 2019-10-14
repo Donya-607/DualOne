@@ -24,11 +24,11 @@
 #undef max
 #undef min
 
-int GetEasingCount()
+static int GetEasingCount()
 {
 	return scast<int>( Donya::Easing::Kind::ENUM_TERMINATION );
 }
-std::string EasingKindToStr( int easingKind )
+static std::string EasingKindToStr( int easingKind )
 {
 	using namespace Donya::Easing;
 	Kind kind = scast<Kind>( easingKind );
@@ -1619,6 +1619,8 @@ void Boss::Uninit()
 
 void Boss::StartUp( float appearPositionZ )
 {
+	status = State::Normal;
+
 	waitReuseFrame = AttackParam::Get().untilAttackFrame;
 
 	pos = Donya::Vector3{ 0.0f, 0.0f, appearPositionZ };

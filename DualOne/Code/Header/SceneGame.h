@@ -25,6 +25,11 @@ public:
 
 	void	Draw( float elapsedTime ) override;
 private:
+	/// <summary>
+	/// This method is linking to title-scene's method.
+	/// </summary>
+	bool	IsDecisionTriggered() const;
+
 	void	UpdateCamera();
 
 	/// <summary>
