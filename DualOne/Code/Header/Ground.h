@@ -100,7 +100,7 @@ public:
 
 	void EraseDeadTree(Donya::Vector3 _playerPos);
 
-#ifdef USE_IMGUI
+#if USE_IMGUI
 	void UseImGui();
 #endif
 

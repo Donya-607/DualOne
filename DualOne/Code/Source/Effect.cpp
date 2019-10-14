@@ -304,6 +304,7 @@ void ParticleManager::JudgeEraseShockWave()
 	}
 }
 
+#if USE_IMGUI
 
 /*-------------------------------------------------*/
 //	ImGuiä÷êî
@@ -323,6 +324,7 @@ void ParticleManager::UseImGui()
 	}
 }
 
+#endif // USE_IMGUI
 
 /*-------------------------------------------------*/
 //

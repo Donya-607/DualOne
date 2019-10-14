@@ -212,7 +212,11 @@ void Ground::Update(Donya::Vector3 _playerPos)
 
 	EraseDeadTree(_playerPos);
 
+#if USE_IMGUI
+
 	UseImGui();
+
+#endif // USE_IMGUI
 }
 
 /*-------------------------------------------------*/
@@ -261,7 +265,7 @@ void Ground::EraseDeadTree(Donya::Vector3 _playerPos)
 	trees.erase(eraseItr, trees.end());
 }
 
-#ifdef USE_IMGUI
+#if USE_IMGUI
 void Ground::UseImGui()
 {
 	if (ImGui::BeginIfAllowed())

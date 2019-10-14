@@ -147,7 +147,7 @@ private:
 	void JudgeEraseSmokeOfMissle();
 	void JudgeEraseShockWave();
 
-#ifdef USE_IMGUI
+#if USE_IMGUI
 	void UseImGui();
 #endif
 
