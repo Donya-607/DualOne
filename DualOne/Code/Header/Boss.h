@@ -657,6 +657,7 @@ public:
 private:
 	enum class State
 	{
+		Hidden,
 		Normal,
 		Stun,
 		GenerateWave,
@@ -753,6 +754,8 @@ private:
 public:
 	void Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions );
 	void Uninit();
+
+	void StartUp( float appearPositionZ );
 
 	void Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
 

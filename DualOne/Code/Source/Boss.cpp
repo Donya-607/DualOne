@@ -1539,7 +1539,7 @@ void CollisionDetail::UseImGui()
 #pragma region Boss
 
 Boss::Boss() :
-	status( State::Normal ),
+	status( State::Hidden ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
 	stunTimer(),
@@ -1592,14 +1592,10 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 
 	waitReuseFrame = AttackParam::Get().untilAttackFrame;
 
-	pos = Donya::Vector3{ 0.0f, 0.0f, initDistanceFromOrigin };
-	
 	lanePositions = registerLanePositions;
 	Obstacle::Warning::RegisterLaneCount( lanePositions.size() );
 
 	basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
-
-	Donya::Sound::Play( Music::BossEngine );
 }
 
 void Boss::Uninit()
@@ -1621,6 +1617,15 @@ void Boss::Uninit()
 	Donya::Sound::Stop( Music::BossEngine );
 }
 
+void Boss::StartUp( float appearPositionZ )
+{
+	waitReuseFrame = AttackParam::Get().untilAttackFrame;
+
+	pos = Donya::Vector3{ 0.0f, 0.0f, appearPositionZ };
+
+	Donya::Sound::Play( Music::BossEngine );
+}
+
 void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 {
 #if USE_IMGUI
@@ -1636,6 +1641,9 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 
 #endif // USE_IMGUI
 
+	if ( status == State::Hidden ) { return; }
+	// else
+
 	Move( wsAttackTargetPos );
 
 	UpdateCurrentStatus( targetLaneNo, wsAttackTargetPos );
@@ -1645,6 +1653,9 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
 {
+	if ( status == State::Hidden ) { return; }
+	// else
+
 	using namespace DirectX;
 
 	auto Matrix		= []( const XMFLOAT4X4 &matrix )
@@ -1769,6 +1780,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 AABB Boss::GetHitBox() const
 {
+	if ( status == State::Hidden ) { return AABB::Nil(); }
+	// else
+
 	AABB wsHitBox = hitBox;
 	wsHitBox.pos += GetPos();
 	return wsHitBox;

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Donya/Constant.h"
+#include "Donya/Easing.h"
 #include "Donya/GamepadXInput.h"
 #include "Donya/Keyboard.h"
 #include "Donya/Mouse.h"
@@ -29,26 +30,93 @@
 #include "Timer.h"
 #include "Boss.h"
 
+int GetEasingKindCount()
+{
+	return scast<int>( Donya::Easing::Kind::ENUM_TERMINATION );
+}
+int GetEasingTypeCount()
+{
+	return 3; // scast<int>( Donya::Easing::Type::InOut ) + 1;
+}
+std::string EasingKindToStr( int easingKind )
+{
+	using namespace Donya::Easing;
+	Kind kind = scast<Kind>( easingKind );
+	switch ( kind )
+	{
+	case Kind::Linear:			return "Linear";
+	case Kind::Back:			return "Back";
+	case Kind::Bounce:			return "Bounce";
+	case Kind::Circular:		return "Circular";
+	case Kind::Cubic:			return "Cubic";
+	case Kind::Elastic:			return "Elastic";
+	case Kind::Exponential:		return "Exponential";
+	case Kind::Quadratic:		return "Quadratic";
+	case Kind::Quartic:			return "Quartic";
+	case Kind::Quintic:			return "Quintic";
+	case Kind::Smooth:			return "Smooth";
+	case Kind::Sinusoidal:		return "Sinusoidal";
+	case Kind::SoftBack:		return "SoftBack";
+	case Kind::Step:			return "Step";
+	}
+
+	return "Error Kind !";
+}
+std::string EasingTypeToStr( int easingType )
+{
+	using namespace Donya::Easing;
+	Type type = scast<Type>( easingType );
+	switch ( type )
+	{
+	case Type::In:		return "In";
+	case Type::Out:		return "Out";
+	case Type::InOut:	return "InOut";
+	}
+
+	return "Error Type !";
+}
+
 struct SceneGame::Impl
 {
 public:
+	enum class State
+	{
+		Title,	// Showing the title-scene at another scene.
+		Game,	// Playing main scene.
+	};
+public:
+	State	status;
+
+	int		cameraEaseKind;			// Linking to Donya::Ease::Kind.
+	int		cameraEaseType;			// Linking to Donya::Ease::Type.
+	float	cameraLerpFactor;		// 0.0f ~ 1.0f.
+	float	cameraLerpSpeed;		// 1.0f / (whole-frame).
 	float	initDistanceOfBoss;		// Distance from origin.
 	size_t	sprFont;
+
 	Camera	camera;
 	Player	player;
 	Ground	ground;
 	Boss	boss;
-//	ParticleManager particleManager;
 	Timer	currentTime;
+
 	Donya::Vector3	lightDirection;
-	Donya::Vector3	cameraDistance;	// X, Y is calculated from world-space, Z is calculated from local of player space.
-	Donya::Vector3	cameraFocus;	// Relative position from the camera.
+
+	Donya::Vector3	cameraDistance;		// Use at game-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
+	Donya::Vector3	cameraFocus;		// Use at game-scene. Relative position from the camera.
+	Donya::Vector3	titleCameraDistance;// Use at title-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
+	Donya::Vector3	titleCameraFocus;	// Use at title-scene. Relative position from the camera.
+
 	Donya::XInput	controller;
+
 	std::vector<Donya::Vector3>		lanePositions;	// Only use when initialize.
 	std::vector<ReflectedEntity>	reflectedEntities;
+
 	bool	wasTouched;		// True when detect the collision between player and boss.
 public:
 	Impl() :
+		status( State::Title ),
+		cameraEaseKind(), cameraEaseType(), cameraLerpFactor(), cameraLerpSpeed(),
 		initDistanceOfBoss(),
 		sprFont( NULL ),
 		camera(),
@@ -58,6 +126,7 @@ public:
 		currentTime(),
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
+		titleCameraDistance( 0.0f, 1.0f, -1.0f ), titleCameraFocus( 0.0f, -0.5f, 1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		lanePositions(), reflectedEntities(),
 		wasTouched( false )
@@ -100,9 +169,18 @@ private:
 		}
 		if ( 4 <= version )
 		{
-			/*
-			archive( CEREAL_NVP() );
-			*/
+			archive
+			(
+				CEREAL_NVP( cameraEaseKind ),
+				CEREAL_NVP( cameraEaseType ),
+				CEREAL_NVP( cameraLerpSpeed ),
+				CEREAL_NVP( titleCameraDistance ),
+				CEREAL_NVP( titleCameraFocus )
+			);
+		}
+		if ( 5 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Game";
@@ -141,9 +219,31 @@ public:
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
-				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x, -512.0f, 512.0f );
-				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x, -512.0f, 512.0f );
+				ImGui::SliderFloat3( u8"カメラの位置（自機からの相対）", &cameraDistance.x,	-1024.0f, 1024.0f );
+				ImGui::SliderFloat3( u8"カメラ注視点（自身からの相対）", &cameraFocus.x,		-1024.0f, 1024.0f );
 				ImGui::Text( "" );
+				
+				ImGui::SliderFloat3( u8"タイトル・カメラの位置（自機からの相対）", &titleCameraDistance.x,	-1024.0f, 1024.0f );
+				ImGui::SliderFloat3( u8"タイトル・カメラ注視点（自身からの相対）", &titleCameraFocus.x,		-1024.0f, 1024.0f );
+				ImGui::Text( "" );
+
+				if ( ImGui::TreeNode( u8"カメラにかけるイージング" ) )
+				{
+					ImGui::SliderInt( u8"種類",		&cameraEaseKind, 0, GetEasingKindCount() - 1 );
+					ImGui::SliderInt( u8"タイプ",	&cameraEaseType, 0, GetEasingTypeCount() - 1 );
+					std::string easingCaption = "名：" + EasingKindToStr( cameraEaseKind ) + " " + EasingTypeToStr( cameraEaseType );
+					easingCaption = Donya::MultiToUTF8( easingCaption );
+					ImGui::Text( easingCaption.c_str() );
+
+					static int cameraMoveFrame =
+					( ZeroEqual( cameraLerpSpeed ) )
+					? 1
+					: scast<int>( 1.0f / cameraLerpSpeed );
+					ImGui::SliderInt( u8"移動にかける時間（フレーム）", &cameraMoveFrame, 1, 256 );
+					cameraLerpSpeed = 1.0f / scast<float>( cameraMoveFrame );
+
+					ImGui::TreePop();
+				}
 
 				ImGui::SliderFloat( u8"初期のボスとの距離", &initDistanceOfBoss, 0.01f, 512.0f );
 				ImGui::Text( "" );
@@ -210,7 +310,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 3 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 4 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -240,10 +340,15 @@ void SceneGame::Init()
 	ParticleManager::Get().Init();
 
 	// The camera's initialize should call after player's initialize.
-	constexpr float FOV = ToRadian( 30.0f );
-	pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
-	pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
-	pImpl->camera.SetPosition( pImpl->player.GetPos() + pImpl->cameraDistance );
+	{
+		Donya::Vector3 cameraPosition = pImpl->cameraDistance;
+		cameraPosition.z += pImpl->player.GetPos().z;
+
+		constexpr float FOV = ToRadian( 30.0f );
+		pImpl->camera.Init( Common::ScreenWidthF(), Common::ScreenHeightF(), FOV );
+		pImpl->camera.SetFocusCoordinate( pImpl->player.GetPos() + pImpl->cameraFocus );
+		pImpl->camera.SetPosition( cameraPosition );
+	}
 }
 
 void SceneGame::Uninit()
@@ -282,6 +387,9 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	auto MakePlayerInput = [&]()->Player::Input
 	{
 		Player::Input input{};
+
+		if ( pImpl->status == Impl::State::Title ) { return input; }
+		// else
 
 		auto &ctrller = pImpl->controller;
 		if ( ctrller.IsConnected() )
@@ -335,91 +443,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		ParticleManager::Get().Update( arg );
 	}
 
-	Camera::Controller cameraController{};
-	cameraController.SetNoOperation();
-
-#if DEBUG_MODE
-	auto MakeControlStructWithMouse = []()
-	{
-		static Donya::Int2 prevMouse{};
-		static Donya::Int2 currMouse{};
-
-		prevMouse = currMouse;
-
-		auto nowMouse = Donya::Mouse::Coordinate();
-		currMouse.x = scast<int>( nowMouse.x );
-		currMouse.y = scast<int>( nowMouse.y );
-
-		bool isInputMouseButton = Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) || Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) || Donya::Mouse::Press( Donya::Mouse::Kind::RIGHT );
-		bool isDriveMouse = ( prevMouse != currMouse ) || Donya::Mouse::WheelRot() || isInputMouseButton;
-		if ( !isDriveMouse || Donya::IsMouseHoveringImGuiWindow() )
-		{
-			Camera::Controller noop{};
-			noop.SetNoOperation();
-			return noop;
-		}
-
-		Donya::Vector3 diff{};
-		{
-			Donya::Vector2 vec2 = ( currMouse - prevMouse ).Float();
-
-			diff.x = vec2.x;
-			diff.y = vec2.y * -1.0f;
-		}
-
-		Donya::Vector3 movement{};
-		Donya::Vector3 rotation{};
-
-		if ( Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) )
-		{
-			constexpr float ROT_AMOUNT = ToRadian( 1.0f );
-			rotation.x = diff.x * ROT_AMOUNT;
-			rotation.y = diff.y * ROT_AMOUNT;
-		}
-		else
-			if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
-			{
-				constexpr float MOVE_SPEED = 0.1f;
-				movement.x = diff.x * MOVE_SPEED;
-				movement.y = diff.y * MOVE_SPEED;
-			}
-
-		constexpr float FRONT_SPEED = 3.5f;
-		movement.z = FRONT_SPEED * scast<float>( Donya::Mouse::WheelRot() );
-
-		Donya::Quaternion rotYaw = Donya::Quaternion::Make( Donya::Vector3::Up(), rotation.x );
-
-		Donya::Vector3 right = Donya::Vector3::Right();
-		right = rotYaw.RotateVector( right );
-		Donya::Quaternion rotPitch = Donya::Quaternion::Make( right, rotation.y );
-
-		Donya::Quaternion rotQ = rotYaw * rotPitch;
-
-		static Donya::Vector3 front = Donya::Vector3::Front();
-
-		if ( !rotation.IsZero() )
-		{
-			front = rotQ.RotateVector( front );
-			front.Normalize();
-		}
-
-		Camera::Controller ctrl{};
-		ctrl.moveVelocity = movement;
-		ctrl.rotation = rotation;
-		ctrl.slerpPercent = 1.0f;
-		ctrl.moveAtLocalSpace = true;
-
-		return ctrl;
-	};
-	// cameraController = MakeControlStructWithMouse();
-#endif // DEBUG_MODE
-
-	pImpl->camera.Update( cameraController );
-
-	Donya::Vector3 criteria = pImpl->player.GetPos();
-	criteria.x = criteria.y = 0.0f;
-	pImpl->camera.SetPosition( criteria + pImpl->cameraDistance );
-	pImpl->camera.SetFocusCoordinate( criteria + pImpl->cameraFocus );
+	UpdateCamera();
 
 	DetectCollision();
 
@@ -495,6 +519,118 @@ void SceneGame::Draw( float elapsedTime )
 		32.0f, 32.0f,
 		32.0f, 32.0f
 	);
+}
+
+void SceneGame::UpdateCamera()
+{
+	Camera::Controller cameraController{};
+	cameraController.SetNoOperation();
+
+#if DEBUG_MODE
+	auto MakeControlStructWithMouse = []()
+	{
+		static Donya::Int2 prevMouse{};
+		static Donya::Int2 currMouse{};
+
+		prevMouse = currMouse;
+
+		auto nowMouse = Donya::Mouse::Coordinate();
+		currMouse.x = scast<int>( nowMouse.x );
+		currMouse.y = scast<int>( nowMouse.y );
+
+		bool isInputMouseButton = Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) || Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) || Donya::Mouse::Press( Donya::Mouse::Kind::RIGHT );
+		bool isDriveMouse = ( prevMouse != currMouse ) || Donya::Mouse::WheelRot() || isInputMouseButton;
+		if ( !isDriveMouse || Donya::IsMouseHoveringImGuiWindow() )
+		{
+			Camera::Controller noop{};
+			noop.SetNoOperation();
+			return noop;
+		}
+
+		Donya::Vector3 diff{};
+		{
+			Donya::Vector2 vec2 = ( currMouse - prevMouse ).Float();
+
+			diff.x = vec2.x;
+			diff.y = vec2.y * -1.0f;
+		}
+
+		Donya::Vector3 movement{};
+		Donya::Vector3 rotation{};
+
+		if ( Donya::Mouse::Press( Donya::Mouse::Kind::LEFT ) )
+		{
+			constexpr float ROT_AMOUNT = ToRadian( 1.0f );
+			rotation.x = diff.x * ROT_AMOUNT;
+			rotation.y = diff.y * ROT_AMOUNT;
+		}
+		else
+		if ( Donya::Mouse::Press( Donya::Mouse::Kind::MIDDLE ) )
+		{
+			constexpr float MOVE_SPEED = 0.1f;
+			movement.x = diff.x * MOVE_SPEED;
+			movement.y = diff.y * MOVE_SPEED;
+		}
+
+		constexpr float FRONT_SPEED = 3.5f;
+		movement.z = FRONT_SPEED * scast<float>( Donya::Mouse::WheelRot() );
+
+		Donya::Quaternion rotYaw = Donya::Quaternion::Make( Donya::Vector3::Up(), rotation.x );
+
+		Donya::Vector3 right = Donya::Vector3::Right();
+		right = rotYaw.RotateVector( right );
+		Donya::Quaternion rotPitch = Donya::Quaternion::Make( right, rotation.y );
+
+		Donya::Quaternion rotQ = rotYaw * rotPitch;
+
+		static Donya::Vector3 front = Donya::Vector3::Front();
+
+		if ( !rotation.IsZero() )
+		{
+			front = rotQ.RotateVector( front );
+			front.Normalize();
+		}
+
+		Camera::Controller ctrl{};
+		ctrl.moveVelocity = movement;
+		ctrl.rotation = rotation;
+		ctrl.slerpPercent = 1.0f;
+		ctrl.moveAtLocalSpace = true;
+
+		return ctrl;
+	};
+	// cameraController = MakeControlStructWithMouse();
+#endif // DEBUG_MODE
+
+	pImpl->camera.Update( cameraController );
+
+	Donya::Vector3 nowCameraDistance	= pImpl->titleCameraDistance;
+	Donya::Vector3 nowCameraFocus		= pImpl->titleCameraFocus;
+	if ( pImpl->status != Impl::State::Title )
+	{
+		if ( pImpl->cameraLerpFactor < 1.0f )
+		{
+			Donya::Vector3 distVec  = pImpl->cameraDistance	- pImpl->titleCameraDistance;
+			Donya::Vector3 focusVec = pImpl->cameraFocus	- pImpl->titleCameraFocus;
+			distVec  *= pImpl->cameraLerpFactor;
+			focusVec *= pImpl->cameraLerpFactor;
+			nowCameraDistance	+= distVec;
+			nowCameraFocus		+= focusVec;
+
+			pImpl->cameraLerpFactor += pImpl->cameraLerpSpeed;
+			pImpl->cameraLerpFactor = std::min( 1.0f, pImpl->cameraLerpFactor );
+		}
+		else
+		{
+			nowCameraDistance	= pImpl->cameraDistance;
+			nowCameraFocus		= pImpl->cameraFocus;
+		}
+	}
+
+	Donya::Vector3 criteria = pImpl->player.GetPos();
+	criteria.x = criteria.y = 0.0f;
+	pImpl->camera.SetPosition( criteria + nowCameraDistance );
+	pImpl->camera.SetFocusCoordinate( criteria + nowCameraFocus );
 }
 
 void SceneGame::DetectCollision()
