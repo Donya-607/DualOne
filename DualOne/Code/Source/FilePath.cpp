@@ -29,9 +29,9 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 	case SpriteAttribute::Warning:
 		return L"./Data/Images/UI/Warning.png";		// break;
 	case SpriteAttribute::GroundTex1:
-		return L"./Data/Images/Object/è∞1.png";		// break;
+		return L"./Data/Images/Object/yukaTEX.png";	// break;
 	case SpriteAttribute::GroundTex2:
-		return L"./Data/Images/Object/è∞2.png";		// break;
+		return L"./Data/Images/Object/yukaTEX.png";	// break;
 	case SpriteAttribute::SledEffect:
 		return L"./Data/Images/Effect/snow.png";	// break;
 	case SpriteAttribute::SmokeEffect:
@@ -62,7 +62,7 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 	case ModelAttribute::Missile:
 		return "./Data/Models/Boss/Missile.bin";			// break;
 	case ModelAttribute::Tree:
-		return "./Data/Models/Terrain/Tree_NoMaterial.bin";	// break;
+		return "./Data/Models/Terrain/Tree.bin";			// break;
 	case ModelAttribute::Obstacle:
 		return "./Data/Models/Boss/Obstacle.bin";			// breaak;
 	default:

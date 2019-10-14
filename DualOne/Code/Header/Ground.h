@@ -33,6 +33,7 @@ public:
 
 	void Move();
 	void ApplyLoopToMap(Donya::Vector3 _playerPos);
+	Donya::Vector3 GetPos() { return pos; }
 };
 
 struct Tree
@@ -59,7 +60,7 @@ public:
 
 	bool ShouldErase(Donya::Vector3 _playerPos) const
 	{
-		return (pos.z  >= _playerPos.z + 1000) ? true : false;
+		return (pos.z  >= _playerPos.z + 2000) ? true : false;
 	}
 
 	void LoadModel();
@@ -76,7 +77,9 @@ class Ground
 	std::vector<Tree>	trees;
 	int					timer;
 public:
+	static Donya::Vector3 treePos;
 	static Donya::Vector3 treeAngle;
+	static int CREATE_TREE;
 
 public:
 	Ground();

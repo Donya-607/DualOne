@@ -41,19 +41,19 @@ void Block::Init(size_t _num)
 	}
 	billBoard->Init();
 	if (_num == 0)
-		pos = Donya::Vector3(0.0f, 0.0f, 0.0f);
+		pos = Donya::Vector3(0.0f, 0.0f, 5000.0f);
 	else if (_num == 1)
-		pos = Donya::Vector3(0.0f, 0.0f, -500.0f);
+		pos = Donya::Vector3(0.0f, 0.0f, -0.0f);
 	else if (_num == 2)
-		pos = Donya::Vector3(0.0f, 0.0f, -1000.0f);
+		pos = Donya::Vector3(0.0f, 0.0f, -5000.0f);
 	else
-		pos = Donya::Vector3(0.0f, 0.0f, -1500.0f);
+		pos = Donya::Vector3(0.0f, 0.0f, -10000.0f);
 	velocity = Donya::Vector3(0.0f, 0.0f, 0.0f);
 
 #if 0
 	scale = Donya::Vector3(100.0f, 1.0f, 2000.0f);
 #else
-	scale = Donya::Vector3(100.0f, 500.0f, 0.1f);
+	scale = Donya::Vector3(3000.0f, 10100.0f, 0.1f);
 
 	if (_num % 2 == 0)
 		pos.y += -1.0f;
@@ -64,8 +64,8 @@ void Block::Init(size_t _num)
 /*-------------------------------------------------*/
 void Block::Update(Donya::Vector3 _playerPos)
 {
-	Move();
 	ApplyLoopToMap(_playerPos);
+	Move();
 }
 
 /*-------------------------------------------------*/
@@ -139,9 +139,9 @@ void Block::Move()
 /*-------------------------------------------------*/
 void Block::ApplyLoopToMap(Donya::Vector3 _playerPos)
 {
-	if (pos.z >= _playerPos.z + 1000)
+	if (pos.z >= _playerPos.z + 10000)
 	{
-		pos.z = _playerPos.z -1000;
+		pos.z = _playerPos.z -10000;
 	}
 }
 
@@ -151,6 +151,9 @@ void Block::ApplyLoopToMap(Donya::Vector3 _playerPos)
 //
 /*-------------------------------------------------*/
 Donya::Vector3 Ground::treeAngle;
+Donya::Vector3 Ground::treePos;
+int Ground::CREATE_TREE;
+
 /*-------------------------------------------------*/
 //	コンストラクタとデストラクタ
 /*-------------------------------------------------*/
@@ -171,6 +174,9 @@ void Ground::Init()
 	{
 		blocks[i].Init(i);
 	}
+	CREATE_TREE = 15;
+	treePos.y = 0.0f;
+
 }
 
 void Ground::Uninit()
@@ -192,15 +198,14 @@ void Ground::Update(Donya::Vector3 _playerPos)
 		it.Update();
 	}
 
-	if (++timer >= 15)
+	if (++timer >= CREATE_TREE)
 	{
 		timer = 0;
-		Donya::Vector3 treePos;
 		static bool generateDir;
 		generateDir = !generateDir;
 		if (generateDir)	treePos.x = 70.0f;
 		else				treePos.x = -70.0f;
-		treePos.y = 0.0f;
+//		treePos.y = 0.0f;
 		treePos.z = _playerPos.z - 200.0f;
 		CreateTree(treePos);
 	}
@@ -261,13 +266,31 @@ void Ground::UseImGui()
 {
 	if (ImGui::BeginIfAllowed())
 	{
-		if (ImGui::TreeNode(u8"木の角度"))
+		if (ImGui::TreeNode(u8"block"))
+		{
+			Donya::Vector3 math;
+			math = blocks[0].GetPos();
+			ImGui::SliderFloat(u8"座標 : 0", &math.z, 0.0f, 180.0f);
+			math = blocks[1].GetPos();
+			ImGui::SliderFloat(u8"座標 : 1", &math.z, 0.0f, 180.0f);
+			math = blocks[2].GetPos();
+			ImGui::SliderFloat(u8"座標 : 2", &math.z, 0.0f, 180.0f);
+			math = blocks[3].GetPos();
+			ImGui::SliderFloat(u8"座標 : 3", &math.z, 0.0f, 180.0f);
+
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode(u8"tree"))
 		{
 			ImGui::SliderFloat(u8"角度X", &treeAngle.x, 0.0f, 180.0f);
 			ImGui::SliderFloat(u8"角度Y", &treeAngle.y, 0.0f, 180.0f);
-			ImGui::SliderFloat(u8"角度Z", &treeAngle.z, 0.0f, 180.0f);
+			ImGui::SliderFloat(u8"角度Z", &treeAngle.z, -180.0f, 180.0f);
+			ImGui::SliderFloat(u8"Y座標", &treePos.y, -50.0f, 50.0f);
+			ImGui::SliderInt(u8"生成間隔", &CREATE_TREE, 1, 60);
+
 			ImGui::TreePop();
 		}
+
 		ImGui::End();
 	}
 }
@@ -347,7 +370,7 @@ void Tree::Draw
 	XMMATRIX W = S * R * T;
 	XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
 
-	constexpr XMFLOAT4 color{ 1.0f, 0.0f, 0.0f, 1.0f };
+	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	pModel->Render(Float4x4(WVP), Float4x4(W), lightDirection, color, cameraPosition);
 }

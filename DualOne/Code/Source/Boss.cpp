@@ -1170,6 +1170,11 @@ void Wave::Uninit()
 void Wave::Update()
 {
 	aliveFrame--;
+	// Emit Particles
+	if (aliveFrame % 5 == 0)
+	{
+		ParticleManager::Get().CreateShockWaveParticle(pos);
+	}
 
 	pos.z -= speed; // The advance direction is back.
 }
