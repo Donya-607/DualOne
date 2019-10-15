@@ -2787,8 +2787,8 @@ void Boss::UseImGui()
 				arm.highestAngle = ToRadian( highestDegree );
 
 				ImGui::SliderFloat( u8"傾ける角度の内，体部分の割合", &arm.bodyAngleRatio, 0.0f, 1.0f );
-				ImGui::Text( u8"体部分の最大角度：%05.3f", arm.highestDegree * arm.bodyAngleRatio );
-				ImGui::Text( u8"腕部分の最大角度：%05.3f", arm.highestDegree * ( 1.0f - arm.bodyAngleRatio ) );
+				ImGui::Text( u8"体部分の最大角度：%05.3f", highestDegree * arm.bodyAngleRatio );
+				ImGui::Text( u8"腕部分の最大角度：%05.3f", highestDegree * ( 1.0f - arm.bodyAngleRatio ) );
 				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"画面シェイク" ) )
