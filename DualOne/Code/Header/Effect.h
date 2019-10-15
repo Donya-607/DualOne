@@ -40,7 +40,7 @@ struct Particle
 	//	Fanctions
 	/*----------------------------------------*/
 	Particle();
-	Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove = false);
+	Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove = false, float _scale = 1.0f);
 	Particle(const Particle&);
 	Particle& operator = (const Particle&);
 	~Particle();
@@ -54,7 +54,7 @@ struct Particle
 	void SetNoneElements(Donya::Vector3 _emitterPos);
 	void SetSledElements(Donya::Vector3 _emitterPos);
 	void SetBossElements(Donya::Vector3 _emitterPos);
-	void SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove);
+	void SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, float _scale = 1.0f);
 	void SetShockWaveElements(Donya::Vector3 _emitterPos);
 
 };
@@ -77,9 +77,12 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	std::vector<Particle> shockWaveEffects;
 
 	int				timer;
+	bool			isExplosion;
+	int				explosionPopNum;
+	int				popNumOnce;
 
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0) {}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), isExplosion(false) {}
 
 public:
 	void Init();
@@ -139,6 +142,9 @@ public:
 	void CreateSmokeOfMissileParticle(Donya::Vector3 _pos);
 	void CreateShockWaveParticle(Donya::Vector3 _pos);
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
+	void ReserveExplosionParticles(int _popNum, int _onceNum);
+	void CreateExplosionLoop(Donya::Vector3 _pos);
+
 	/*---------------------*/
 	//	Judge erase fanction
 	/*---------------------*/
