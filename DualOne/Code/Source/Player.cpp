@@ -584,6 +584,11 @@ Player::CollideResult Player::ReceiveImpact( bool canReflection )
 	return rv;
 }
 
+bool Player::IsFullCharged() const
+{
+	return ( charge < 1.0f ) ? false : true;
+}
+
 void Player::LoadModel()
 {
 	Donya::Loader loader{};
@@ -696,10 +701,6 @@ void Player::ChargeUpdate( Input input )
 bool Player::IsCharging() const
 {
 	return ( status == State::Charge ) ? true : false;
-}
-bool Player::IsFullCharged() const
-{
-	return ( charge < 1.0f ) ? false : true;
 }
 
 void Player::ChangeLaneIfRequired( Input input )

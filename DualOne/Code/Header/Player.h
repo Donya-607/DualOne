@@ -121,6 +121,8 @@ public:
 	};
 	CollideResult ReceiveImpact( bool canReflection );
 public:
+	bool IsFullCharged() const;
+
 	int GetCurrentLane() const { return currentLane; }
 
 	/// <summary>
@@ -154,7 +156,6 @@ private:
 	void ChargeUpdate( Input input );
 	
 	bool IsCharging() const;
-	bool IsFullCharged() const;
 
 	void ChangeLaneIfRequired( Input input );
 	/// <summary>
