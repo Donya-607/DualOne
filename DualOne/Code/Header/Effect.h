@@ -11,6 +11,7 @@
 struct ParticleEmitterPosition
 {
 	Donya::Vector3 playerPos;
+	Donya::Vector3 explosionPos;
 };
 
 struct Particle

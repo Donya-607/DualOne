@@ -30,8 +30,8 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 		CreateSledParticle(_arg.playerPos);
 	}
 
-	Donya::Vector3 provisional = _arg.playerPos;
-	provisional.y = 50.0f;
+	// Explosion!
+	Donya::Vector3 provisional = _arg.explosionPos;
 	CreateExplosionLoop(provisional);
 
 	JudgeErase();
