@@ -1557,13 +1557,137 @@ void CollisionDetail::UseImGui()
 // region CollisionDetail
 #pragma endregion
 
+#pragma region DestructionParam
+
+DestructionParam::DestructionParam() :
+	performanceFrame(),
+	speedRange(),
+	vectorPatterns()
+{
+	vectorPatterns.resize( 1U );
+}
+DestructionParam::~DestructionParam()
+{
+	vectorPatterns.clear();
+	vectorPatterns.shrink_to_fit();
+}
+
+void DestructionParam::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void DestructionParam::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void DestructionParam::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ボスの壊れかた" ) )
+		{
+			ImGui::Text( u8"速さや方向は，指定した中からランダムで選ばれます" );
+			ImGui::Text( u8"方向は，保存時に正規化されます" );
+			ImGui::Text( "" );
+
+			ImGui::SliderInt( u8"破壊演出の全体時間（フレーム）", &performanceFrame, 1, 360 );
+
+			ImGui::SliderFloat2( u8"吹っ飛ぶ速さ（Min, Max）", &speedRange.x, 1.0f, 64.0f );
+
+			if ( ImGui::TreeNode( u8"吹っ飛ぶ方向" ) )
+			{
+				if ( ImGui::Button( u8"パターンを増やす" ) )
+				{
+					vectorPatterns.push_back( {} );
+				}
+				if ( 1 < vectorPatterns.size() )
+				{
+					if ( ImGui::Button( u8"パターンを減らす" ) )
+					{
+						vectorPatterns.pop_back();
+					}
+				}
+				ImGui::Text( "" );
+
+				std::string caption{};
+				const size_t COUNT = vectorPatterns.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = "[" + std::to_string( i ) + "]";
+					ImGui::SliderFloat3( caption.c_str(), &vectorPatterns[i].x, -1.0f, 1.0f );
+
+					std::string normalizeStrU8 = Donya::MultiToUTF8( caption + "：正規化" );
+					if ( ImGui::Button( normalizeStrU8.c_str() ) )
+					{
+						vectorPatterns[i].Normalize();
+					}
+				}
+
+				ImGui::TreePop();
+			}
+			ImGui::Text( "" );
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					for ( auto &it : vectorPatterns )
+					{
+						it.Normalize();
+					}
+
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+// region DestructionParam
+#pragma endregion
+
 #pragma region Boss
 
 Boss::Boss() :
 	status( State::Hidden ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
-	stunTimer(), bounceTimer(),
+	stunTimer(), bounceTimer(), destructTimer(),
 	maxDistanceToTarget(), gravity(), initBouncePower(),
 	hitBox(),
 	bounceAppearTimeRange(), bouncePowerRange(),
@@ -1610,6 +1734,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 
 	AttackParam::Get().LoadParameter();
 	CollisionDetail::Get().LoadParameter();
+	DestructionParam::Get().LoadParameter();
 
 	currentHP = AttackParam::Get().maxHP;
 
@@ -1667,15 +1792,12 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
 	CollisionDetail::Get().UseImGui();
+	DestructionParam::Get().UseImGui();
 
 #endif // USE_IMGUI
 
 	if ( status == State::Hidden ) { return; }
 	// else
-
-	Move( wsAttackTargetPos );
-
-	UpdateVertical();
 
 	UpdateCurrentStatus( targetLaneNo, wsAttackTargetPos );
 
@@ -1685,6 +1807,7 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &matProjection, const DirectX::XMFLOAT4 &lightDirection, const DirectX::XMFLOAT4 &cameraPosition, bool isEnableFill ) const
 {
 	if ( status == State::Hidden ) { return; }
+	if ( status == State::Dead   ) { return; }
 	// else
 
 	using namespace DirectX;
@@ -1811,7 +1934,9 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 AABB Boss::GetHitBox() const
 {
-	if ( status == State::Hidden ) { return AABB::Nil(); }
+	if ( status == State::Hidden		) { return AABB::Nil(); }
+	if ( status == State::Destruction	) { return AABB::Nil(); }
+	if ( status == State::Dead			) { return AABB::Nil(); }
 	// else
 
 	AABB wsHitBox = hitBox;
@@ -1821,7 +1946,7 @@ AABB Boss::GetHitBox() const
 
 bool Boss::IsDead() const
 {
-	return ( GetCurrentHP() <= 0 ) ? true : false;
+	return ( status == State::Dead ) ? true : false;
 }
 
 const std::vector<Missile>  &Boss::FetchReflectableMissiles() const
@@ -1919,18 +2044,48 @@ void Boss::LoadModel()
 
 void Boss::UpdateCurrentStatus( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 {
+	auto PhysicalUpdate = [&]()
+	{
+		Move( wsAttackTargetPos );
+
+		UpdateVertical();
+	};
+
 	switch ( status )
 	{
 	case Boss::State::Normal:
+
+		PhysicalUpdate();
+
 		LotteryAttack( targetLaneNo, wsAttackTargetPos );
+
 		RotateRoll();
+
 		break;
 	case Boss::State::Stun:
+
+		PhysicalUpdate();
+
 		StunUpdate();
+
 		break;
 	case Boss::State::GenerateWave:
+
+		PhysicalUpdate();
+
 		ArmUpdate();
+
 		RotateRoll();
+
+		break;
+	case Boss::State::Destruction:
+
+		DestructionUpdate();
+
+		break;
+
+	case Boss::State::Dead:
+		// No op.
 		break;
 	default:
 		break;
@@ -2169,7 +2324,7 @@ void Boss::UpdateObstacles()
 		it.Update();
 
 		obstacleBox = it.GetHitBox();
-		if ( AABB::IsHitAABB( wsBody, obstacleBox ) )
+		if ( AABB::IsHitAABB( wsBody, obstacleBox, /* ignoreExistFlag = */ true ) )
 		{
 			it.HitToOther();
 			Donya::Sound::Play( Music::ObjBreakObstacle );
@@ -2361,8 +2516,17 @@ void Boss::ReceiveDamage( int damage )
 	if ( damage <= 0 ) { return; }
 	// else
 
+	currentHP -= damage;
+	if ( currentHP <= 0 )
+	{
+		currentHP = 0;
+		SetDestructMode();
+
+		return;
+	}
+	// else
+
 	status			= State::Stun;
-	currentHP		-= damage;
 
 	ResetArmState();
 
@@ -2390,6 +2554,69 @@ void Boss::StunUpdate()
 bool Boss::IsStunning() const
 {
 	return ( status == State::Stun ) ? true : false;
+}
+
+void Boss::SetDestructMode()
+{
+	status = State::Destruction;
+
+	// Erase obstacles.
+	for ( auto &it : obstacles )
+	{
+		it.HitToOther();
+	}
+
+	// Set breaking process.
+	{
+		const auto &PARAM = DestructionParam::Get();
+		destructTimer = PARAM.performanceFrame;
+
+		constexpr size_t PART_COUNT = 3;
+		const std::array<Donya::Vector3 *, PART_COUNT> VELOCITIES
+		{
+			&modelBody.velocity,
+			&modelFoot.velocity,
+			&modelRoll.velocity
+		};
+
+		const auto &PATTERNS = PARAM.vectorPatterns;
+		const size_t PATTERN_COUNT = PATTERNS.size();
+		float speed{};
+		size_t patternIndex{};
+		Donya::Vector3 vector{};
+		for ( size_t i = 0; i < PART_COUNT; ++i )
+		{
+			using Random = Donya::Random;
+			speed = Random::GenerateFloat( PARAM.speedRange.x, PARAM.speedRange.y ); // Min ~ Max
+			patternIndex = Random::GenerateInt( 0, PATTERN_COUNT ); // Min ~ (Max - 1)
+
+			vector = PATTERNS[patternIndex] * speed;
+			*( VELOCITIES[i] ) = vector;
+		}
+	}
+}
+void Boss::DestructionUpdate()
+{
+	constexpr size_t PART_COUNT = 3;
+	const std::array<ModelPart *, PART_COUNT> MODELS
+	{
+		&modelBody,
+		&modelFoot,
+		&modelRoll
+	};
+
+	for ( auto &it : MODELS )
+	{
+		it->velocity.y -= gravity;
+		it->offset += it->velocity;
+	}
+
+	destructTimer--;
+	if ( destructTimer <= 0 )
+	{
+		destructTimer = 0;
+		status = State::Dead;
+	}
 }
 
 void Boss::LoadParameter( bool isBinary )

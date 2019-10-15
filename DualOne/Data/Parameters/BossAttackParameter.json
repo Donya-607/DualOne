@@ -7,61 +7,61 @@
         "resetWaitFrame": 0,
         "intervalsPerHP": [
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 10,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 10,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 10,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 20,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 20,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 20,
                 "value2": 12,
                 "value3": 12
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 12,
                 "value2": 20,
                 "value3": 20
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 12,
                 "value2": 20,
                 "value3": 20
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 12,
                 "value2": 20,
                 "value3": 20
             },
             {
-                "value0": 15,
+                "value0": 1,
                 "value1": 12,
                 "value2": 20,
                 "value3": 20
@@ -69,61 +69,61 @@
         ],
         "reuseFramesPerHP": [
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150
             },
             {
-                "value0": 240,
+                "value0": 1,
                 "value1": 120,
                 "value2": 120,
                 "value3": 150

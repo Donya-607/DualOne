@@ -572,11 +572,58 @@ public:
 
 CEREAL_CLASS_VERSION( CollisionDetail, 0 )
 
+class DestructionParam : public Donya::Singleton<DestructionParam>
+{
+	friend Donya::Singleton<DestructionParam>;
+public:
+	int					performanceFrame;
+	Donya::Vector2		speedRange;			// ( X:Min, Y:Max )
+	std::vector<Donya::Vector3> vectorPatterns; // Store vector is normalized.
+private:
+	DestructionParam();
+public:
+	~DestructionParam();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( speedRange ),
+			CEREAL_NVP( vectorPatterns )
+		);
+
+		if ( 1 <= version )
+		{
+			archive( CEREAL_NVP( performanceFrame ) );
+		}
+		if ( 2 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "BossDestructionParam";
+public:
+	void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	void SaveParameter();
+
+	void UseImGui();
+
+#endif // USE_IMGUI
+};
+
+CEREAL_CLASS_VERSION( DestructionParam, 1 )
+
 struct ModelPart
 {
 public:
-	Donya::Vector3						offset{};
-	Donya::Vector3						scale{};
+	Donya::Vector3						offset{};	// Will be serialize.
+	Donya::Vector3						scale{};	// Will be serialize.
+	Donya::Vector3						velocity{};	// Use when destruction.
 	Donya::Quaternion					posture{};
 	std::shared_ptr<Donya::StaticMesh>	pModel{};
 private:
@@ -663,6 +710,8 @@ private:
 		Normal,
 		Stun,
 		GenerateWave,
+		Destruction,
+		Dead
 	};
 private:
 	int									currentHP;		// 1-based, 0 express the dead.
@@ -670,6 +719,7 @@ private:
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 	int									stunTimer;
 	int									bounceTimer;
+	int									destructTimer;
 
 	float								maxDistanceToTarget;
 	float								gravity;
@@ -859,6 +909,9 @@ private:
 
 	void StunUpdate();
 	bool IsStunning() const;
+
+	void SetDestructMode();
+	void DestructionUpdate();
 
 	void LoadParameter( bool isBinary = true );
 
