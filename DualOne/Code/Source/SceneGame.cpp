@@ -461,14 +461,6 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	// Update Particles.
 	{
-		Donya::Vector3 provisional = pImpl->player.GetPos();
-		provisional.y = 50.0f;
-		if (Donya::Keyboard::Press(VK_SPACE))
-		{
-			Donya::Vector3 provisional = pImpl->player.GetPos();
-			provisional.y = 50.0f;
-			ParticleManager::Get().CreateExplosionParticle(provisional, 1);
-		}
 		ParticleEmitterPosition arg;
 		arg.playerPos = pImpl->player.GetPos();
 		ParticleManager::Get().Update( arg );
