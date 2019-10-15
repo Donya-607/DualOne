@@ -1624,7 +1624,7 @@ void Boss::Uninit()
 	Donya::Sound::Stop( Music::BossEngine );
 }
 
-void Boss::StartUp( float appearPositionZ )
+void Boss::StartUp( int targetLaneNo, float appearPositionZ )
 {
 	status = State::Normal;
 
@@ -1633,6 +1633,8 @@ void Boss::StartUp( float appearPositionZ )
 	pos = Donya::Vector3{ 0.0f, 0.0f, appearPositionZ };
 	velocity.y = initBouncePower;
 	isLanding = false;
+
+
 
 	Donya::Sound::Play( Music::BossEngine );
 }
@@ -2035,10 +2037,10 @@ void Boss::LotteryAttack( int targetLaneNo, const Donya::Vector3 &wsAttackTarget
 	{
 		switch ( useAttackNo )
 		{
-		case AttackParam::AttackKind::Missile:	ShootMissile( targetLaneNo, wsAttackTargetPos );	break;
-		case AttackParam::AttackKind::Obstacle:	GenerateObstacles( wsAttackTargetPos );				break;
-		case AttackParam::AttackKind::Beam:		ShootBeam();										break;
-		case AttackParam::AttackKind::Wave:		SetWaveMode();										break;
+		case AttackParam::AttackKind::Missile:	ShootMissile( targetLaneNo );			break;
+		case AttackParam::AttackKind::Obstacle:	GenerateObstacles( wsAttackTargetPos );	break;
+		case AttackParam::AttackKind::Beam:		ShootBeam( targetLaneNo );				break;
+		case AttackParam::AttackKind::Wave:		SetWaveMode();							break;
 		default: break;
 		}
 
@@ -2060,14 +2062,18 @@ Donya::Vector3 Boss::LotteryLanePosition()
 	int index = Donya::Random::GenerateInt( 0, laneCount );
 	return lanePositions[index];
 }
-
-void Boss::ShootMissile( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
+Donya::Vector3 Boss::GetLanePosition( int laneNo )
 {
 	const int LANE_COUNT = scast<int>( lanePositions.size() ); // 1-based.
-	_ASSERT_EXPR( targetLaneNo < LANE_COUNT, L"Received lane-count is over than the actual lane-count !" );
+	_ASSERT_EXPR( laneNo < LANE_COUNT, L"Received lane-count is over than the actual lane-count !" );
 	_ASSERT_EXPR( 0 < LANE_COUNT, L"The lane count is must over than zero !" );
 
-	Donya::Vector3 appearPos = lanePositions[targetLaneNo];
+	return lanePositions[laneNo];
+}
+
+void Boss::ShootMissile( int targetLaneNo )
+{
+	Donya::Vector3 appearPos = GetLanePosition( targetLaneNo );
 	appearPos.z = pos.z;
 
 	Donya::Vector3 dir = appearPos - pos;
@@ -2171,9 +2177,9 @@ void Boss::UpdateObstacles()
 	obstacles.erase( eraseItr, obstacles.end() );
 }
 
-void Boss::ShootBeam()
+void Boss::ShootBeam( int targetLaneNo )
 {
-	Donya::Vector3 appearPos = LotteryLanePosition();
+	Donya::Vector3 appearPos = GetLanePosition( targetLaneNo );
 	appearPos.z = pos.z;
 
 	Donya::Vector3 dir = appearPos - pos;

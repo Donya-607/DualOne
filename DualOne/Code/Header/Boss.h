@@ -773,7 +773,7 @@ public:
 	void Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3> &registerLanePositions );
 	void Uninit();
 
-	void StartUp( float appearPositionZ );
+	void StartUp( int targetLaneNo, float appearPositionZ );
 
 	void Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
 
@@ -834,14 +834,15 @@ private:
 	void LotteryAttack( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
 
 	Donya::Vector3 LotteryLanePosition();
+	Donya::Vector3 GetLanePosition( int laneNo );
 	
-	void ShootMissile( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos );
+	void ShootMissile( int targetLaneNo );
 	void UpdateMissiles();
 	
 	void GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos );
 	void UpdateObstacles();
 	
-	void ShootBeam();
+	void ShootBeam( int targetLaneNo );
 	void UpdateBeams();
 	
 	void SetWaveMode();
