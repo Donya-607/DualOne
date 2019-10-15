@@ -9,9 +9,23 @@ namespace Music
 		BGM_Over,
 		BGM_Title,
 
+		BossBeamCharge,
+		BossBeamShoot,
+		BossEngine,
+		BossImpact,
+		BossReceiveDamage,
+		BossRushWave,
+		BossShootMissile,
+
 		PlayerCharge,
+		PlayerChargeComplete,
+		PlayerReflect,
+		PlayerSlipping,
+		PlayerTumble,
 		PlayerJump,
-		PlayerLanding,
+		PlayerLaneMove = PlayerJump,
+
+		ObjBreakObstacle,
 
 		ItemChoose,
 		ItemDecision,

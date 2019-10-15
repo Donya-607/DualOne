@@ -1,6 +1,6 @@
 {
     "Game": {
-        "cereal_class_version": 3,
+        "cereal_class_version": 4,
         "lightDirection": {
             "cereal_class_version": 0,
             "x": 0.0,
@@ -15,9 +15,9 @@
         "cameraFocus": {
             "x": 0.0,
             "y": 0.0,
-            "z": 64.0
+            "z": 150.0
         },
-        "initDistanceOfBoss": 256.0,
+        "initDistanceOfBoss": 700.0,
         "lanePositions": [
             {
                 "x": -32.0,
@@ -34,6 +34,19 @@
                 "y": 0.0,
                 "z": 0.0
             }
-        ]
+        ],
+        "cameraEaseKind": 4,
+        "cameraEaseType": 2,
+        "cameraLerpSpeed": 0.012500000186264515,
+        "titleCameraDistance": {
+            "x": 333.2539978027344,
+            "y": 187.83399963378907,
+            "z": -199.9530029296875
+        },
+        "titleCameraFocus": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+        }
     }
 }

@@ -12,6 +12,7 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "StorageForScene.h"
 
 #undef max
 #undef min
@@ -184,6 +185,7 @@ Scene::Result ScenePause::ReturnResult()
 		if ( choice == Choice::ReTry )
 		{
 			change.sceneType = Scene::Type::Game;
+			StorageForScene::Get().StoreRetryFlag( true );
 		}
 		else
 		{

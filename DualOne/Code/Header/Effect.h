@@ -1,0 +1,154 @@
+#pragma once
+
+#include <memory>
+#include <vector>
+
+#include "Donya/Vector.h"
+#include "Donya/GeometricPrimitive.h"
+#include "Donya/UseImgui.h"
+#include "Donya/Template.h"
+
+struct ParticleEmitterPosition
+{
+	Donya::Vector3 playerPos;
+};
+
+struct Particle
+{
+	const float GRAVITY = 0.196f;
+	enum Type
+	{
+		NONE,
+		SLED_EFFECT,
+		BOSS_EFFECT,
+		MISSLE_EFFECT,
+		SHOCKWAVE_EFFECT,
+	};
+	/*----------------------------------------*/
+	//	Variables
+	/*----------------------------------------*/
+	Donya::Vector3			pos;
+	Donya::Vector3			velocity;
+	Donya::Vector3			startVelocity;
+	Donya::Vector3			scale;
+	static Donya::Vector3	setVelocity;
+	Donya::Vector3			angle;
+	int						existanceTime;
+	Type					type;
+
+	/*----------------------------------------*/
+	//	Fanctions
+	/*----------------------------------------*/
+	Particle();
+	Particle(Donya::Vector3 _emitterPos, Type _type);
+	Particle(const Particle&);
+	Particle& operator = (const Particle&);
+	~Particle();
+
+	// Update fanction
+	void UpdateOfSleds();
+	void UpdateOfMissles();
+	void UpdateOfShockWave();
+
+	//	Set Parameter fanction
+	void SetNoneElements(Donya::Vector3 _emitterPos);
+	void SetSledElements(Donya::Vector3 _emitterPos);
+	void SetBossElements(Donya::Vector3 _emitterPos);
+	void SetMissleElements(Donya::Vector3 _emitterPos);
+	void SetShockWaveElements(Donya::Vector3 _emitterPos);
+
+};
+
+class ParticleManager : public Donya::Singleton<ParticleManager>
+{
+	friend Donya::Singleton<ParticleManager>;
+	/*---------------------------------*/
+	//	Assets
+	/*---------------------------------*/
+	std::unique_ptr<Donya::Geometric::TextureBoard>	sprSled;
+	std::unique_ptr<Donya::Geometric::TextureBoard>	sprSmoke;
+	/*---------------------------------*/
+
+	/*---------------------------------*/
+	//	Instance
+	/*---------------------------------*/
+	std::vector<Particle> sledEffects;
+	std::vector<Particle> missleEffects;
+	std::vector<Particle> shockWaveEffects;
+
+	int				timer;
+
+private:
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missleEffects(), timer(0) {}
+
+public:
+	void Init();
+	void Uninit();
+	void Update(ParticleEmitterPosition _arg);
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
+private:
+	void LoadSprite();
+
+	/*---------------------*/
+	//	Draw fanction
+	/*---------------------*/
+public:
+	void DrawSled
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+
+	);
+
+	void DrawSmokeOfMissle
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
+	void DrawShockWave
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
+
+
+
+	/*---------------------*/
+	//	Create fanction
+	/*---------------------*/
+	void CreateSledParticle(Donya::Vector3 _pos);
+	void CreateSmokeOfMissleParticle(Donya::Vector3 _pos);
+	void CreateShockWaveParticle(Donya::Vector3 _pos);
+
+	/*---------------------*/
+	//	Judge erase fanction
+	/*---------------------*/
+private:
+	void JudgeEraseSled();
+	void JudgeEraseSmokeOfMissle();
+	void JudgeEraseShockWave();
+
+#if USE_IMGUI
+	void UseImGui();
+#endif
+
+};

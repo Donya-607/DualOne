@@ -1,0 +1,26 @@
+{
+    "Beam": {
+        "cereal_class_version": 1,
+        "afterWaitFrame": 1,
+        "angleIncreaseSpeed": 0.008333333767950535,
+        "beamAngleBegin": 270.0,
+        "beamAngleEnd": 179.0,
+        "beamLength": 900.0,
+        "hitBox": {
+            "cereal_class_version": 0,
+            "pos": {
+                "cereal_class_version": 0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "size": {
+                "x": 8.0,
+                "y": 1080.0,
+                "z": 8.0
+            },
+            "exist": true
+        },
+        "easingKind": 10
+    }
+}

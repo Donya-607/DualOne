@@ -1,52 +1,132 @@
 {
     "BossAttackParameter": {
-        "cereal_class_version": 2,
-        "maxHP": 5,
-        "counterMax": 3600,
-        "untilAttackFrame": 60,
-        "resetWaitFrame": 60,
+        "cereal_class_version": 3,
+        "maxHP": 10,
+        "counterMax": 60,
+        "untilAttackFrame": 240,
+        "resetWaitFrame": 0,
         "intervalsPerHP": [
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 15,
+                "value1": 10,
+                "value2": 12,
+                "value3": 12
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 15,
+                "value1": 10,
+                "value2": 12,
+                "value3": 12
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 15,
+                "value1": 10,
+                "value2": 12,
+                "value3": 12
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 15,
+                "value1": 20,
+                "value2": 12,
+                "value3": 12
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 15,
+                "value1": 20,
+                "value2": 12,
+                "value3": 12
+            },
+            {
+                "value0": 15,
+                "value1": 20,
+                "value2": 12,
+                "value3": 12
+            },
+            {
+                "value0": 15,
+                "value1": 12,
+                "value2": 20,
+                "value3": 20
+            },
+            {
+                "value0": 15,
+                "value1": 12,
+                "value2": 20,
+                "value3": 20
+            },
+            {
+                "value0": 15,
+                "value1": 12,
+                "value2": 20,
+                "value3": 20
+            },
+            {
+                "value0": 15,
+                "value1": 12,
+                "value2": 20,
+                "value3": 20
             }
         ],
         "reuseFramesPerHP": [
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
             },
             {
-                "value0": 30,
-                "value1": 30
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
+            },
+            {
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
+            },
+            {
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
+            },
+            {
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
+            },
+            {
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
+            },
+            {
+                "value0": 240,
+                "value1": 120,
+                "value2": 120,
+                "value3": 150
             }
         ],
         "obstaclePatterns": [
@@ -80,6 +160,8 @@
                 1,
                 1
             ]
-        ]
+        ],
+        "damageWaitFrame": 30,
+        "stunFrame": 60
     }
 }

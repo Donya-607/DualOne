@@ -1,6 +1,7 @@
 #include "Common.h"
 
 #include "Donya/Constant.h"
+#include "Donya/Useful.h"	// Use EPSILON, ZeroEqual().
 
 namespace Common
 {
@@ -50,5 +51,34 @@ namespace Common
 	#else
 		return false;
 	#endif // DEBUG_MODE
+	}
+
+	bool	CalcIntersectionPoint( const Donya::Vector2 &LStart, const Donya::Vector2 &LVec, const Donya::Vector2 &RStart, const Donya::Vector2 &RVec, Donya::Vector2 *pResult )
+	{
+		// From http://marupeke296.com/COL_2D_No10_SegmentAndSegment.html
+
+		float crsLR = Donya::Vector2::Cross( LVec, RVec );
+		if ( ZeroEqual( crsLR ) ) { return false; }
+		// else
+
+		Donya::Vector2 vecSS = RStart - LStart;
+		float crsSL = Donya::Vector2::Cross( vecSS, LVec );
+		float crsSR = Donya::Vector2::Cross( vecSS, RVec );
+
+		float internDivL = crsSR / crsLR;
+		float internDivR = crsSL / crsLR;
+
+		auto WithinZeroOne = []( float value )
+		{
+			return ( value < 0.0f || 1.0f < value ) ? false : true;
+		};
+		if ( !WithinZeroOne( internDivL ) || !WithinZeroOne( internDivR ) ) { return false; }
+
+		if ( pResult )
+		{
+			*pResult = LStart + ( LVec * internDivL );
+		}
+
+		return true;
 	}
 }

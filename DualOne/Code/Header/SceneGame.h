@@ -6,7 +6,6 @@
 #include "Scene.h"
 #include "Donya/GeometricPrimitive.h"
 
-
 class SceneGame : public Scene
 {
 public:
@@ -26,6 +25,15 @@ public:
 
 	void	Draw( float elapsedTime ) override;
 private:
+	/// <summary>
+	/// This method is linking to title-scene's method.
+	/// </summary>
+	bool	IsDecisionTriggered() const;
+
+	bool	IsDoneCameraMove() const;
+
+	void	UpdateCamera();
+
 	/// <summary>
 	/// Check the collision between each objects, and call appropriate method.
 	/// </summary>

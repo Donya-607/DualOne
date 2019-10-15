@@ -28,11 +28,13 @@
 class SceneTitle::Impl
 {
 public:
-	size_t	sprFont;
+	size_t			sprFont;
 	Donya::XInput	controller;
+	bool			wasAddedGameScene; // Append the game-scene below me(title).
 public:
 	Impl() : sprFont( NULL ),
-		controller( Donya::Gamepad::PadNumber::PAD_1 )
+		controller( Donya::Gamepad::PadNumber::PAD_1 ),
+		wasAddedGameScene( false )
 	{}
 private:
 	friend class cereal::access;
@@ -69,26 +71,21 @@ Scene::Result SceneTitle::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
+	/*
 	if ( IsDecisionTriggered() && !Fader::Get().IsExist() )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 
 		StartFade();
 	}
+	*/
 
 	return ReturnResult();
 }
 
 void SceneTitle::Draw( float elapsedTime )
 {
-	Donya::Sprite::DrawRect
-	(
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		Common::ScreenWidthF(),
-		Common::ScreenHeightF(),
-		Donya::Sprite::Color::NAVY, 1.0f
-	);
+	Donya::Sprite::SetDrawDepth( 0.0f );
 
 	Donya::Sprite::DrawString
 	(
@@ -131,15 +128,28 @@ Scene::Result SceneTitle::ReturnResult()
 	// else
 #endif // DEBUG_MODE
 
-	if ( Fader::Get().IsClosed() )
+	if ( !pImpl->wasAddedGameScene )
 	{
+		pImpl->wasAddedGameScene = true;
+
+		Scene::Result append{};
+		append.AddRequest( Scene::Request::UPDATE_NEXT, Scene::Request::APPEND_SCENE );
+		append.sceneType = Scene::Type::Game;
+		return append;
+	}
+
+	// if ( Fader::Get().IsClosed() )
+	if ( IsDecisionTriggered() )
+	{
+		Donya::Sound::Play( Music::ItemDecision );
+
 		Scene::Result change{};
-		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
-		change.sceneType = Scene::Type::Game;
+		change.AddRequest( Scene::Request::UPDATE_NEXT, Scene::Request::REMOVE_ME );
+		change.sceneType = Scene::Type::Null;
 		return change;
 	}
 	// else
 
-	Scene::Result noop{ Scene::Request::NONE, Scene::Type::Null };
+	Scene::Result noop{ Scene::Request::UPDATE_NEXT, Scene::Type::Null };
 	return noop;
 }

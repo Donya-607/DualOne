@@ -11,6 +11,11 @@ enum class SpriteAttribute
 	FMODLogoBlack,
 	FMODLogoWhite,
 	TestFont,
+	Warning,
+	GroundTex1,
+	GroundTex2,
+	SledEffect,
+	SmokeEffect,
 };
 std::wstring GetSpritePath( SpriteAttribute fileAttribute );
 
@@ -23,6 +28,7 @@ enum class ModelAttribute
 	BossFoot,
 	BossRoll,
 	Missile,
+	Tree,
 	Obstacle,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

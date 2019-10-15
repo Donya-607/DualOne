@@ -1,5 +1,7 @@
 #include "SceneManager.h"
 
+#include <algorithm>
+
 #include "Donya/Resource.h"
 #include "Donya/Sprite.h"	// For change the sprites depth.
 
@@ -12,6 +14,9 @@
 #include "ScenePause.h"
 #include "SceneOver.h"
 #include "SceneTitle.h"
+
+#undef max
+#undef min
 
 SceneMng::SceneMng() : pScenes()
 {
@@ -53,20 +58,14 @@ void SceneMng::Update( float elapsedTime )
 
 	Scene::Result message{};
 
-#ifdef UPDATE_ALL_STACKED_SCENE
-
-	for ( size_t i = 0; i < pScenes.size(); ++i )
+	int updateCount = 1;
+	for ( int i = 0; i < updateCount; ++i )
 	{
-		message = ( *std::next( pScenes.begin(), i ) )->Update( elapsedTime );
+		auto &itr = ( *std::next( pScenes.begin(), i ) );
+		message = itr->Update( elapsedTime );
 
-		ProcessMessage( message );
+		ProcessMessage( message, updateCount, i );
 	}
-#else
-
-	message = ( *pScenes.begin() )->Update( elapsedTime );
-	ProcessMessage( message );
-
-#endif // UPDATE_ALL_STACKED_SCENE
 
 	Fader::Get().Update();
 }
@@ -131,7 +130,7 @@ Scene::Result SceneMng::ApplyFailSafe( Scene::Result wrongMessage ) const
 	return wrongMessage;
 }
 
-void SceneMng::ProcessMessage( Scene::Result message )
+void SceneMng::ProcessMessage( Scene::Result message, int &refUpdateCount, int &refLoopIndex )
 {
 	if ( !ValidateMessage( message ) )
 	{
@@ -156,6 +155,26 @@ void SceneMng::ProcessMessage( Scene::Result message )
 	if ( message.HasRequest( Scene::Request::ADD_SCENE ) )
 	{
 		PushScene( message.sceneType, /* isFront = */ true );
+	}
+	
+	if ( message.HasRequest( Scene::Request::APPEND_SCENE ) )
+	{
+		PushScene( message.sceneType, /* isFront = */ false );
+	}
+	
+	if ( message.HasRequest( Scene::Request::UPDATE_NEXT ) )
+	{
+		if ( message.HasRequest( Scene::Request::REMOVE_ME ) )
+		{
+			refLoopIndex--;
+			refLoopIndex = std::max( -1, refLoopIndex );
+			// The loop-index will be increment, so lower limit is -1.
+		}
+		else
+		{
+			refUpdateCount++;
+			refUpdateCount = std::min( scast<int>( pScenes.size() ), refUpdateCount );
+		}
 	}
 }
 

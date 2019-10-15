@@ -47,7 +47,8 @@ ReflectedEntity::ReflectedEntity() :
 	gravity(),
 	hitBox(),
 	wsPos(), velocity(),
-	posture( Donya::Quaternion::Identity() )
+	posture( Donya::Quaternion::Identity() ),
+	shouldErase( false )
 {}
 ReflectedEntity::~ReflectedEntity() = default;
 
@@ -71,6 +72,10 @@ void ReflectedEntity::Update()
 	velocity.y -= gravity;
 
 	wsPos += velocity;
+	if ( wsPos.y + hitBox.radius < 0.0f )
+	{
+		shouldErase = true;
+	}
 
 	constexpr float ROT_SPEED = ToRadian( 12.0f );
 	auto rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), ROT_SPEED );
@@ -149,9 +154,9 @@ void ReflectedEntity::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::X
 #endif // DEBUG_MODE
 }
 
-bool ReflectedEntity::ShouldErase() const
+void ReflectedEntity::HitToOther() const
 {
-	return ( wsPos.y < 0.0f + hitBox.radius ) ? true : false;
+	shouldErase = true;
 }
 
 Sphere ReflectedEntity::GetHitBox() const
@@ -161,7 +166,7 @@ Sphere ReflectedEntity::GetHitBox() const
 	return wsHitBox;
 }
 
-// regioni ReflectedEntity
+// region ReflectedEntity
 #pragma endregion
 
 struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
@@ -169,16 +174,20 @@ struct PlayerParameter final : public Donya::Singleton<PlayerParameter>
 	friend class Donya::Singleton<PlayerParameter>;
 public:
 	int		stunFrame;
-	float	changeLaneSpeed;// Horizontal move speed.
-	float	chargeSpeed;	// MAX is 1.0f.
-	float	fallResistance;	// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
-	float	gravity;		// This is not affected by charge.
-	float	jumpResistance;	// Resist to jumpStrength(will calc to "strength * ( 1 - resistance * charge )"). this will affected by charge.
-	float	jumpStrength;	// Init speed of jump. This is not affected by charge.
-	float	runSpeedUsual;	// Running speed when not charging.
-	float	runSpeedSlow;	// Running speed when charging.
-	float	runSpeedJump;	// Running speed when jumping.
-	AABB	hitBox{};		// Store local-space.
+	float	changeLaneSpeed;	// Horizontal move speed.
+	float	chargeSpeed;		// MAX is 1.0f.
+	float	fallResistance;		// Resist to gravity(will calc to "gravity * ( 1 - resistance * charge )"). this will affected by charge.
+	float	gravity;			// This is not affected by charge.
+	float	jumpResistance;		// Resist to jumpStrength(will calc to "strength * ( 1 - resistance * charge )"). this will affected by charge.
+	float	jumpStrength;		// Init speed of jump. This is not affected by charge.
+	float	runSpeedUsual;		// Running speed when not charging.
+	float	runSpeedSlow;		// Running speed when charging.
+	float	runSpeedJump;		// Running speed when jumping.
+	float	runSpeedStun;		// Running speed when stunning.
+	float	rotateDegree;		// Base rotate speed.
+	float	rotDegMagniCharge;	// Magnification of rotate speed when full charged.
+	float	rotDegMagniJump;	// Magnification of rotate speed when jumping.
+	AABB	hitBox{};			// Store local-space.
 	Donya::Vector3 generateReflectionOffset;
 	Player::CollideResult reflection;
 private:
@@ -215,6 +224,19 @@ private:
 			archive( CEREAL_NVP( runSpeedJump ) );
 		}
 		if ( 3 <= version )
+		{
+			archive( CEREAL_NVP( runSpeedStun ) );
+		}
+		if ( 4 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( rotateDegree ),
+				CEREAL_NVP( rotDegMagniCharge ),
+				CEREAL_NVP( rotDegMagniJump )
+			);
+		}
+		if ( 5 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -287,6 +309,7 @@ public:
 					ImGui::SliderFloat( u8"手前への速度・通常",		&runSpeedUsual,	0.01f, 64.0f );
 					ImGui::SliderFloat( u8"手前への速度・チャージ中",	&runSpeedSlow,	0.01f, 64.0f );
 					ImGui::SliderFloat( u8"手前への速度・ジャンプ中",	&runSpeedJump,	0.01f, 64.0f );
+					ImGui::SliderFloat( u8"手前への速度・気絶中",		&runSpeedStun,	0.01f, 64.0f );
 
 					ImGui::TreePop();
 				}
@@ -300,12 +323,16 @@ public:
 					ImGui::SliderInt( u8"チャージにかかる時間（フレーム）", &chargeFrame, 1, 120 );
 					chargeSpeed = 1.0f / scast<float>( chargeFrame );
 
-					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 512.0f );
-					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.01f, 512.0f );
+					ImGui::SliderFloat( u8"チャージ中の回転速度", &rotateDegree, 0.0f, 360.0f );
+					ImGui::SliderFloat( u8"チャージ完了時の回転速度倍率", &rotDegMagniCharge, 0.1f, 3.0f );
+					ImGui::SliderFloat( u8"ジャンプ中の回転速度倍率", &rotDegMagniJump, 0.1f, 3.0f );
+
+					ImGui::SliderFloat( u8"ジャンプの初速", &jumpStrength, 0.01f, 128.0f );
+					ImGui::SliderFloat( u8"ジャンプ抵抗力（チャージ量の影響を受ける）", &jumpResistance, 0.0f, 128.0f );
 					ImGui::Text( u8"ジャンプ初速 ＝ ジャンプ初速 * ( 1.0f - ジャンプ抵抗力 * チャージ量 )" );
 
 					ImGui::SliderFloat( u8"重力", &gravity, 0.0f, 16.0f );
-					ImGui::SliderFloat( u8"重力抵抗力（チャージ量の影響を受ける）", &fallResistance, 0.001f, 0.99f );
+					ImGui::SliderFloat( u8"重力抵抗力（チャージ量の影響を受ける）", &fallResistance, 0.0f, 1.0f );
 					ImGui::Text( u8"重力 ＝ 重力 * ( 1.0f - 重力抵抗力 * チャージ量 )" );
 
 					ImGui::TreePop();
@@ -337,7 +364,7 @@ public:
 					ImGui::SliderFloat( u8"重力", &reflection.gravity, 0.01f, 64.0f );
 					ImGui::Text( "" );
 
-					ImGui::SliderFloat3( u8"生成位置のオフセット[X:%5.3f][X:%5.3f][X:%5.3f]", &generateReflectionOffset.x, -128.0f, 128.0f );
+					ImGui::SliderFloat3( u8"生成位置のオフセット（Ｙのみ絶対値）[X:%5.3f][X:%5.3f][X:%5.3f]", &generateReflectionOffset.x, -128.0f, 128.0f );
 					ImGui::SliderFloat3( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", &reflection.velocity.x, -64.0f, 64.0f );
 
 					ImGui::TreePop();
@@ -374,7 +401,7 @@ public:
 
 };
 
-CEREAL_CLASS_VERSION( PlayerParameter, 2 )
+CEREAL_CLASS_VERSION( PlayerParameter, 4 )
 
 Player::Player() :
 	status( State::Run ),
@@ -412,13 +439,13 @@ void Player::Init( const std::vector<Donya::Vector3> &lanes )
 
 	ApplyExternalParameter();
 
-	posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	ResetPosture();
 
 	RunInit();
 }
 void Player::Uninit()
 {
-	// No op.
+	StopLoopingSounds();
 }
 
 #if DEBUG_MODE
@@ -531,8 +558,12 @@ Player::CollideResult MakeFetchedResult()
 Player::CollideResult Player::ReceiveImpact( bool canReflection )
 {
 	CollideResult rv = MakeFetchedResult();
-	rv.wsPos = pos + PlayerParameter::Get().generateReflectionOffset;
+	rv.wsPos	= pos + PlayerParameter::Get().generateReflectionOffset;
+	rv.wsPos.y	= PlayerParameter::Get().generateReflectionOffset.y;
 	rv.shouldGenerateBullet = false;
+
+	if ( IsStunning() ) { return rv; }
+	// else
 
 	if ( !canReflection || !IsJumping() )
 	{
@@ -548,6 +579,7 @@ Player::CollideResult Player::ReceiveImpact( bool canReflection )
 	}
 	// else
 
+	Donya::Sound::Play( Music::PlayerReflect );
 	rv.shouldGenerateBullet = true;
 	return rv;
 }
@@ -569,6 +601,28 @@ void Player::ApplyExternalParameter()
 	hitBox = PlayerParameter::Get().hitBox;
 }
 
+void Player::StopLoopingSounds()
+{
+	Donya::Sound::Stop( Music::PlayerCharge );
+	Donya::Sound::Stop( Music::PlayerSlipping );
+}
+
+void Player::ResetPosture()
+{
+	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
+}
+
+void Player::RotateYaw( float radian )
+{
+	Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Up(), radian );
+	posture = rotation * posture;
+}
+void Player::RotatePitch( float radian )
+{
+	Donya::Quaternion rotation = Donya::Quaternion::Make( -Donya::Vector3::Right(), radian );
+	posture = rotation * posture;
+}
+
 void Player::ChooseCurrentStateUpdate( Input input )
 {
 	switch ( status )
@@ -587,10 +641,11 @@ void Player::RunInit()
 
 	velocity.z = -PlayerParameter::Get().runSpeedUsual;
 
-#if DEBUG_MODE
-	// Initial posture.
-	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
-#endif // DEBUG_MODE
+	ResetPosture();
+
+	// Prevent doubly playing sound.
+	Donya::Sound::Stop( Music::PlayerSlipping );
+	Donya::Sound::Play( Music::PlayerSlipping );
 }
 void Player::RunUpdate( Input input )
 {
@@ -611,17 +666,27 @@ void Player::ChargeInit()
 
 	velocity.z = -PlayerParameter::Get().runSpeedSlow;
 
+	// Prevent doubly playing sound.
+	Donya::Sound::Stop( Music::PlayerCharge );
 	Donya::Sound::Play( Music::PlayerCharge );
 }
 void Player::ChargeUpdate( Input input )
 {
-	charge += PlayerParameter::Get().chargeSpeed;
-	charge = std::min( 1.0f, charge );
+	if ( !IsFullCharged() )
+	{
+		charge += PlayerParameter::Get().chargeSpeed;
+		if ( IsFullCharged() )
+		{
+			charge = 1.0f;
+			Donya::Sound::Stop( Music::PlayerCharge );
+			Donya::Sound::Play( Music::PlayerChargeComplete );
+		}
+	}
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 12.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	const auto &PARAM = PlayerParameter::Get();
+	float rotateRadian = ToRadian( PARAM.rotateDegree );
+	if ( IsFullCharged() ) { rotateRadian *= PARAM.rotDegMagniCharge; }
+	RotateYaw( rotateRadian );
 
 	if ( !input.doCharge )
 	{
@@ -663,6 +728,7 @@ void Player::ChangeLaneIfRequired( Input input )
 	velocity.x = distanceBetweenLane * PlayerParameter::Get().changeLaneSpeed * moveSign;
 
 	currentLane += moveSign;
+	Donya::Sound::Play( Music::PlayerLaneMove );
 }
 void Player::HorizontalMove()
 {
@@ -700,16 +766,20 @@ void Player::JumpInit()
 	velocity.y = param.jumpStrength * ( 1.0f - param.jumpResistance * charge );
 	velocity.z = -param.runSpeedJump;
 
+	StopLoopingSounds();
 	Donya::Sound::Play( Music::PlayerJump );
 }
 void Player::JumpUpdate( Input input )
 {
 	velocity.y -= CalcGravity();
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 24.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	if ( !IsStunning() )
+	{
+		const auto &PARAM = PlayerParameter::Get();
+		float rotateRadian = ToRadian( PARAM.rotateDegree * PARAM.rotDegMagniJump );
+		if ( IsFullCharged() ) { rotateRadian *= PARAM.rotDegMagniCharge; }
+		RotateYaw( rotateRadian );
+	}
 
 	if ( pos.y + velocity.y <= 0 )
 	{
@@ -731,8 +801,6 @@ void Player::Landing()
 	charge		= 0.0f;
 	pos.y		= 0.0f;
 	velocity.y	= 0.0f;
-
-	Donya::Sound::Play( Music::PlayerLanding );
 }
 
 void Player::ApplyVelocity()
@@ -742,12 +810,17 @@ void Player::ApplyVelocity()
 
 void Player::MakeStun()
 {
-	stunTimer = PlayerParameter::Get().stunFrame;
+	stunTimer	= PlayerParameter::Get().stunFrame;
 
 	charge		= 0.0f;
-	velocity.z	= 0.0f;
+	velocity.z	= -PlayerParameter::Get().runSpeedStun;
 
 	status = State::Stun;
+
+	ResetPosture();
+
+	StopLoopingSounds();
+	Donya::Sound::Play( Music::PlayerTumble );
 }
 void Player::StunUpdate( Input input )
 {
@@ -759,10 +832,7 @@ void Player::StunUpdate( Input input )
 		JumpUpdate( input );
 	}
 
-#if DEBUG_MODE
-	Donya::Quaternion tmpRot = Donya::Quaternion::Make( -Donya::Vector3::Right(), ToRadian( 12.0f ) );
-	posture = tmpRot * posture;
-#endif // DEBUG_MODE
+	RotatePitch( ToRadian( 12.0f ) ); // ( 360.deg / 30.frame ) magic-number :(
 
 	stunTimer--;
 	if ( stunTimer <= 0 )
@@ -770,9 +840,7 @@ void Player::StunUpdate( Input input )
 		stunTimer = 0;
 		RunInit();
 
-	#if DEBUG_MODE
-		posture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
-	#endif // DEBUG_MODE
+		ResetPosture();
 	}
 }
 bool Player::IsStunning() const

@@ -26,6 +26,16 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 		return L"./Data/Images/Rights/FMOD Logo White - Black Background.png";	// break;
 	case SpriteAttribute::TestFont:
 		return L"./Data/Images/Font/TestFont.png";	// break;
+	case SpriteAttribute::Warning:
+		return L"./Data/Images/UI/Warning.png";		// break;
+	case SpriteAttribute::GroundTex1:
+		return L"./Data/Images/Object/yukaTEX.png";	// break;
+	case SpriteAttribute::GroundTex2:
+		return L"./Data/Images/Object/yukaTEX.png";	// break;
+	case SpriteAttribute::SledEffect:
+		return L"./Data/Images/Effect/snow.png";	// break;
+	case SpriteAttribute::SmokeEffect:
+		return L"./Data/Images/Effect/smoke.png";	// break;
 	default:
 		assert( !"Error : Specified unexpect sprite type." ); break;
 	}
@@ -51,8 +61,10 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 		return "./Data/Models/Boss/Roll.bin";				// break;
 	case ModelAttribute::Missile:
 		return "./Data/Models/Boss/Missile.bin";			// break;
+	case ModelAttribute::Tree:
+		return "./Data/Models/Terrain/Tree.bin";			// break;
 	case ModelAttribute::Obstacle:
-		return "./Data/Models/Boss/Obstacle.bin";			// break;
+		return "./Data/Models/Boss/Obstacle.bin";			// breaak;
 	default:
 		assert( !"Error : Specified unexpect model type." ); break;
 	}
