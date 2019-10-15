@@ -24,9 +24,13 @@
 #undef max
 #undef min
 
-static int GetEasingCount()
+static int GetEasingKindCount()
 {
 	return scast<int>( Donya::Easing::Kind::ENUM_TERMINATION );
+}
+static int GetEasingTypeCount()
+{
+	return 3; // scast<int>( Donya::Easing::Type::InOut ) + 1;
 }
 static std::string EasingKindToStr( int easingKind )
 {
@@ -51,6 +55,19 @@ static std::string EasingKindToStr( int easingKind )
 	}
 
 	return "Error Kind !";
+}
+static std::string EasingTypeToStr( int easingType )
+{
+	using namespace Donya::Easing;
+	Type type = scast<Type>( easingType );
+	switch ( type )
+	{
+	case Type::In:		return "In";
+	case Type::Out:		return "Out";
+	case Type::InOut:	return "InOut";
+	}
+
+	return "Error Type !";
 }
 
 #pragma region Missile
@@ -802,8 +819,9 @@ void Beam::UseImGui()
 			ImGui::SliderFloat( u8"ビームの長さ", &parameter.beamLength, 1.0f, 512.0f );
 			ImGui::Text( "" );
 
-			ImGui::SliderInt( u8"イージングの種類", &parameter.easingKind, 0, GetEasingCount() - 1 );
-			std::string easingCaption = "イージング名：" + EasingKindToStr( parameter.easingKind ) + " In";
+			ImGui::SliderInt( u8"イージングの種類",   &parameter.easingKind, 0, GetEasingKindCount() - 1 );
+			ImGui::SliderInt( u8"イージングのタイプ", &parameter.easingType, 0, GetEasingTypeCount() - 1 );
+			std::string easingCaption = "イージング名：" + EasingKindToStr( parameter.easingKind ) + " " + EasingTypeToStr( parameter.easingType );
 			easingCaption = Donya::MultiToUTF8( easingCaption );
 			ImGui::Text( easingCaption.c_str() );
 
@@ -860,7 +878,7 @@ void Beam::UseImGui()
 
 Beam::Beam() :
 	status( State::Swing ),
-	easingKind(), afterWaitFrame(),
+	easingKind(), easingType(), afterWaitFrame(),
 	angleIncreaseSpeed(), easeParam(),
 	beamAngle(), beamAngleBegin(), beamAngleEnd(),
 	beamLength(),
@@ -991,7 +1009,7 @@ void Beam::SetPosture()
 void Beam::AngleUpdate()
 {
 	using namespace Donya::Easing;
-	float ease = Ease( scast<Kind>( easingKind ), Type::In, easeParam );
+	float ease = Ease( scast<Kind>( easingKind ), scast<Type>( easingType ), easeParam );
 	easeParam += angleIncreaseSpeed;
 
 	beamAngle = beamAngleBegin + ( beamAngleEnd - beamAngleBegin ) * ease;
@@ -2802,12 +2820,12 @@ void Boss::UseImGui()
 				
 				if ( ImGui::TreeNode( u8"イージングの種類" ) )
 				{
-					ImGui::SliderInt( u8"振り上げ・種類", &arm.easingKindRise, 0, GetEasingCount() - 1 );
+					ImGui::SliderInt( u8"振り上げ・種類", &arm.easingKindRise, 0, GetEasingKindCount() - 1 );
 					std::string easingCaption = "振り上げ・名：" + EasingKindToStr( arm.easingKindRise ) + " Out";
 					easingCaption = Donya::MultiToUTF8( easingCaption );
 					ImGui::Text( easingCaption.c_str() );
 
-					ImGui::SliderInt( u8"振り降ろし・種類", &arm.easingKindFall, 0, GetEasingCount() - 1 );
+					ImGui::SliderInt( u8"振り降ろし・種類", &arm.easingKindFall, 0, GetEasingKindCount() - 1 );
 					easingCaption = "振り降ろし・名：" + EasingKindToStr( arm.easingKindFall ) + " In";
 					easingCaption = Donya::MultiToUTF8( easingCaption );
 					ImGui::Text( easingCaption.c_str() );

@@ -295,6 +295,7 @@ private:
 	State				status;
 
 	int					easingKind;
+	int					easingType;
 	int					afterWaitFrame;		// Use after finish the rotate of angle.
 	float				angleIncreaseSpeed;	// Use for beam-angle(radian).
 	float				easeParam;			// Use for "t" of easing.
@@ -329,6 +330,10 @@ private:
 		}
 		if ( 2 <= version )
 		{
+			archive( CEREAL_NVP( easingType ) );
+		}
+		if ( 3 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -362,7 +367,7 @@ private:
 	void CalcBeamDestination();
 };
 
-CEREAL_CLASS_VERSION( Beam, 1 )
+CEREAL_CLASS_VERSION( Beam, 2 )
 
 class Wave
 {
