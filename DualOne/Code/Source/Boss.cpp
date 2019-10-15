@@ -797,8 +797,8 @@ void Beam::UseImGui()
 			parameter.angleIncreaseSpeed = 1.0f / scast<float>( angleSwingFrame );
 			ImGui::SliderInt( u8"薙ぎ払い終了後の待ち時間（フレーム）", &parameter.afterWaitFrame, 1, 180 );
 
-			ImGui::SliderFloat( u8"ビームの初期角度", &parameter.beamAngleBegin, -360.0f, 360.0f );
-			ImGui::SliderFloat( u8"ビームの終了角度", &parameter.beamAngleEnd, -360.0f, 360.0f );
+			ImGui::SliderFloat( u8"ビームの初期角度", &parameter.beamAngleBegin, 0.0f, 360.0f );
+			ImGui::SliderFloat( u8"ビームの終了角度", &parameter.beamAngleEnd, 0.0f, 360.0f );
 			ImGui::SliderFloat( u8"ビームの長さ", &parameter.beamLength, 1.0f, 512.0f );
 			ImGui::Text( "" );
 
@@ -2491,7 +2491,10 @@ void Boss::ArmUpdate()
 	default: break;
 	}
 
-	modelBody.posture = Donya::Quaternion::Make( -Donya::Vector3::Right(), arm.radian );
+	float armPercent  = 1.0f - arm.bodyAngleRatio;
+	float bodyPercent = arm.bodyAngleRatio;
+	modelArm.posture  = Donya::Quaternion::Make( -Donya::Vector3::Right(), arm.radian * armPercent  );
+	modelBody.posture = Donya::Quaternion::Make( -Donya::Vector3::Right(), arm.radian * bodyPercent );
 
 	// If finished the wave omen.
 	if ( arm.status == Arm::State::Vacation )
@@ -2782,6 +2785,10 @@ void Boss::UseImGui()
 				static float highestDegree = ToDegree( arm.highestAngle );
 				ImGui::SliderFloat( u8"腕を振り上げる最大角度", &highestDegree, 0.0f, 360.0f );
 				arm.highestAngle = ToRadian( highestDegree );
+
+				ImGui::SliderFloat( u8"傾ける角度の内，体部分の割合", &arm.bodyAngleRatio, 0.0f, 1.0f );
+				ImGui::Text( u8"体部分の最大角度：%05.3f", arm.highestDegree * arm.bodyAngleRatio );
+				ImGui::Text( u8"腕部分の最大角度：%05.3f", arm.highestDegree * ( 1.0f - arm.bodyAngleRatio ) );
 				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"画面シェイク" ) )

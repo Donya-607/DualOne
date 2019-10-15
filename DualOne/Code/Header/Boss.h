@@ -664,6 +664,7 @@ public:
 
 		float easeParam{};			// Use for parameter of easing.
 		float radian{};
+		float bodyAngleRatio{};		// Will be serialize. Radian. 0.0f ~ 1.0f.
 		float incrementation{};		// Will be serialize. Use for increase the "easeParam".
 		float highestAngle{};		// Will be serialize. Radian.
 
@@ -701,6 +702,10 @@ public:
 				);
 			}
 			if ( 3 <= version )
+			{
+				archive( CEREAL_NVP( bodyAngleRatio ) );
+			}
+			if ( 4 <= version )
 			{
 				// archive( CEREAL_NVP( x ) );
 			}
@@ -934,4 +939,4 @@ private:
 };
 
 CEREAL_CLASS_VERSION( Boss, 10 )
-CEREAL_CLASS_VERSION( Boss::Arm, 2 )
+CEREAL_CLASS_VERSION( Boss::Arm, 3 )
