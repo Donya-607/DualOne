@@ -305,6 +305,7 @@ private:
 	AABB				hitBox;				// The position is local-space, size is world-space.
 	Donya::Vector3		basePos;
 	Donya::Vector3		beamDestPos;
+	Donya::Quaternion	posture;
 public:
 	Beam();
 	~Beam();
@@ -353,6 +354,8 @@ public:
 
 	bool ShouldErase() const;
 private:
+	void SetPosture();
+
 	void AngleUpdate();
 	void WaitUpdate();
 

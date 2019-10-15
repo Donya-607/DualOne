@@ -734,12 +734,10 @@ void Obstacle::HitToOther() const
 #pragma region Beam
 
 Beam Beam::parameter{};
-// std::shared_ptr<Donya::StaticMesh> Beam::pModel{ nullptr };
+std::shared_ptr<Donya::StaticMesh> Beam::pModel{ nullptr };
 
 void Beam::LoadModel()
 {
-	// No op.
-	/*
 	static bool wasLoaded = false;
 	if ( wasLoaded ) { return; }
 	// else
@@ -758,7 +756,6 @@ void Beam::LoadModel()
 	}
 
 	wasLoaded = true;
-	*/
 }
 
 void Beam::LoadParameter( bool isBinary )
@@ -868,7 +865,8 @@ Beam::Beam() :
 	beamAngle(), beamAngleBegin(), beamAngleEnd(),
 	beamLength(),
 	hitBox(),
-	basePos(), beamDestPos()
+	basePos(), beamDestPos(),
+	posture()
 {}
 Beam::~Beam() = default;
 
@@ -882,6 +880,8 @@ void Beam::Init( const Donya::Vector3 &wsAppearPos )
 	beamAngleBegin		= ToRadian( beamAngleBegin		);	// These angles stored by degree.
 	beamAngleEnd		= ToRadian( beamAngleEnd		);	// These angles stored by degree.
 	beamAngle			= beamAngleBegin;
+
+	SetPosture();
 
 	Donya::Sound::Play( Music::BossBeamShoot );
 }
@@ -919,19 +919,18 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
-	/*
 	XMMATRIX S = XMMatrixIdentity();
 	XMMATRIX R = Matrix( posture.RequireRotationMatrix() );
-	XMMATRIX T = XMMatrixTranslation( pos.x, pos.y, pos.z );
+	XMMATRIX T = XMMatrixTranslation( basePos.x, basePos.y, basePos.z );
 	XMMATRIX W = S * R * T;
 	XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
 
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
-	*/
+	constexpr XMFLOAT4 lightDir{ 0.0f, -1.0f, 1.0f, 0.0f };
+	
+	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDir, color, cameraPosition, isEnableFill );
 
-	// pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
-
-// #if DEBUG_MODE
+#if DEBUG_MODE
 
 	if ( Common::IsShowCollision() )
 	{
@@ -968,7 +967,7 @@ void Beam::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 
 	}
 
-// #endif // DEBUG_MODE
+#endif // DEBUG_MODE
 }
 
 AABB Beam::GetHitBox() const
@@ -984,6 +983,11 @@ bool Beam::ShouldErase() const
 	return ( status == State::End ) ? true : false;
 }
 
+void Beam::SetPosture()
+{
+	posture = Donya::Quaternion::Make( -Donya::Vector3::Right(), beamAngle );
+}
+
 void Beam::AngleUpdate()
 {
 	using namespace Donya::Easing;
@@ -997,6 +1001,8 @@ void Beam::AngleUpdate()
 		beamAngle = beamAngleEnd;
 		status = State::Wait;
 	}
+
+	SetPosture();
 }
 
 void Beam::WaitUpdate()
