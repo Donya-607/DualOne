@@ -184,7 +184,7 @@ Missile::Missile() :
 {}
 Missile::~Missile() = default;
 
-void Missile::Init( const Donya::Vector3 &wsAppearPos )
+void Missile::Init( const Donya::Vector3 &wsAppearPos, bool useFast )
 {
 	// Apply the external paramter.
 	*this		= parameter;
@@ -193,6 +193,11 @@ void Missile::Init( const Donya::Vector3 &wsAppearPos )
 	basePos		= wsAppearPos;
 
 	posture		= Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
+
+	if ( useFast )
+	{
+		InitToFastMode();
+	}
 }
 
 void Missile::Uninit()
@@ -291,6 +296,17 @@ bool Missile::ShouldErase() const
 void Missile::HitToOther() const
 {
 	wasHitToOther = true;
+}
+
+void Missile::InitToFastMode()
+{
+	// Setting to immediately transition to flying state.
+	// And setting to immediately showing to screen.
+
+	status		= State::Wait;
+	waitFrame	= 0;
+
+	exposingLength *= 3.5f;
 }
 
 void Missile::ExposeUpdate()
@@ -1634,7 +1650,7 @@ void Boss::StartUp( int targetLaneNo, float appearPositionZ )
 	velocity.y = initBouncePower;
 	isLanding = false;
 
-
+	ShootMissile( targetLaneNo, /* setFastMode */ true );
 
 	Donya::Sound::Play( Music::BossEngine );
 }
@@ -2071,7 +2087,7 @@ Donya::Vector3 Boss::GetLanePosition( int laneNo )
 	return lanePositions[laneNo];
 }
 
-void Boss::ShootMissile( int targetLaneNo )
+void Boss::ShootMissile( int targetLaneNo, bool setFastMode )
 {
 	Donya::Vector3 appearPos = GetLanePosition( targetLaneNo );
 	appearPos.z = pos.z;
@@ -2082,7 +2098,7 @@ void Boss::ShootMissile( int targetLaneNo )
 	appearPos.z += missileOffset.z;
 
 	missiles.push_back( {} );
-	missiles.back().Init( appearPos );
+	missiles.back().Init( appearPos, setFastMode );
 
 	// Emit Particle
 }

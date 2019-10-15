@@ -382,7 +382,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	if ( ( IsDecisionReleased() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
 	{
 		pImpl->status = Impl::State::Game;
-		pImpl->boss.StartUp( pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
+		pImpl->boss.StartUp( pImpl->player.GetCurrentLane(), pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
 	}
 
 	if ( pImpl->status != Impl::State::Title )

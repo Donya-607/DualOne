@@ -88,7 +88,7 @@ private:
 		}
 	}
 public:
-	void Init( const Donya::Vector3 &wsAppearPos );
+	void Init( const Donya::Vector3 &wsAppearPos, bool useFast = false );
 	void Uninit();
 
 	void Update( float basePositionZ );
@@ -118,6 +118,8 @@ public:
 	/// </summary>
 	void HitToOther() const;
 private:
+	void InitToFastMode();
+
 	void ExposeUpdate();
 	void WaitUpdate();
 	void FlyUpdate();
@@ -836,7 +838,7 @@ private:
 	Donya::Vector3 LotteryLanePosition();
 	Donya::Vector3 GetLanePosition( int laneNo );
 	
-	void ShootMissile( int targetLaneNo );
+	void ShootMissile( int targetLaneNo, bool setFastMode = false );
 	void UpdateMissiles();
 	
 	void GenerateObstacles( const Donya::Vector3 &wsAttackTargetPos );
