@@ -21,6 +21,7 @@ public:
 	void	Draw( float elapsedTime );
 private:
 	bool	IsDecisionTriggered() const;
+	bool	IsDecisionReleased() const;
 
 	void	StartFade();
 

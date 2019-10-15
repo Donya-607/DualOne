@@ -379,10 +379,46 @@ Scene::Result SceneGame::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
-	if ( ( IsDecisionTriggered() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
+	auto MakePlayerInput = [&]( bool doChargeForce = false )->Player::Input
 	{
+		Player::Input input{};
+
+		auto &ctrller = pImpl->controller;
+		if ( ctrller.IsConnected() )
+		{
+			bool triggerLeft  = ctrller.Trigger( Donya::Gamepad::Button::LEFT  ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::LEFT  );
+			bool triggerRight = ctrller.Trigger( Donya::Gamepad::Button::RIGHT ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::RIGHT );
+			if ( triggerLeft  ) { input.stick.x = -1.0f; }
+			if ( triggerRight ) { input.stick.x =  1.0f; }
+
+			if ( ctrller.Press( Donya::Gamepad::Button::A ) || doChargeForce ) { input.doCharge = true; }
+		}
+		else
+		{
+			if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x =  1.0f; }
+			if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
+
+			if ( Donya::Keyboard::Press( 'Z' ) || doChargeForce ) { input.doCharge = true; }
+		}
+
+		if ( pImpl->status == Impl::State::Title )
+		{
+			input.stick = 0.0f;
+		}
+
+		return input;
+	};
+
+	if ( ( IsDecisionReleased() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
+	{
+		// Charging player for reflect a missile, must do this before change the status.
+		while ( !pImpl->player.IsFullCharged() )
+		{
+			pImpl->player.Update( MakePlayerInput( /* doChargeForce = */ true ) );
+		}
+
 		pImpl->status = Impl::State::Game;
-		pImpl->boss.StartUp( pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
+		pImpl->boss.StartUp( pImpl->player.GetCurrentLane(), pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
 	}
 
 	if ( pImpl->status != Impl::State::Title )
@@ -398,33 +434,6 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	pImpl->ground.Update( pImpl->player.GetPos() );
 
-	auto MakePlayerInput = [&]()->Player::Input
-	{
-		Player::Input input{};
-
-		if ( pImpl->status == Impl::State::Title ) { return input; }
-		// else
-
-		auto &ctrller = pImpl->controller;
-		if ( ctrller.IsConnected() )
-		{
-			bool triggerLeft  = ctrller.Trigger( Donya::Gamepad::Button::LEFT  ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::LEFT  );
-			bool triggerRight = ctrller.Trigger( Donya::Gamepad::Button::RIGHT ) || ctrller.TriggerStick( Donya::Gamepad::StickDirection::RIGHT );
-			if ( triggerLeft  ) { input.stick.x = -1.0f; }
-			if ( triggerRight ) { input.stick.x =  1.0f; }
-
-			if ( ctrller.Press( Donya::Gamepad::Button::A ) ) { input.doCharge = true; }
-		}
-		else
-		{
-			if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x =  1.0f; }
-			if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
-
-			if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
-		}
-
-		return input;
-	};
 	pImpl->player.Update( MakePlayerInput() );
 
 
@@ -549,6 +558,13 @@ bool SceneGame::IsDecisionTriggered() const
 	( pImpl->controller.IsConnected() )
 	? pImpl->controller.Trigger( Donya::Gamepad::A )
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
+}
+bool SceneGame::IsDecisionReleased() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Release( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Release( 'Z' ) ) ? true : false;
 }
 
 bool SceneGame::IsDoneCameraMove() const
