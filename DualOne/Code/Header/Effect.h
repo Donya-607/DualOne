@@ -21,7 +21,7 @@ struct Particle
 		NONE,
 		SLED_EFFECT,
 		BOSS_EFFECT,
-		MISSLE_EFFECT,
+		MISSILE_EFFECT,
 		SHOCKWAVE_EFFECT,
 	};
 	/*----------------------------------------*/
@@ -29,7 +29,6 @@ struct Particle
 	/*----------------------------------------*/
 	Donya::Vector3			pos;
 	Donya::Vector3			velocity;
-	Donya::Vector3			startVelocity;
 	Donya::Vector3			scale;
 	static Donya::Vector3	setVelocity;
 	Donya::Vector3			angle;
@@ -40,21 +39,21 @@ struct Particle
 	//	Fanctions
 	/*----------------------------------------*/
 	Particle();
-	Particle(Donya::Vector3 _emitterPos, Type _type);
+	Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove = false);
 	Particle(const Particle&);
 	Particle& operator = (const Particle&);
 	~Particle();
 
 	// Update fanction
 	void UpdateOfSleds();
-	void UpdateOfMissles();
+	void UpdateOfMissiles();
 	void UpdateOfShockWave();
 
 	//	Set Parameter fanction
 	void SetNoneElements(Donya::Vector3 _emitterPos);
 	void SetSledElements(Donya::Vector3 _emitterPos);
 	void SetBossElements(Donya::Vector3 _emitterPos);
-	void SetMissleElements(Donya::Vector3 _emitterPos);
+	void SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove);
 	void SetShockWaveElements(Donya::Vector3 _emitterPos);
 
 };
@@ -73,13 +72,13 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	//	Instance
 	/*---------------------------------*/
 	std::vector<Particle> sledEffects;
-	std::vector<Particle> missleEffects;
+	std::vector<Particle> missileEffects;
 	std::vector<Particle> shockWaveEffects;
 
 	int				timer;
 
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missleEffects(), timer(0) {}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0) {}
 
 public:
 	void Init();
@@ -111,7 +110,7 @@ public:
 
 	);
 
-	void DrawSmokeOfMissle
+	void DrawSmokeOfMissile
 	(
 		const DirectX::XMFLOAT4X4& matView,
 		const DirectX::XMFLOAT4X4& matProjection,
@@ -136,15 +135,16 @@ public:
 	//	Create fanction
 	/*---------------------*/
 	void CreateSledParticle(Donya::Vector3 _pos);
-	void CreateSmokeOfMissleParticle(Donya::Vector3 _pos);
+	void CreateSmokeOfMissileParticle(Donya::Vector3 _pos);
 	void CreateShockWaveParticle(Donya::Vector3 _pos);
-
+	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
 	/*---------------------*/
 	//	Judge erase fanction
 	/*---------------------*/
 private:
+	void JudgeErase();
 	void JudgeEraseSled();
-	void JudgeEraseSmokeOfMissle();
+	void JudgeEraseSmokeOfMissile();
 	void JudgeEraseShockWave();
 
 #if USE_IMGUI

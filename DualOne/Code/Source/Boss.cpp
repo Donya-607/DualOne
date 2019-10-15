@@ -324,7 +324,7 @@ void Missile::FlyUpdate()
 
 	Move();
 
-	ParticleManager::Get().CreateSmokeOfMissleParticle( pos );
+	ParticleManager::Get().CreateSmokeOfMissileParticle( pos );
 
 #if DEBUG_MODE
 
