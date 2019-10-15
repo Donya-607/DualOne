@@ -28,19 +28,22 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 	for (int i = 0; i < 3; i++)
 	{
 		CreateSledParticle(_arg.playerPos);
-//		CreateShockWaveParticle(_arg.playerPos);
 	}
-	JudgeEraseSled();
-	JudgeEraseSmokeOfMissle();
-	JudgeEraseShockWave();
+
+	// Provisional
+//	Donya::Vector3 provisionalPos = _arg.playerPos;
+//	provisionalPos.y = 50.0f;
+//	CreateExplosionParticle(provisionalPos, 1);
+
+	JudgeErase();
 
 	for (auto& it : sledEffects)
 	{
 		it.UpdateOfSleds();
 	}
-	for (auto& it : missleEffects)
+	for (auto& it : missileEffects)
 	{
-		it.UpdateOfMissles();
+		it.UpdateOfMissiles();
 	}
 	for (auto& it : shockWaveEffects)
 	{
@@ -65,7 +68,7 @@ void ParticleManager::Draw(const DirectX::XMFLOAT4X4& matView,
 {
 	Donya::Blend::Set(Donya::Blend::Mode::ADD);
 	DrawSled(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
-	DrawSmokeOfMissle(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
+	DrawSmokeOfMissile(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	DrawShockWave(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	Donya::Blend::Set(Donya::Blend::Mode::ALPHA);
 }
@@ -137,7 +140,6 @@ void ParticleManager::DrawSled(const DirectX::XMFLOAT4X4& matView,
 			color.w = 1.0f;
 		}
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
-		//	XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f);
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
 		XMMATRIX W = S * T;
 
@@ -148,7 +150,7 @@ void ParticleManager::DrawSled(const DirectX::XMFLOAT4X4& matView,
 	}
 }
 
-void ParticleManager::DrawSmokeOfMissle
+void ParticleManager::DrawSmokeOfMissile
 (
 	const DirectX::XMFLOAT4X4& matView,
 	const DirectX::XMFLOAT4X4& matProjection,
@@ -170,7 +172,7 @@ void ParticleManager::DrawSmokeOfMissle
 		return matrix;
 	};
 
-	for (auto& it : missleEffects)
+	for (auto& it : missileEffects)
 	{
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
@@ -180,15 +182,6 @@ void ParticleManager::DrawSmokeOfMissle
 		// WVP  =  WorldMatrix * InverceViewMatrix * SynthesisMatrix of View and Projection
 		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
 		constexpr XMFLOAT4 color{ 1.0f,1.0f,1.0f,1.0f };
-//		XMFLOAT4 color;
-//		if (it.isColorBlack)
-//		{
-//			color = DirectX::XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
-//		}
-//		else
-//		{
-//			color = DirectX::XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
-//		}
 
 		sprSmoke->Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
 	}
@@ -220,14 +213,6 @@ void ParticleManager::DrawShockWave
 
 	for (auto& it : shockWaveEffects)
 	{
-//		if (it.existanceTime <= 10)
-//		{
-//			color.w = static_cast<float>((it.existanceTime - 1) / 10);
-//		}
-//		else
-//		{
-//			color.w = 1.0f;
-//		}
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f);
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
@@ -251,10 +236,10 @@ void ParticleManager::CreateSledParticle(Donya::Vector3 _pos)
 	sledEffects.emplace_back(pre);
 }
 
-void ParticleManager::CreateSmokeOfMissleParticle(Donya::Vector3 _pos)
+void ParticleManager::CreateSmokeOfMissileParticle(Donya::Vector3 _pos)
 {
-	Particle pre(_pos, Particle::Type::MISSLE_EFFECT);
-	missleEffects.emplace_back(pre);
+	Particle pre(_pos, Particle::Type::MISSILE_EFFECT);
+	missileEffects.emplace_back(pre);
 }
 
 void ParticleManager::CreateShockWaveParticle(Donya::Vector3 _pos)
@@ -267,9 +252,28 @@ void ParticleManager::CreateShockWaveParticle(Donya::Vector3 _pos)
 	}
 }
 
+void ParticleManager::CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum)
+{
+	assert(_loopNum != 0);
+	Donya::Vector3 emitPos = _pos;
+	for (int i = 0; i < _loopNum; i++)
+	{
+		Particle pre(emitPos, Particle::Type::MISSILE_EFFECT, true);
+		missileEffects.emplace_back(pre);
+		emitPos.z += 1.0f;
+	}
+}
+
 /*-------------------------------------------------*/
 //	Á‹Ž‚·‚é‚©”»’è‚·‚éŠÖ”
 /*-------------------------------------------------*/
+void ParticleManager::JudgeErase()
+{
+	JudgeEraseSled();
+	JudgeEraseSmokeOfMissile();
+	JudgeEraseShockWave();
+}
+
 void ParticleManager::JudgeEraseSled()
 {
 	for (size_t i = 0; i < sledEffects.size(); i++)
@@ -282,13 +286,13 @@ void ParticleManager::JudgeEraseSled()
 	}
 }
 
-void ParticleManager::JudgeEraseSmokeOfMissle()
+void ParticleManager::JudgeEraseSmokeOfMissile()
 {
-	for (size_t i = 0; i < missleEffects.size(); i++)
+	for (size_t i = 0; i < missileEffects.size(); i++)
 	{
-		if (missleEffects[i].existanceTime <= 0)
+		if (missileEffects[i].existanceTime <= 0)
 		{
-			missleEffects.erase(missleEffects.begin() + i);
+			missileEffects.erase(missileEffects.begin() + i);
 		}
 	}
 }
@@ -344,18 +348,18 @@ Particle::Particle()
 	existanceTime = 0;
 }
 
-Particle::Particle(Donya::Vector3 _emitterPos, Type _type)
+Particle::Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove)
 {
 	type = _type;
 	existanceTime = 0;
 	switch (type)
 	{
-	case Particle::NONE:				SetNoneElements(_emitterPos);		break;
-	case Particle::SLED_EFFECT:			SetSledElements(_emitterPos);		break;
-	case Particle::BOSS_EFFECT:			SetBossElements(_emitterPos);		break;
-	case Particle::MISSLE_EFFECT:		SetMissleElements(_emitterPos);		break;
-	case Particle::SHOCKWAVE_EFFECT:	SetShockWaveElements(_emitterPos);	break;
-	default:														break;
+	case Particle::NONE:				SetNoneElements(_emitterPos);				break;
+	case Particle::SLED_EFFECT:			SetSledElements(_emitterPos);				break;
+	case Particle::BOSS_EFFECT:			SetBossElements(_emitterPos);				break;
+	case Particle::MISSILE_EFFECT:		SetMissileElements(_emitterPos, _noMove);	break;
+	case Particle::SHOCKWAVE_EFFECT:	SetShockWaveElements(_emitterPos);			break;
+	default:																		break;
 	}
 }
 
@@ -368,7 +372,6 @@ Particle& Particle::operator = (const Particle& rhs)
 {
 	pos = rhs.pos;
 	velocity = rhs.velocity;
-	startVelocity = rhs.startVelocity;
 	scale = rhs.scale;
 	setVelocity = rhs.setVelocity;
 	existanceTime = rhs.existanceTime;
@@ -388,7 +391,6 @@ Particle::~Particle()
 void Particle::SetNoneElements(Donya::Vector3 _emitterPos)
 {
 	velocity = setVelocity;
-	startVelocity = velocity;
 	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	existanceTime = 0;
 	assert("particle type is None");
@@ -420,31 +422,43 @@ void Particle::SetSledElements(Donya::Vector3 _emitterPos)
 
 	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	velocity = setVelocity;
-	startVelocity = velocity;
 	existanceTime = 20;
 }
 
 void Particle::SetBossElements(Donya::Vector3 _emitterPos)
 {
 	velocity = setVelocity;
-	startVelocity = velocity;
 	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	existanceTime = 0;
 }
 
-void Particle::SetMissleElements(Donya::Vector3 _emitterPos)
+void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove)
 {
+	if (_noMove)
+	{
+		velocity = Donya::Vector3(0.0f,0.0f,-9.0f);
+	}
+	else
+	{
 	velocity = Donya::Vector3(
 		Donya::Random::GenerateFloat(-3.0f,3.0f), 
 		Donya::Random::GenerateFloat(-3.0f, 3.0f), 
 		0.0f//Donya::Random::GenerateFloat(-3.0f, 3.0f)
 	);
+	}
 	scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
 	pos = Donya::Vector3(_emitterPos.x, _emitterPos.y + 0.0f, _emitterPos.z + 10.0f);
 	angle.x = Donya::Random::GenerateFloat(0.0f, 360.0f);
 	angle.y = Donya::Random::GenerateFloat(0.0f, 360.0f);
 	angle.z = Donya::Random::GenerateFloat(0.0f, 360.0f);
-	existanceTime = 15;
+	if (_noMove)
+	{
+		existanceTime = 15;
+	}
+	else
+	{
+		existanceTime = 15;
+	}
 }
 
 void Particle::SetShockWaveElements(Donya::Vector3 _emitterPos)
@@ -455,10 +469,9 @@ void Particle::SetShockWaveElements(Donya::Vector3 _emitterPos)
 	pos.x += Donya::Random::GenerateFloat(-64.0f, 64.0f);
 
 	velocity = Vector3{ 0.0f,/*10.0f*/Donya::Random::GenerateFloat(3.0f,10.0f),0.0f };
-	startVelocity = Vector3{ 0.0f,0.0f,0.0f };
 	scale = Vector3{ 2.0f,2.0f,2.0f };
 	angle = Vector3{ 0.0f,0.0f,0.0f };
-	existanceTime = 30;
+	existanceTime = 20;
 }
 
 /*-------------------------------------------------*/
@@ -467,12 +480,11 @@ void Particle::SetShockWaveElements(Donya::Vector3 _emitterPos)
 void Particle::UpdateOfSleds()
 {
 	velocity.y -= GRAVITY;
-//	velocity.x -= (startVelocity.x / existanceTime);
 	pos += velocity;
 	--existanceTime;
 }
 
-void Particle::UpdateOfMissles()
+void Particle::UpdateOfMissiles()
 {
 	--existanceTime;
 
@@ -482,13 +494,13 @@ void Particle::UpdateOfMissles()
 	// Update angle
 //	angle.x += Donya::Random::GenerateFloat(0.0f, 1.0f);
 //	angle.y += Donya::Random::GenerateFloat(0.0f, 1.0f);
-	angle.z += Donya::Random::GenerateFloat(0.0f, 10.0f);
+	angle.z += Donya::Random::GenerateFloat(50.0f, 100.0f);
 
 	if (angle.x >= 360) angle.x = 0;
 	if (angle.y >= 360)angle.y = 0;
 	if (angle.z >= 360)angle.z = 0;
 	// Update scale
-	scale.x = scale.y = scale.x * existanceTime / 15;
+	scale.x = scale.y = scale.x * existanceTime / 15 ;
 }
 
 void Particle::UpdateOfShockWave()
