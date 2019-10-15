@@ -30,5 +30,6 @@ enum class ModelAttribute
 	Missile,
 	Tree,
 	Obstacle,
+	Wave,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

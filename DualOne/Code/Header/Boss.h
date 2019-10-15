@@ -267,6 +267,7 @@ class Beam
 {
 private:
 	static Beam parameter;
+	static std::shared_ptr<Donya::StaticMesh> pModel;
 	static constexpr const char *SERIAL_ID = "Beam";
 public:
 	/// <summary>
@@ -364,7 +365,7 @@ class Wave
 {
 private:
 	static Wave parameter;
-	// static std::shared_ptr<Donya::StaticMesh>	pModel;
+	static std::shared_ptr<Donya::StaticMesh> pModel;
 	static constexpr const char *SERIAL_ID = "Wave";
 public:
 	/// <summary>

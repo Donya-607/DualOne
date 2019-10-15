@@ -1048,11 +1048,10 @@ void Beam::CalcBeamDestination()
 #pragma region Wave
 
 Wave Wave::parameter{};
-// std::shared_ptr<Donya::StaticMesh> Wave::pModel{ nullptr };
+std::shared_ptr<Donya::StaticMesh> Wave::pModel{ nullptr };
 
 void Wave::LoadModel()
 {
-	/*
 	static bool wasLoaded = false;
 	if ( wasLoaded ) { return; }
 	// else
@@ -1060,18 +1059,17 @@ void Wave::LoadModel()
 	Donya::Loader loader{};
 	bool result = loader.Load( GetModelPath( ModelAttribute::Wave ), nullptr );
 
-	_ASSERT_EXPR( result, L"Failed : Load obstacle model." );
+	_ASSERT_EXPR( result, L"Failed : Load wave model." );
 
 	pModel = Donya::StaticMesh::Create( loader );
 
 	if ( !pModel )
 	{
-		_ASSERT_EXPR( 0, L"Failed : Load obstacle model." );
+		_ASSERT_EXPR( 0, L"Failed : Load wave model." );
 		exit( -1 );
 	}
 
 	wasLoaded = true;
-	*/
 }
 
 void Wave::LoadParameter( bool isBinary )
@@ -1177,6 +1175,8 @@ void Wave::Init( const Donya::Vector3 &wsAppearPos )
 	*this = parameter;
 
 	pos = wsAppearPos;
+
+	posture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 }
 void Wave::Uninit()
 {
@@ -1210,7 +1210,6 @@ void Wave::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
-	/*
 	XMMATRIX S = XMMatrixIdentity();
 	XMMATRIX R = Matrix( posture.RequireRotationMatrix() );
 	XMMATRIX T = XMMatrixTranslation( pos.x, pos.y, pos.z );
@@ -1220,8 +1219,7 @@ void Wave::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
-	*/
-
+	
 #if DEBUG_MODE
 
 	if ( Common::IsShowCollision() )
@@ -1743,7 +1741,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 	lanePositions = registerLanePositions;
 	Obstacle::Warning::RegisterLaneCount( lanePositions.size() );
 
-	basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+	basePosture = Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 }
 
 void Boss::Uninit()
