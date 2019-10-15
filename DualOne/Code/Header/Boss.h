@@ -747,6 +747,7 @@ private:
 
 	Donya::Quaternion					basePosture;
 
+	ModelPart							modelArm;
 	ModelPart							modelBody;
 	ModelPart							modelFoot;
 	ModelPart							modelRoll;
@@ -820,6 +821,10 @@ private:
 			);
 		}
 		if ( 10 <= version )
+		{
+			archive( CEREAL_NVP( modelArm ) );
+		}
+		if ( 11 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -928,5 +933,5 @@ private:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( Boss, 9 )
+CEREAL_CLASS_VERSION( Boss, 10 )
 CEREAL_CLASS_VERSION( Boss::Arm, 2 )

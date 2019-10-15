@@ -1698,12 +1698,13 @@ Boss::Boss() :
 	pos(), velocity(), stunVelocity(),
 	missileOffset(), obstacleOffset(), waveOffset(),
 	basePosture(),
-	modelBody(), modelFoot(), modelRoll(), arm(),
+	modelArm(), modelBody(), modelFoot(), modelRoll(), arm(),
 	lanePositions(), missiles(), obstacles(), beams(), waves(),
 	isLanding( true )
 {}
 Boss::~Boss()
 {
+	modelArm.pModel.reset();
 	modelBody.pModel.reset();
 	modelFoot.pModel.reset();
 	modelRoll.pModel.reset();
@@ -1827,26 +1828,56 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
-	auto RenderModelPart = [&]( const ModelPart &mp, const Donya::Quaternion &offsetRotation )
+	// Rendering model parts.
 	{
-		Donya::Vector3 rotatedOffset = ( mp.offset.IsZero() ) ? Donya::Vector3::Zero() : offsetRotation.RotateVector( mp.offset );
-		Donya::Vector3 coord = pos + rotatedOffset;
-		Donya::Quaternion synthesis = mp.posture * offsetRotation;
-		
-		XMMATRIX S = XMMatrixScaling( mp.scale.x, mp.scale.y, mp.scale.z );
-		XMMATRIX R = Matrix( synthesis.RequireRotationMatrix() );
-		XMMATRIX T = XMMatrixTranslation( coord.x, coord.y, coord.z );
-		XMMATRIX W = S * R * T;
-		XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+		// Make matrix that is transform to parent-space for each model.
+		/*
+		Foot-space -> World-space.
+		Body-space -> Foot-space.
+		Arm-space  -> Body-space.
+		Roll-space -> Arm-space.
+		*/
 
-		constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		auto MakeModelMatrix = [&Matrix]( const ModelPart &mp )->XMMATRIX
+		{
+			XMMATRIX S = XMMatrixScaling( mp.scale.x, mp.scale.y, mp.scale.z );
+			XMMATRIX R = Matrix( mp.posture.RequireRotationMatrix() );
+			XMMATRIX T = XMMatrixTranslation( mp.offset.x, mp.offset.y, mp.offset.z );
+			return S * R * T;
+		};
+		XMMATRIX MF = MakeModelMatrix( modelFoot );
+		XMMATRIX MB = MakeModelMatrix( modelBody );
+		XMMATRIX MA = MakeModelMatrix( modelArm  );
+		XMMATRIX MR = MakeModelMatrix( modelRoll );
 
-		mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
-	};
+		auto MakeWorldMatrix = [&]()->XMMATRIX
+		{
+			// XMMATRIX S = XMMatrixIdentity();
+			XMMATRIX R = Matrix( basePosture.RequireRotationMatrix() );
+			XMMATRIX T = XMMatrixTranslation( pos.x, pos.y, pos.z );
+			return R * T;
+		};
+		XMMATRIX W = MakeWorldMatrix();
+	
+		XMMATRIX WF = MF * W;  //                MF * W
+		XMMATRIX WB = MB * WF; //           MB * MF * W
+		XMMATRIX WA = MA * WB; //      MA * MB * MF * W
+		XMMATRIX WR = MR * WA; // MR * MA * MB * MF * W
 
-	RenderModelPart( modelFoot, basePosture );
-	RenderModelPart( modelBody, basePosture );
-	RenderModelPart( modelRoll, modelBody.posture * basePosture );
+		auto RenderModelPart = [&]( const ModelPart &mp, const XMMATRIX &W )
+		{
+			XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
+
+			constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+			mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
+		};
+
+		RenderModelPart( modelFoot, WF );
+		RenderModelPart( modelBody, WB );
+		RenderModelPart( modelArm,  WA );
+		RenderModelPart( modelRoll, WR );
+	}
 
 	for ( const auto &it : missiles )
 	{
@@ -2018,15 +2049,17 @@ void Boss::ReceiveImpact( Donya::Vector3 wsCollidedPosition )
 
 void Boss::LoadModel()
 {
-	constexpr size_t MODEL_COUNT = 3;
+	constexpr size_t MODEL_COUNT = 4;
 	const std::array<std::shared_ptr<Donya::StaticMesh> *, MODEL_COUNT> LOAD_MODELS
 	{
+		&modelArm.pModel,
 		&modelBody.pModel,
 		&modelFoot.pModel,
 		&modelRoll.pModel
 	};
 	const std::array<std::string, MODEL_COUNT> LOAD_PATHS
 	{
+		GetModelPath( ModelAttribute::BossArm ),
 		GetModelPath( ModelAttribute::BossBody ),
 		GetModelPath( ModelAttribute::BossFoot ),
 		GetModelPath( ModelAttribute::BossRoll )
@@ -2099,7 +2132,7 @@ void Boss::UpdateCurrentStatus( int targetLaneNo, const Donya::Vector3 &wsAttack
 void Boss::RotateRoll()
 {
 	constexpr float SPEED = ToRadian( 12.0f );
-	Donya::Quaternion rotation = Donya::Quaternion::Make( -Donya::Vector3::Right(), SPEED );
+	Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Right(), SPEED );
 
 	modelRoll.posture = rotation * modelRoll.posture;
 }
@@ -2458,7 +2491,7 @@ void Boss::ArmUpdate()
 	default: break;
 	}
 
-	modelBody.posture = Donya::Quaternion::Make( Donya::Vector3::Right(), arm.radian );
+	modelBody.posture = Donya::Quaternion::Make( -Donya::Vector3::Right(), arm.radian );
 
 	// If finished the wave omen.
 	if ( arm.status == Arm::State::Vacation )
@@ -2729,9 +2762,10 @@ void Boss::UseImGui()
 					ImGui::SliderFloat3( ToUTF8( name + "：スケール" ).c_str(), &pModel->scale.x, 0.01f, 3.0f );
 				};
 
-				ShowModelPartToGui( "体",		&modelBody );
-				ShowModelPartToGui( "足もと",	&modelFoot );
-				ShowModelPartToGui( "ローラー",	&modelRoll );
+				ShowModelPartToGui( "1:足もと",		&modelFoot );
+				ShowModelPartToGui( "2:体",			&modelBody );
+				ShowModelPartToGui( "3:腕",			&modelArm  );
+				ShowModelPartToGui( "4:ローラー",	&modelRoll );
 
 				ImGui::TreePop();
 			}

@@ -53,6 +53,8 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 		return "./Data/Models/Player/Player.bin";			// break;
 	case ModelAttribute::ReflectedEntity:
 		return "./Data/Models/Player/ReflectedEntity.bin";	// break;
+	case ModelAttribute::BossArm:
+		return "./Data/Models/Boss/Arm.bin";				// break;
 	case ModelAttribute::BossBody:
 		return "./Data/Models/Boss/Body.bin";				// break;
 	case ModelAttribute::BossFoot:

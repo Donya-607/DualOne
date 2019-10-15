@@ -1,6 +1,6 @@
 {
     "Boss": {
-        "cereal_class_version": 9,
+        "cereal_class_version": 10,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
@@ -51,7 +51,7 @@
             "cereal_class_version": 0,
             "offset": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": 80.0,
                 "z": 0.0
             },
             "scale": {
@@ -75,8 +75,8 @@
         "modelRoll": {
             "offset": {
                 "x": 0.0,
-                "y": 20.0,
-                "z": 80.0
+                "y": -28.0,
+                "z": 62.0
             },
             "scale": {
                 "x": 1.0,
@@ -87,7 +87,7 @@
         "arm": {
             "cereal_class_version": 2,
             "incrementation": 0.016949152573943139,
-            "highestAngle": 1.3082554340362549,
+            "highestAngle": 1.3080084323883057,
             "easingKindRise": 11,
             "easingKindFall": 5,
             "shakeStrength": 3.5,
@@ -104,6 +104,18 @@
         "bouncePowerRange": {
             "x": 0.0,
             "y": 0.0
+        },
+        "modelArm": {
+            "offset": {
+                "x": 0.0,
+                "y": -32.0,
+                "z": 16.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
         }
     }
 }
