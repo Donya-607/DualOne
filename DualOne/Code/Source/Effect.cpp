@@ -89,7 +89,7 @@ void ParticleManager::LoadSprite()
 	sprSled = std::make_unique<Donya::Geometric::TextureBoard>(GetSpritePath(SpriteAttribute::SledEffect));
 	sprSled->Init();
 
-	sprSmoke = std::make_unique<Donya::Geometric::TextureBoard>(GetSpritePath(SpriteAttribute::SmokeEffect));
+	sprSmoke = std::make_unique<Donya::Geometric::TextureBoard>(GetSpritePath(SpriteAttribute::SmokeWhiteEffect));
 	sprSmoke->Init();
 }
 
@@ -181,7 +181,10 @@ void ParticleManager::DrawSmokeOfMissile
 
 		// WVP  =  WorldMatrix * InverceViewMatrix * SynthesisMatrix of View and Projection
 		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
-		constexpr XMFLOAT4 color{ 1.0f,1.0f,1.0f,1.0f };
+//		constexpr XMFLOAT4 color{ 1.0f,0.3f,0.0f,1.0f };
+//		constexpr XMFLOAT4 color{ 1.0f,1.0f,1.0f,1.0f };
+//		constexpr XMFLOAT4 color{ 1.0f,0.8f,0.8f,1.0f };
+		XMFLOAT4 color = it.color;
 
 		sprSmoke->Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
 	}
@@ -344,6 +347,7 @@ Particle::Particle()
 	velocity = Donya::Vector3(0.0f, 0.0f, 0.0f);
 	scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
 	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
+	color = Donya::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	type = NONE;
 	existanceTime = 0;
 }
@@ -376,6 +380,7 @@ Particle& Particle::operator = (const Particle& rhs)
 	setVelocity = rhs.setVelocity;
 	existanceTime = rhs.existanceTime;
 	type = rhs.type;
+	color = rhs.color;
 
 	return *this;
 }
@@ -437,6 +442,7 @@ void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove)
 	if (_noMove)
 	{
 		velocity = Donya::Vector3(0.0f,0.0f,-9.0f);
+		color = Donya::Vector4(1.0f, 0.3f, 0.0f, 1.0f);
 	}
 	else
 	{
@@ -445,6 +451,7 @@ void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove)
 		Donya::Random::GenerateFloat(-3.0f, 3.0f), 
 		0.0f//Donya::Random::GenerateFloat(-3.0f, 3.0f)
 	);
+	color = Donya::Vector4(1.0f, 0.8f, 0.8f, 1.0f);
 	}
 	scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
 	pos = Donya::Vector3(_emitterPos.x, _emitterPos.y + 0.0f, _emitterPos.z + 10.0f);

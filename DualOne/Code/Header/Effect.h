@@ -32,6 +32,7 @@ struct Particle
 	Donya::Vector3			scale;
 	static Donya::Vector3	setVelocity;
 	Donya::Vector3			angle;
+	Donya::Vector4			color;
 	int						existanceTime;
 	Type					type;
 
