@@ -150,8 +150,8 @@ void Block::ApplyLoopToMap(Donya::Vector3 _playerPos)
 //	Ground
 //
 /*-------------------------------------------------*/
-Donya::Vector3 Ground::treeAngle;
-Donya::Vector3 Ground::treePos;
+Donya::Vector3 Ground::treeAngle{ 30.0f, 0.0f, 0.0f };
+Donya::Vector3 Ground::treePos{ 0.0f, -4.0f, 0.0f };
 int Ground::CREATE_TREE;
 
 /*-------------------------------------------------*/
