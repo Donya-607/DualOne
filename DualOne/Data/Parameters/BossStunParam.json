@@ -3,12 +3,12 @@
         "cereal_class_version": 0,
         "invisibleCycleFrame": 1,
         "invisibleLowestAlpha": 0.0,
-        "rotationSpeedMiddle": 21.80500030517578,
-        "rotationSpeedHigh": 48.0,
+        "rotationSpeedMiddle": 12.611000061035157,
+        "rotationSpeedHigh": 23.513999938964845,
         "stunFrames": {
             "value0": 30,
-            "value1": 30,
-            "value2": 30
+            "value1": 60,
+            "value2": 90
         },
         "stunVelocities": {
             "value0": {

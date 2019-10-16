@@ -2574,6 +2574,7 @@ void Boss::ResetArmState()
 	arm.easeParam	= 0.0f;
 	arm.radian		= 0.0f;
 
+	modelArm.posture  = Donya::Quaternion::Identity();
 	modelBody.posture = Donya::Quaternion::Identity();
 }
 void Boss::ArmUpdate()
