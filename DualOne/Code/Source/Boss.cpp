@@ -1579,6 +1579,115 @@ void CollisionDetail::UseImGui()
 // region CollisionDetail
 #pragma endregion
 
+#pragma region StunParam
+
+StunParam::StunParam() :
+	invisibleInterval(),
+	rotationSpeedMiddle(),
+	rotationSpeedHigh(),
+	stunFrames(),
+	stunVelocities()
+{}
+StunParam::~StunParam() = default;
+
+void StunParam::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void StunParam::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void StunParam::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ボスの気絶関連" ) )
+		{
+			ImGui::SliderInt( u8"点滅間隔（フレーム）", &invisibleInterval, 1, 30 );
+			ImGui::Text( "" );
+
+			ImGui::SliderFloat( u8"回転速度（扇型）", &rotationSpeedMiddle, 0.0f, 32.0f );
+			ImGui::SliderFloat( u8"回転速度（ぐるり）", &rotationSpeedHigh, 0.0f, 32.0f );
+			
+			if ( ImGui::TreeNode( u8"気絶時間の設定" ) )
+			{
+				std::string caption{};
+
+				const size_t COUNT = stunFrames.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = "レベル：" + std::to_string( i );
+					ImGui::SliderInt( Donya::MultiToUTF8( caption ).c_str(), &stunFrames[i], 1, 360 );
+				}
+				
+				ImGui::TreePop();
+			}
+			if ( ImGui::TreeNode( u8"気絶時の移動速度の設定" ) )
+			{
+				std::string caption{};
+
+				const size_t COUNT = stunVelocities.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = "レベル：" + std::to_string( i );
+					ImGui::SliderFloat3( Donya::MultiToUTF8( caption ).c_str(), &stunVelocities[i].x, -64.0f, 64.0f );
+				}
+				
+				ImGui::TreePop();
+			}
+
+			ImGui::Text( "" );
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+// region StunParam
+#pragma endregion
+
 #pragma region DestructionParam
 
 DestructionParam::DestructionParam() :

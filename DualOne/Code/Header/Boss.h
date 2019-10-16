@@ -581,6 +581,63 @@ public:
 
 CEREAL_CLASS_VERSION( CollisionDetail, 0 )
 
+class StunParam : public Donya::Singleton<StunParam>
+{
+	friend Donya::Singleton<StunParam>;
+public:
+	enum class StunLevel
+	{
+		Low,	// Enable invisible.
+		Middle,	// Enable Invisible, little-rotation.
+		High,	// Enable Invisible, rotation.
+
+		COUNT_OF_STUN_LEVEL
+	};
+	static constexpr int STUN_LEVEL_COUNT = scast<int>( StunLevel::COUNT_OF_STUN_LEVEL );
+public:
+	int					invisibleInterval;		// Frame.
+	float				rotationSpeedMiddle;	// Use when the level is middle. pass to sinf().
+	float				rotationSpeedHigh;		// Use when the level is high.
+	std::array<int, STUN_LEVEL_COUNT>				stunFrames;
+	std::array<Donya::Vector3, STUN_LEVEL_COUNT>	stunVelocities;
+private:
+	StunParam();
+public:
+	~StunParam();
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( invisibleInterval ),
+			CEREAL_NVP( rotationSpeedMiddle ),
+			CEREAL_NVP( rotationSpeedHigh ),
+			CEREAL_NVP( stunFrames ),
+			CEREAL_NVP( stunVelocities )
+		);
+
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+	static constexpr const char *SERIAL_ID = "BossStunParam";
+public:
+	void LoadParameter( bool isBinary = true );
+
+#if USE_IMGUI
+
+	void SaveParameter();
+
+	void UseImGui();
+
+#endif // USE_IMGUI
+};
+
+CEREAL_CLASS_VERSION( StunParam, 0 )
+
 class DestructionParam : public Donya::Singleton<DestructionParam>
 {
 	friend Donya::Singleton<DestructionParam>;
