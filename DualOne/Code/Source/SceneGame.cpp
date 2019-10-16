@@ -217,6 +217,10 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"一般設定" ) )
 			{
+				ImGui::Text( u8"Ｈキー：当たり判定の表示・非表示切り替え" );
+				ImGui::Text( u8"Ｔキー：ImGuiの表示・非表示切り替え" );
+				ImGui::Text( "" );
+
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
