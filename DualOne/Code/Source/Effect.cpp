@@ -31,8 +31,8 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 	}
 
 	// Explosion!
-	Donya::Vector3 provisional = _arg.explosionPos;
-	CreateExplosionLoop(provisional);
+//	Donya::Vector3 provisional = _arg.explosionPos;
+	CreateExplosionLoop(explosionPos);
 
 	CreateBossDamageLoop();
 
@@ -314,8 +314,9 @@ void ParticleManager::CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum)
 	}
 }
 
-void ParticleManager::ReserveExplosionParticles(int _popNum, int _onceNum)
+void ParticleManager::ReserveExplosionParticles(Donya::Vector3 _emitPos, int _popNum, int _onceNum)
 {
+	explosionPos = _emitPos;
 	explosionPopNum = _popNum;
 	popNumOnce = _onceNum;
 	isExplosion = true;
