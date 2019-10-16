@@ -31,10 +31,10 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 	}
 
 	// Explosion!
-//	Donya::Vector3 provisional = _arg.explosionPos;
-	CreateExplosionLoop(explosionPos);
+	Donya::Vector3 provisional = _arg.explosionPos;
+	CreateExplosionLoop(provisional);
 
-	CreateBossDamageLoop();
+	CreateBossDamageLoop(_arg.bossPos);
 
 	JudgeErase();
 
