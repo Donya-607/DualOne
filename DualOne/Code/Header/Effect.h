@@ -86,6 +86,7 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	bool			isExplosion;
 	int				explosionPopNum;
 	int				popNumOnce;
+	Donya::Vector3	explosionPos;
 
 	// BossDamage variable
 	enum DLevel
@@ -98,7 +99,7 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	DLevel			damageLevel;
 
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), explosionPopNum(0), isExplosion(false) , isBossSmoke(false) ,damageLevel(LEVEL1){}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), explosionPopNum(0), explosionPos(0.0f,0.0f,0.0f), isExplosion(false) , isBossSmoke(false) ,damageLevel(LEVEL1){}
 
 public:
 	void Init();
@@ -167,7 +168,7 @@ public:
 	void CreateSmokeOfMissileParticle(Donya::Vector3 _pos);
 	void CreateShockWaveParticle(Donya::Vector3 _pos);
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
-	void ReserveExplosionParticles(int _popNum, int _onceNum);
+	void ReserveExplosionParticles(Donya::Vector3 _emitPos, int _popNum, int _onceNum);
 	void CreateExplosionLoop(Donya::Vector3 _pos);
 	void CreateBossDamageParticle(Donya::Vector3 _pos);
 	void CreateBossDamageLoop(Donya::Vector3 _pos);

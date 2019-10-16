@@ -2681,10 +2681,40 @@ void Boss::UpdateAttacks()
 	UpdateWaves();
 }
 
+int  Boss::GetCurrentInjuryLevel() const
+{
+	// HACK:Doing hard coding... :(
+	constexpr int LEVEL_COUNT = 3;
+	constexpr std::array<int, LEVEL_COUNT> LEVEL_BORDERS
+	{
+		9,
+		6,
+		4
+	};
+
+	int i = 0;
+	for ( ; i < LEVEL_COUNT; ++i )
+	{
+		if ( LEVEL_BORDERS[i] < currentHP )
+		{
+			break;
+		}
+	}
+	return std::min( LEVEL_COUNT - 1, i );
+}
+
 void Boss::ReceiveDamage( int damage )
 {
 	if ( damage <= 0 ) { return; }
 	// else
+
+	const int &maxHP = AttackParam::Get().maxHP;
+	if ( currentHP == maxHP )
+	{
+		ParticleManager::Get().StartBossDamageParticle();
+	}
+
+	const int oldInjuryLevel = GetCurrentInjuryLevel();
 
 	currentHP -= damage;
 	if ( currentHP <= 0 )
@@ -2695,6 +2725,12 @@ void Boss::ReceiveDamage( int damage )
 		return;
 	}
 	// else
+
+	const int currentInjuryLevel = GetCurrentInjuryLevel();
+	if ( oldInjuryLevel != currentInjuryLevel )
+	{
+		ParticleManager::Get().UpdateBossDamageLevel();
+	}
 
 	status			= State::Stun;
 

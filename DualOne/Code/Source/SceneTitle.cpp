@@ -128,7 +128,7 @@ Scene::Result SceneTitle::ReturnResult()
 	if ( Donya::Keyboard::Trigger( VK_BACK ) )
 	{
 		Scene::Result change{};
-		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ME );
+		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ALL );
 		change.sceneType = Scene::Type::Logo;
 		return change;
 	}

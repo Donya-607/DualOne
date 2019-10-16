@@ -18,6 +18,12 @@ void ParticleManager::Init()
 {
 	LoadSprite();
 	timer = 0;
+	isExplosion = false;
+	explosionPopNum = 0;
+	popNumOnce = 0;
+	explosionPos = Donya::Vector3(0.0f, 0.0f, 0.0f);
+	isBossSmoke = false;
+	damageLevel = LEVEL1;
 }
 
 /*-------------------------------------------------*/
@@ -71,6 +77,7 @@ void ParticleManager::Draw(const DirectX::XMFLOAT4X4& matView,
 	DrawSled(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	DrawSmokeOfMissile(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	DrawShockWave(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
+	DrawSmokeOfBoss( matView, matProjection, lightDirection, cameraPosition, isEnableFill );
 	Donya::Blend::Set(Donya::Blend::Mode::ALPHA);
 }
 
@@ -175,8 +182,6 @@ void ParticleManager::DrawSmokeOfMissile
 
 	for (auto& it : missileEffects)
 	{
-		Donya::Blend::Set(Donya::Blend::Mode::ADD);
-
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
@@ -217,8 +222,6 @@ void ParticleManager::DrawSmokeOfBoss
 
 	for (auto& it : bossDamageEffects)
 	{
-		Donya::Blend::Set(Donya::Blend::Mode::ADD);
-
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
@@ -226,9 +229,6 @@ void ParticleManager::DrawSmokeOfBoss
 
 		// WVP  =  WorldMatrix * InverceViewMatrix * SynthesisMatrix of View and Projection
 		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
-		//		constexpr XMFLOAT4 color{ 1.0f,0.3f,0.0f,1.0f };
-		//		constexpr XMFLOAT4 color{ 1.0f,1.0f,1.0f,1.0f };
-		//		constexpr XMFLOAT4 color{ 1.0f,0.8f,0.8f,1.0f };
 		XMFLOAT4 color = it.color;
 
 		sprSmoke->Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
@@ -395,6 +395,7 @@ void ParticleManager::JudgeErase()
 {
 	JudgeEraseSled();
 	JudgeEraseSmokeOfMissile();
+	JudgeEraseSmokeOfBoss();
 	JudgeEraseShockWave();
 }
 
@@ -564,9 +565,17 @@ void Particle::SetSledElements(Donya::Vector3 _emitterPos)
 
 void Particle::SetBossElements(Donya::Vector3 _emitterPos)
 {
-	velocity = setVelocity;
-	angle = Donya::Vector3(0.0f, 0.0f, 0.0f);
-	existanceTime = 0;
+	pos = _emitterPos;
+	velocity = Donya::Vector3
+	(
+		Donya::Random::GenerateFloat(-5.0f, 5.0f),
+		Donya::Random::GenerateFloat(3.0f, 5.0f),
+		-10.0f
+	);
+	scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
+	color = Donya::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	angle = Donya::Vector3(0.0f, 0.0f, Donya::Random::GenerateFloat(0.0f,360.0f));
+	existanceTime = 30;
 }
 
 void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, float _scale)
@@ -635,8 +644,6 @@ void Particle::UpdateOfMissiles()
 	pos += velocity;
 
 	// Update angle
-//	angle.x += Donya::Random::GenerateFloat(0.0f, 1.0f);
-//	angle.y += Donya::Random::GenerateFloat(0.0f, 1.0f);
 	angle.z += Donya::Random::GenerateFloat(50.0f, 100.0f);
 
 	if (angle.x >= 360) angle.x = 0;
@@ -649,6 +656,9 @@ void Particle::UpdateOfMissiles()
 void Particle::UpdateOfBossDamage()
 {
 	--existanceTime;
+
+	pos += velocity;
+	scale.x = scale.y = scale.z = 50.0f * (existanceTime / 30);
 }
 
 void Particle::UpdateOfShockWave()
