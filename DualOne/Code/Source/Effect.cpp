@@ -31,8 +31,10 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 	}
 
 	// Explosion!
-//	Donya::Vector3 provisional = _arg.explosionPos;
-	CreateExplosionLoop(explosionPos);
+	Donya::Vector3 provisional = _arg.explosionPos;
+	CreateExplosionLoop(provisional);
+
+	CreateBossDamageLoop(_arg.bossPos);
 
 	JudgeErase();
 
@@ -191,6 +193,48 @@ void ParticleManager::DrawSmokeOfMissile
 	}
 }
 
+void ParticleManager::DrawSmokeOfBoss
+(
+	const DirectX::XMFLOAT4X4& matView,
+	const DirectX::XMFLOAT4X4& matProjection,
+	const DirectX::XMFLOAT4& lightDirection,
+	const DirectX::XMFLOAT4& cameraPosition,
+	bool isEnableFill
+)
+{
+	using namespace DirectX;
+
+	auto Matrix = [](const XMFLOAT4X4 & matrix)
+	{
+		return XMLoadFloat4x4(&matrix);
+	};
+	auto Float4x4 = [](const XMMATRIX & M)
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4(&matrix, M);
+		return matrix;
+	};
+
+	for (auto& it : bossDamageEffects)
+	{
+		Donya::Blend::Set(Donya::Blend::Mode::ADD);
+
+		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
+		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
+		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
+		XMMATRIX W = S * R * T;
+
+		// WVP  =  WorldMatrix * InverceViewMatrix * SynthesisMatrix of View and Projection
+		XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
+		//		constexpr XMFLOAT4 color{ 1.0f,0.3f,0.0f,1.0f };
+		//		constexpr XMFLOAT4 color{ 1.0f,1.0f,1.0f,1.0f };
+		//		constexpr XMFLOAT4 color{ 1.0f,0.8f,0.8f,1.0f };
+		XMFLOAT4 color = it.color;
+
+		sprSmoke->Render(Float4x4(WVP), Float4x4(W), lightDirection, color);
+	}
+}
+
 void ParticleManager::DrawShockWave
 (
 	const DirectX::XMFLOAT4X4& matView,
@@ -296,6 +340,54 @@ void ParticleManager::CreateExplosionLoop(Donya::Vector3 _pos)
 	}
 }
 
+void ParticleManager::CreateBossDamageLoop(Donya::Vector3 _pos)
+{
+	if (!isBossSmoke)return;
+
+	int generateInterval = 0;
+	switch (damageLevel)
+	{
+	case LEVEL1:
+		generateInterval = 60;	break;
+	case LEVEL2:
+		generateInterval = 30;	break;
+	case LEVEL3:
+		generateInterval = 10;	break;
+	default:
+		break;
+	}
+
+	if (timer % generateInterval == 0)
+	{
+		CreateBossDamageParticle(_pos);
+	}
+}
+
+void ParticleManager::CreateBossDamageParticle(Donya::Vector3 _pos)
+{
+	Particle pre(_pos, Particle::Type::BOSS_DAMAGE_EFFECT);
+	bossDamageEffects.emplace_back(pre);
+}
+
+void ParticleManager::StartBossDamageParticle()
+{
+	isBossSmoke = true;
+	damageLevel = LEVEL1;
+}
+
+void ParticleManager::UpdateBossDamageLevel()
+{
+	switch (damageLevel)
+	{
+	case LEVEL1:
+		damageLevel = LEVEL2;	break;
+	case LEVEL2:
+		damageLevel = LEVEL3;	break;
+	default:
+		damageLevel = LEVEL3;	break;
+	}
+}
+
 /*-------------------------------------------------*/
 //	è¡ãéÇ∑ÇÈÇ©îªíËÇ∑ÇÈä÷êî
 /*-------------------------------------------------*/
@@ -325,6 +417,17 @@ void ParticleManager::JudgeEraseSmokeOfMissile()
 		if (missileEffects[i].existanceTime <= 0)
 		{
 			missileEffects.erase(missileEffects.begin() + i);
+		}
+	}
+}
+
+void ParticleManager::JudgeEraseSmokeOfBoss()
+{
+	for (size_t i = 0; i < bossDamageEffects.size(); i++)
+	{
+		if (bossDamageEffects[i].existanceTime <= 0)
+		{
+			bossDamageEffects.erase(bossDamageEffects.begin() + i);
 		}
 	}
 }
@@ -389,7 +492,7 @@ Particle::Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove, float _
 	{
 	case Particle::NONE:				SetNoneElements(_emitterPos);				break;
 	case Particle::SLED_EFFECT:			SetSledElements(_emitterPos);				break;
-	case Particle::BOSS_EFFECT:			SetBossElements(_emitterPos);				break;
+	case Particle::BOSS_DAMAGE_EFFECT:	SetBossElements(_emitterPos);				break;
 	case Particle::MISSILE_EFFECT:		SetMissileElements(_emitterPos, _noMove, _scale);	break;
 	case Particle::SHOCKWAVE_EFFECT:	SetShockWaveElements(_emitterPos);			break;
 	default:																		break;
@@ -541,6 +644,11 @@ void Particle::UpdateOfMissiles()
 	if (angle.z >= 360)angle.z = 0;
 	// Update scale
 	scale.x = scale.y = scale.x * existanceTime / 15 ;
+}
+
+void Particle::UpdateOfBossDamage()
+{
+	--existanceTime;
 }
 
 void Particle::UpdateOfShockWave()
