@@ -475,22 +475,40 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	DetectCollision();
 
+#if DEBUG_MODE
+
+	if ( Donya::Keyboard::Press( 'A' ) )
+	{
+		bool enableImpact = false;
+		Donya::Vector3 tmpCollidePos{};
+		if ( Donya::Keyboard::Trigger( '1' ) ) { tmpCollidePos.y =  0.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '2' ) ) { tmpCollidePos.y = 20.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '3' ) ) { tmpCollidePos.y = 90.0f; enableImpact = true; }
+
+		if ( enableImpact )
+		{
+			pImpl->boss.ReceiveImpact( tmpCollidePos );
+		}
+	}
+
+#endif // DEBUG_MODE
+
 	return ReturnResult();
 }
 
 void SceneGame::Draw( float elapsedTime )
 {
 	// Draw BackGround.
-#if DEBUG_MODE
-
 	Donya::Sprite::DrawRect
 	(
 		Common::HalfScreenWidthF(),
 		Common::HalfScreenHeightF(),
 		Common::ScreenWidthF(),
 		Common::ScreenHeightF(),
-		Donya::Sprite::Color::TEAL, 1.0f
+		Donya::Sprite::Color::DARK_GRAY, 1.0f
 	);
+
+#if DEBUG_MODE
 
 	Donya::Sprite::DrawString
 	(

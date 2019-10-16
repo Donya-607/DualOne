@@ -467,7 +467,7 @@ public:
 	// int reuseFrame;
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> intervalsPerHP;		// Each attacks per HP(0-based).
 	std::vector<std::array<int, ATTACK_KIND_COUNT>> reuseFramesPerHP;	// Each attacks per HP(0-based).
-	std::vector<std::vector<int>> obstaclePatterns;					// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
+	std::vector<std::vector<int>> obstaclePatterns;						// Array of pattern, store 0(FALSE) or 1(TRUE). e.g. [0:T,F,F], [1:F,T,F], ...
 private:
 	AttackParam();
 public:
@@ -980,6 +980,8 @@ private:
 	void UpdateWaves();
 
 	void UpdateAttacks();
+
+	int  GetCurrentInjuryLevel() const;
 
 	void ReceiveDamage( int damage );
 

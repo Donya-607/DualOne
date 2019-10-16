@@ -77,6 +77,7 @@ void ParticleManager::Draw(const DirectX::XMFLOAT4X4& matView,
 	DrawSled(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	DrawSmokeOfMissile(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
 	DrawShockWave(matView, matProjection, lightDirection, cameraPosition, isEnableFill);
+	DrawSmokeOfBoss( matView, matProjection, lightDirection, cameraPosition, isEnableFill );
 	Donya::Blend::Set(Donya::Blend::Mode::ALPHA);
 }
 
@@ -181,8 +182,6 @@ void ParticleManager::DrawSmokeOfMissile
 
 	for (auto& it : missileEffects)
 	{
-		Donya::Blend::Set(Donya::Blend::Mode::ADD);
-
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
@@ -223,8 +222,6 @@ void ParticleManager::DrawSmokeOfBoss
 
 	for (auto& it : bossDamageEffects)
 	{
-		Donya::Blend::Set(Donya::Blend::Mode::ADD);
-
 		XMMATRIX S = DirectX::XMMatrixScaling(it.scale.x, it.scale.y, it.scale.z);
 		XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(it.angle.x, it.angle.y, DirectX::XMConvertToRadians(it.angle.z));
 		XMMATRIX T = DirectX::XMMatrixTranslation(it.pos.x, it.pos.y, it.pos.z);
@@ -568,6 +565,7 @@ void Particle::SetSledElements(Donya::Vector3 _emitterPos)
 
 void Particle::SetBossElements(Donya::Vector3 _emitterPos)
 {
+	pos = _emitterPos;
 	velocity = Donya::Vector3
 	(
 		Donya::Random::GenerateFloat(-5.0f, 5.0f),
