@@ -362,6 +362,8 @@ void SceneGame::Init()
 
 void SceneGame::Uninit()
 {
+	ParticleManager::Get().Uninit();
+
 	pImpl->player.Uninit();
 
 	for ( auto &it : pImpl->reflectedEntities )
@@ -482,8 +484,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		bool enableImpact = false;
 		Donya::Vector3 tmpCollidePos{};
 		if ( Donya::Keyboard::Trigger( '1' ) ) { tmpCollidePos.y =  0.0f; enableImpact = true; }
-		if ( Donya::Keyboard::Trigger( '2' ) ) { tmpCollidePos.y = 20.0f; enableImpact = true; }
-		if ( Donya::Keyboard::Trigger( '3' ) ) { tmpCollidePos.y = 90.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '2' ) ) { tmpCollidePos.y = 50.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '3' ) ) { tmpCollidePos.y =999.0f; enableImpact = true; }
 
 		if ( enableImpact )
 		{

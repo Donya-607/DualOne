@@ -1622,7 +1622,7 @@ void StunParam::UseImGui()
 	{
 		if ( ImGui::TreeNode( u8"ボスの気絶関連" ) )
 		{
-			ImGui::SliderInt( u8"点滅間隔（フレーム）", &invisibleInterval, 1, 30 );
+			ImGui::SliderInt( u8"点滅間隔（フレーム）", &invisibleCycleFrame, 1, 128 );
 			ImGui::Text( "" );
 
 			ImGui::SliderFloat( u8"回転速度（扇型）", &rotationSpeedMiddle, 0.0f, 32.0f );
@@ -1819,7 +1819,7 @@ Boss::Boss() :
 	status( State::Hidden ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
-	stunTimer(), bounceTimer(), destructTimer(),
+	stunTimer(), stunFrame(), stunLevel(), bounceTimer(), destructTimer(),
 	maxDistanceToTarget(), gravity(), initBouncePower(),
 	hitBox(),
 	bounceAppearTimeRange(), bouncePowerRange(),
@@ -1958,7 +1958,19 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
+	bool isDrawBoss = true;
+	if ( status == State::Stun )
+	{
+		const int &INTERVAL = StunParam::Get().invisibleCycleFrame;
+		int  clampedTimer = stunTimer % ( INTERVAL << 1 );
+		if ( clampedTimer < INTERVAL )
+		{
+			isDrawBoss = false;
+		}
+	}
+
 	// Rendering model parts.
+	if ( isDrawBoss )
 	{
 		// Make matrix that is transform to parent-space for each model.
 		/*
@@ -1994,11 +2006,10 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		XMMATRIX WA = MA * WB; //      MA * MB * MF * W
 		XMMATRIX WR = MR * WA; // MR * MA * MB * MF * W
 
+		constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		auto RenderModelPart = [&]( const ModelPart &mp, const XMMATRIX &W )
 		{
 			XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
-
-			constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 			mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 		};
@@ -2737,44 +2748,56 @@ void Boss::ReceiveDamage( int damage )
 	ResetArmState();
 
 	const auto &ATK_PARAM	= AttackParam::Get();
-	waitReuseFrame	= ATK_PARAM.damageWaitFrame;
-	stunTimer		= ATK_PARAM.stunFrame;
+	waitReuseFrame			= ATK_PARAM.damageWaitFrame;
 
 	const auto &STUN_PARAM = StunParam::Get();
-	int stunLevel = damage - 1;
-	stunLevel = std::min( STUN_PARAM.STUN_LEVEL_COUNT - 1, stunLevel );
+	int level = damage - 1;
+	stunLevel = std::min( STUN_PARAM.STUN_LEVEL_COUNT - 1, level );
 
-	stunTimer		= STUN_PARAM.stunFrames[stunLevel];
+	stunFrame		= STUN_PARAM.stunFrames[stunLevel];
 	stunVelocity	= STUN_PARAM.stunVelocities[stunLevel];
-	invisibleTimer	= 0;
+	stunTimer		= 0;
 
 	Donya::Sound::Play( Music::BossReceiveDamage );
 }
 void Boss::StunUpdate()
 {
-	auto Flashing = [&]()
-	{
-		invisibleTimer++;
-	};
 	auto FanRotation = [&]()
 	{
-		float radian = ToRadian( StunParam::Get().rotationSpeedMiddle );
-		Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
-		basePosture = rotation * basePosture;
+		constexpr float BACK = ToRadian( 180.0f );
+		const float SPEED = ToRadian( StunParam::Get().rotationSpeedMiddle );
+		float radian = sinf( SPEED * stunTimer );
+		basePosture = Donya::Quaternion::Make( Donya::Vector3::Up(), BACK + radian );
 	};
 	auto WholeRotation = [&]()
 	{
-		Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
+		const float radian = ToRadian( StunParam::Get().rotationSpeedHigh );
+		Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Up(), radian );
 		basePosture = rotation * basePosture;
 	};
 
-	stunTimer--;
-	if ( stunTimer <= 0 )
+	auto level = scast<StunParam::StunLevel>( stunLevel );
+	switch ( level )
 	{
-		stunTimer = 0;
+	case StunParam::StunLevel::Low:
+		break;
+	case StunParam::StunLevel::Middle:
+		FanRotation();
+		break;
+	case StunParam::StunLevel::High:
+		WholeRotation();
+		break;
+	default: break;
+	}
+
+	stunTimer++;
+	if ( stunFrame <= stunTimer )
+	{
 		status = State::Normal;
 
-		basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+		stunTimer		= 0;
+
+		basePosture		= Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 	}
 }
 bool Boss::IsStunning() const

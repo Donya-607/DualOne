@@ -595,7 +595,7 @@ public:
 	};
 	static constexpr int STUN_LEVEL_COUNT = scast<int>( StunLevel::COUNT_OF_STUN_LEVEL );
 public:
-	int		invisibleCycleFrame;	// Frame required for invisible-cycle.
+	int		invisibleCycleFrame;	// Frame, use for flashing interval.
 	float	invisibleLowestAlpha;
 	float	rotationSpeedMiddle;	// Use when the level is middle. pass to sinf().
 	float	rotationSpeedHigh;		// Use when the level is high.
@@ -791,6 +791,8 @@ private:
 	int									attackTimer;
 	int									waitReuseFrame;	// Wait frame of until can reuse.
 	int									stunTimer;
+	int									stunFrame;
+	int									stunLevel;
 	int									bounceTimer;
 	int									destructTimer;
 

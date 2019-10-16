@@ -86,7 +86,13 @@ void ParticleManager::Draw(const DirectX::XMFLOAT4X4& matView,
 /*-------------------------------------------------*/
 void ParticleManager::Uninit()
 {
+	sprSled.reset( nullptr );
+	sprSmoke.reset( nullptr );
 
+	std::vector<Particle>().swap( sledEffects );
+	std::vector<Particle>().swap( missileEffects );
+	std::vector<Particle>().swap( bossDamageEffects );
+	std::vector<Particle>().swap( shockWaveEffects );
 }
 
 /*-------------------------------------------------*/
