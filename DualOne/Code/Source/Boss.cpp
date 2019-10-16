@@ -1582,7 +1582,8 @@ void CollisionDetail::UseImGui()
 #pragma region StunParam
 
 StunParam::StunParam() :
-	invisibleInterval(),
+	invisibleCycleFrame(),
+	invisibleLowestAlpha(),
 	rotationSpeedMiddle(),
 	rotationSpeedHigh(),
 	stunFrames(),
@@ -1866,6 +1867,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 
 	AttackParam::Get().LoadParameter();
 	CollisionDetail::Get().LoadParameter();
+	StunParam::Get().LoadParameter();
 	DestructionParam::Get().LoadParameter();
 
 	currentHP = AttackParam::Get().maxHP;
@@ -1924,6 +1926,7 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
 	CollisionDetail::Get().UseImGui();
+	StunParam::Get().UseImGui();
 	DestructionParam::Get().UseImGui();
 
 #endif // USE_IMGUI
@@ -2697,17 +2700,37 @@ void Boss::ReceiveDamage( int damage )
 
 	ResetArmState();
 
-	auto &PARAM		= AttackParam::Get();
-	waitReuseFrame	= PARAM.damageWaitFrame;
-	stunTimer		= PARAM.stunFrame;
+	const auto &ATK_PARAM	= AttackParam::Get();
+	waitReuseFrame	= ATK_PARAM.damageWaitFrame;
+	stunTimer		= ATK_PARAM.stunFrame;
+
+	const auto &STUN_PARAM = StunParam::Get();
+	int stunLevel = damage - 1;
+	stunLevel = std::min( STUN_PARAM.STUN_LEVEL_COUNT - 1, stunLevel );
+
+	stunTimer		= STUN_PARAM.stunFrames[stunLevel];
+	stunVelocity	= STUN_PARAM.stunVelocities[stunLevel];
+	invisibleTimer	= 0;
 
 	Donya::Sound::Play( Music::BossReceiveDamage );
 }
-
 void Boss::StunUpdate()
 {
-	Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
-	basePosture = rotation * basePosture;
+	auto Flashing = [&]()
+	{
+		invisibleTimer++;
+	};
+	auto FanRotation = [&]()
+	{
+		float radian = ToRadian( StunParam::Get().rotationSpeedMiddle );
+		Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
+		basePosture = rotation * basePosture;
+	};
+	auto WholeRotation = [&]()
+	{
+		Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
+		basePosture = rotation * basePosture;
+	};
 
 	stunTimer--;
 	if ( stunTimer <= 0 )

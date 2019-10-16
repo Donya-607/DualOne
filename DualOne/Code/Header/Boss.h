@@ -595,9 +595,10 @@ public:
 	};
 	static constexpr int STUN_LEVEL_COUNT = scast<int>( StunLevel::COUNT_OF_STUN_LEVEL );
 public:
-	int					invisibleInterval;		// Frame.
-	float				rotationSpeedMiddle;	// Use when the level is middle. pass to sinf().
-	float				rotationSpeedHigh;		// Use when the level is high.
+	int		invisibleCycleFrame;	// Frame required for invisible-cycle.
+	float	invisibleLowestAlpha;
+	float	rotationSpeedMiddle;	// Use when the level is middle. pass to sinf().
+	float	rotationSpeedHigh;		// Use when the level is high.
 	std::array<int, STUN_LEVEL_COUNT>				stunFrames;
 	std::array<Donya::Vector3, STUN_LEVEL_COUNT>	stunVelocities;
 private:
@@ -611,7 +612,8 @@ private:
 	{
 		archive
 		(
-			CEREAL_NVP( invisibleInterval ),
+			CEREAL_NVP( invisibleCycleFrame ),
+			CEREAL_NVP( invisibleLowestAlpha ),
 			CEREAL_NVP( rotationSpeedMiddle ),
 			CEREAL_NVP( rotationSpeedHigh ),
 			CEREAL_NVP( stunFrames ),
