@@ -456,7 +456,13 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			pImpl->reflectedEntities.end(),
 			[]( ReflectedEntity &element )
 			{
-				return element.ShouldErase();
+				if ( element.ShouldErase() )
+				{
+					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 1, 1 );
+					return true;
+				}
+				// else
+				return false;
 			}
 		);
 
@@ -491,6 +497,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 		{
 			pImpl->boss.ReceiveImpact( tmpCollidePos );
 		}
+	}
+	if ( Donya::Keyboard::Trigger( 'F' ) )
+	{
+		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1, 1 );
 	}
 
 #endif // DEBUG_MODE
@@ -737,6 +747,8 @@ void SceneGame::DetectCollision()
 				it.HitToOther();
 
 				HitToPlayer( /* canReflection = */ true );
+
+				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 1, 1 );
 			}
 		}
 	}
