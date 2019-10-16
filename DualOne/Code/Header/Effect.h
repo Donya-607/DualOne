@@ -11,7 +11,6 @@
 struct ParticleEmitterPosition
 {
 	Donya::Vector3 playerPos;
-	Donya::Vector3 explosionPos;
 };
 
 struct Particle
@@ -81,9 +80,10 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	bool			isExplosion;
 	int				explosionPopNum;
 	int				popNumOnce;
+	Donya::Vector3	explosionPos;
 
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), isExplosion(false) {}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), isExplosion(false), explosionPos(0.0f,0.0f,0.0f){}
 
 public:
 	void Init();
@@ -143,7 +143,7 @@ public:
 	void CreateSmokeOfMissileParticle(Donya::Vector3 _pos);
 	void CreateShockWaveParticle(Donya::Vector3 _pos);
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
-	void ReserveExplosionParticles(int _popNum, int _onceNum);
+	void ReserveExplosionParticles(Donya::Vector3 _emitPos, int _popNum, int _onceNum);
 	void CreateExplosionLoop(Donya::Vector3 _pos);
 
 	/*---------------------*/
