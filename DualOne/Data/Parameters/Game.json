@@ -4,18 +4,18 @@
         "lightDirection": {
             "cereal_class_version": 0,
             "x": 0.0,
-            "y": 0.0,
+            "y": -0.5,
             "z": 1.0
         },
         "cameraDistance": {
             "x": 0.0,
-            "y": 121.98699951171875,
-            "z": -256.0
+            "y": 60.0,
+            "z": -170.0
         },
         "cameraFocus": {
             "x": 0.0,
-            "y": 0.0,
-            "z": 150.0
+            "y": 4.0,
+            "z": 115.1240005493164
         },
         "initDistanceOfBoss": 700.0,
         "lanePositions": [

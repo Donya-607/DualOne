@@ -1,26 +1,27 @@
 {
     "Beam": {
-        "cereal_class_version": 1,
-        "afterWaitFrame": 1,
-        "angleIncreaseSpeed": 0.008333333767950535,
+        "cereal_class_version": 2,
+        "afterWaitFrame": 120,
+        "angleIncreaseSpeed": 0.008474576286971569,
         "beamAngleBegin": 270.0,
-        "beamAngleEnd": 179.0,
-        "beamLength": 900.0,
+        "beamAngleEnd": 188.0,
+        "beamLength": 800.0,
         "hitBox": {
             "cereal_class_version": 0,
             "pos": {
                 "cereal_class_version": 0,
                 "x": 0.0,
                 "y": 0.0,
-                "z": 0.0
+                "z": 600.0
             },
             "size": {
                 "x": 8.0,
-                "y": 1080.0,
-                "z": 8.0
+                "y": 60.0,
+                "z": 600.0
             },
             "exist": true
         },
-        "easingKind": 10
+        "easingKind": 6,
+        "easingType": 0
     }
 }
