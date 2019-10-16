@@ -2,6 +2,7 @@
 
 #include <algorithm>	// Use std::min().
 
+#include "Donya/Blend.h"
 #include "Donya/Constant.h"
 #include "Donya/Loader.h"
 #include "Donya/Random.h"
@@ -448,10 +449,6 @@ void Player::Uninit()
 	StopLoopingSounds();
 }
 
-#if DEBUG_MODE
-#include "Donya/Keyboard.h"
-#endif // DEBUG_MODE
-
 void Player::Update( Input input )
 {
 #if USE_IMGUI
@@ -491,6 +488,11 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 
 	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
+	bool enableAddBlend = IsFullCharged();
+	if ( enableAddBlend )
+	{
+		Donya::Blend::Set( Donya::Blend::Mode::ADD );
+	}
 	pModel->Render
 	(
 		Float4x4( WVP ),
@@ -499,6 +501,10 @@ void Player::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4
 		color,
 		cameraPos
 	);
+	if ( enableAddBlend )
+	{
+		Donya::Blend::Set( Donya::Blend::Mode::ALPHA );
+	}
 
 #if DEBUG_MODE
 
