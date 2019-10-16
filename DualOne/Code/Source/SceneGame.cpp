@@ -463,6 +463,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	{
 		ParticleEmitterPosition arg;
 		arg.playerPos = pImpl->player.GetPos();
+		arg.bossPos = pImpl->boss.GetPos();
 		ParticleManager::Get().Update( arg );
 	}
 

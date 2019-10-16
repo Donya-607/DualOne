@@ -12,6 +12,7 @@ struct ParticleEmitterPosition
 {
 	Donya::Vector3 playerPos;
 	Donya::Vector3 explosionPos;
+	Donya::Vector3 bossPos;
 };
 
 struct Particle
@@ -21,7 +22,7 @@ struct Particle
 	{
 		NONE,
 		SLED_EFFECT,
-		BOSS_EFFECT,
+		BOSS_DAMAGE_EFFECT,
 		MISSILE_EFFECT,
 		SHOCKWAVE_EFFECT,
 	};
@@ -49,6 +50,7 @@ struct Particle
 	// Update fanction
 	void UpdateOfSleds();
 	void UpdateOfMissiles();
+	void UpdateOfBossDamage();
 	void UpdateOfShockWave();
 
 	//	Set Parameter fanction
@@ -75,15 +77,28 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	/*---------------------------------*/
 	std::vector<Particle> sledEffects;
 	std::vector<Particle> missileEffects;
+	std::vector<Particle> bossDamageEffects;
 	std::vector<Particle> shockWaveEffects;
 
 	int				timer;
+
+	// Explosion variable 
 	bool			isExplosion;
 	int				explosionPopNum;
 	int				popNumOnce;
 
+	// BossDamage variable
+	enum DLevel
+	{
+		LEVEL1,
+		LEVEL2,
+		LEVEL3,
+	};
+	bool			isBossSmoke;
+	DLevel			damageLevel;
+
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), isExplosion(false) {}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), explosionPopNum(0), isExplosion(false) , isBossSmoke(false) ,damageLevel(LEVEL1){}
 
 public:
 	void Init();
@@ -124,6 +139,15 @@ public:
 		bool isEnableFill = true
 	);
 
+	void DrawSmokeOfBoss
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
 	void DrawShockWave
 	(
 		const DirectX::XMFLOAT4X4& matView,
@@ -145,6 +169,10 @@ public:
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
 	void ReserveExplosionParticles(int _popNum, int _onceNum);
 	void CreateExplosionLoop(Donya::Vector3 _pos);
+	void CreateBossDamageParticle(Donya::Vector3 _pos);
+	void CreateBossDamageLoop(Donya::Vector3 _pos);
+	void StartBossDamageParticle();
+	void UpdateBossDamageLevel();
 
 	/*---------------------*/
 	//	Judge erase fanction
@@ -153,6 +181,7 @@ private:
 	void JudgeErase();
 	void JudgeEraseSled();
 	void JudgeEraseSmokeOfMissile();
+	void JudgeEraseSmokeOfBoss();
 	void JudgeEraseShockWave();
 
 #if USE_IMGUI
