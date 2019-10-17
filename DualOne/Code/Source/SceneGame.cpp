@@ -112,6 +112,7 @@ public:
 	std::vector<Donya::Vector3>		lanePositions;	// Only use when initialize.
 	std::vector<ReflectedEntity>	reflectedEntities;
 
+	bool	prepareStart;	// True when title-mode, and the player charging.
 	bool	wasTouched;		// True when detect the collision between player and boss.
 	bool	wasRetried;		// True if initialized from retry.
 public:
@@ -130,7 +131,7 @@ public:
 		titleCameraDistance( 0.0f, 1.0f, -1.0f ), titleCameraFocus( 0.0f, -0.5f, 1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		lanePositions(), reflectedEntities(),
-		wasTouched( false ), wasRetried( false )
+		prepareStart( false ), wasTouched( false ), wasRetried( false )
 	{
 		constexpr unsigned int DEFAULT_LANE_COUNT = 3;
 		lanePositions.resize( DEFAULT_LANE_COUNT );
@@ -414,21 +415,37 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 		return input;
 	};
+	Player::Input playerInput{};
 
 	if ( ( IsDecisionReleased() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
 	{
-		// Charging player for reflect a missile, must do this before change the status.
-		while ( !pImpl->player.IsFullCharged() )
-		{
-			pImpl->player.Update( MakePlayerInput( /* doChargeForce = */ true ) );
-		}
+		pImpl->prepareStart = true;
+	}
 
-		pImpl->status = Impl::State::Game;
-		pImpl->boss.StartUp( pImpl->player.GetCurrentLane(), pImpl->player.GetPos().z + pImpl->initDistanceOfBoss );
+	if ( pImpl->prepareStart )
+	{
+		// Charging player for reflect a missile, must do this before change the status.
+		if ( !pImpl->player.IsFullCharged() )
+		{
+			playerInput = MakePlayerInput( /* doChargeForce = */ true );
+		}
+		else
+		{
+			pImpl->status		= Impl::State::Game;
+			pImpl->prepareStart	= false;
+
+			pImpl->boss.StartUp
+			(
+				pImpl->player.GetCurrentLane(),
+				pImpl->player.GetPos().z + pImpl->initDistanceOfBoss
+			);
+		}
 	}
 
 	if ( pImpl->status != Impl::State::Title )
 	{
+		playerInput = MakePlayerInput();
+
 		pImpl->currentTime.Update();
 	}
 
@@ -440,8 +457,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	pImpl->ground.Update( pImpl->player.GetPos() );
 
-	pImpl->player.Update( MakePlayerInput() );
-
+	pImpl->player.Update( playerInput );
 
 	// Update "pImpl->reflectedEntities".
 	{
