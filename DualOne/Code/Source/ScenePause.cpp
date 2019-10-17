@@ -253,7 +253,7 @@ void ScenePause::UseImGui()
 			ShowVec2( u8"再開・描画位置",				&uiResumePos	);
 			ShowVec2( u8"タイトルへ戻る・描画位置",	&uiBackPos		);
 			ShowVec2( u8"左矢印・描画位置",			&uiArrowPosL	);
-			ShowVec2( u8"右矢印位置",				&uiArrowPosR	);
+			ShowVec2( u8"右矢印・描画位置",			&uiArrowPosR	);
 
 			if ( ImGui::TreeNode( u8"ファイル" ) )
 			{

@@ -17,6 +17,7 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "Sentence.h"
 #include "StorageForScene.h"
 #include "Timer.h"
 
@@ -33,12 +34,19 @@ public:
 		ReTry,
 	};
 public:
-	size_t			sprFont;
 	Choice			choice;
+
+	Donya::Vector2	uiOverPos;
+	Donya::Vector2	uiBackPos;
+	Donya::Vector2	uiRetryPos;
+	Donya::Vector2	uiArrowPosL;
+	Donya::Vector2	uiArrowPosR;
+
 	Donya::XInput	controller;
 public:
-	Impl() : sprFont( NULL ),
+	Impl() :
 		choice( Nil ),
+		uiOverPos(), uiBackPos(), uiRetryPos(),
 		controller( Donya::XInput::PadNumber::PAD_1 )
 	{}
 private:
@@ -46,10 +54,14 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, const std::uint32_t version )
 	{
-		/*archive
+		archive
 		(
-			CEREAL_NVP( x ),
-		);*/
+			CEREAL_NVP( uiOverPos ),
+			CEREAL_NVP( uiBackPos ),
+			CEREAL_NVP( uiRetryPos ),
+			CEREAL_NVP( uiArrowPosL ),
+			CEREAL_NVP( uiArrowPosR )
+		);
 
 		if ( 1 <= version )
 		{
@@ -89,6 +101,19 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"ゲームオーバー画面" ) )
 			{
+				auto ShowVec2 = []( const std::string &caption, Donya::Vector2 *pV )
+				{
+					if ( !pV ) { return; }
+					// else
+					ImGui::SliderFloat2( caption.c_str(), &pV->x, 0.0f, 1920.0f );
+				};
+
+				ShowVec2( u8"ゲームオーバー・描画位置",	&uiOverPos		);
+				ShowVec2( u8"リトライ・描画位置",			&uiRetryPos		);
+				ShowVec2( u8"タイトルへ戻る・描画位置",	&uiBackPos		);
+				ShowVec2( u8"左矢印・描画位置",			&uiArrowPosL	);
+				ShowVec2( u8"右矢印・描画位置",			&uiArrowPosR	);
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -131,8 +156,6 @@ SceneOver::~SceneOver()
 void SceneOver::Init()
 {
 	Donya::Sound::Play( Music::BGM_Over );
-
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 }
 
 void SceneOver::Uninit()
@@ -142,6 +165,12 @@ void SceneOver::Uninit()
 
 Scene::Result SceneOver::Update( float elapsedTime )
 {
+#if USE_IMGUI
+
+	pImpl->UseImGui();
+
+#endif // USE_IMGUI
+
 	pImpl->controller.Update();
 
 	UpdateChooseItem();
@@ -171,37 +200,20 @@ void SceneOver::Draw( float elapsedTime )
 		Donya::Sprite::Color::BLACK, 0.6f
 	);
 
-	Donya::Sprite::DrawStringExt
-	(
-		pImpl->sprFont,
-		"Over",
-		Common::HalfScreenWidthF(),
-		64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f,
-		2.0f, 2.0f
-	);
-
-	auto GetString = []( Impl::Choice choice )->std::string
+	const auto &GET = Sentence::Get();
+	switch ( pImpl->choice )
 	{
-		switch ( choice )
-		{
-		case Impl::Choice::Nil:			return "<Choose by arrow>";	break;
-		case Impl::Choice::BackToTitle:	return "  Back to Title >";	break;
-		case Impl::Choice::ReTry:		return "< Retry";			break;
-		default: break;
-		}
-		return "";
-	};
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		GetString( pImpl->choice ).c_str(),
-		Common::HalfScreenWidthF(),
-		128.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+	case Impl::BackToTitle:
+		GET.Draw( Sentence::Kind::BackToTitle, pImpl->uiBackPos );
+		break;
+	case Impl::ReTry:
+		GET.Draw( Sentence::Kind::Retry, pImpl->uiRetryPos );
+		break;
+	default: break;
+	}
+	GET.Draw( Sentence::Kind::GAME_OVER, pImpl->uiOverPos );
+	if ( pImpl->choice != Impl::Choice::BackToTitle	) { GET.Draw( Sentence::Kind::LeftArrow,  pImpl->uiArrowPosL ); }
+	if ( pImpl->choice != Impl::Choice::ReTry		) { GET.Draw( Sentence::Kind::RightArrow, pImpl->uiArrowPosR ); }
 }
 
 void SceneOver::UpdateChooseItem()

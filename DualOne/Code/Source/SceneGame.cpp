@@ -393,8 +393,6 @@ SceneGame::~SceneGame()
 
 void SceneGame::Init()
 {
-	Donya::Sound::Play( Music::BGM_Game );
-
 	pImpl->LoadParameter();
 
 	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
@@ -512,6 +510,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 				pImpl->player.GetCurrentLane(),
 				pImpl->player.GetPos().z + pImpl->initDistanceOfBoss
 			);
+
+			Donya::Sound::Play( Music::BGM_Game );
 		}
 	}
 
