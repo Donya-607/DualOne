@@ -649,14 +649,17 @@ void SceneGame::Draw( float elapsedTime )
 
 		pImpl->sprUsage.Draw();
 
-		Donya::Sprite::DrawString
-		(
-			pImpl->sprFont,
-			pImpl->currentTime.ToStr(),
-			32.0f, 64.0f,
-			64.0f, 64.0f,
-			64.0f, 64.0f
-		);
+		if ( pImpl->status != Impl::State::Title )
+		{
+			Donya::Sprite::DrawString
+			(
+				pImpl->sprFont,
+				pImpl->currentTime.ToStr(),
+				32.0f, 64.0f,
+				64.0f, 64.0f,
+				64.0f, 64.0f
+			);
+		}
 	}
 
 	using namespace DirectX;
