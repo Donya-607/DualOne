@@ -3,9 +3,9 @@
         "cereal_class_version": 1,
         "bestTime": {
             "cereal_class_version": 0,
-            "current": 1,
-            "second": 5,
-            "minute": 0
+            "current": 59,
+            "second": 59,
+            "minute": 99
         },
         "uiClearPos": {
             "cereal_class_version": 0,
