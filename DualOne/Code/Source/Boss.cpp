@@ -2902,6 +2902,7 @@ void Boss::UseImGui()
 		{
 			if ( ImGui::TreeNode( u8"パラメータ表示" ) )
 			{
+				ImGui::Text( u8"現在ＨＰ[%d]", currentHP );
 				ImGui::Text( u8"位置[X:%5.3f][Y:%5.3f][Z:%5.3f]", pos.x, pos.y, pos.z );
 				ImGui::Text( u8"速度[X:%5.3f][Y:%5.3f][Z:%5.3f]", velocity.x, velocity.y, velocity.z );
 
