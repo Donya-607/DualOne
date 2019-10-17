@@ -1,7 +1,7 @@
 {
     "BossAttackParameter": {
         "cereal_class_version": 3,
-        "maxHP": 15,
+        "maxHP": 17,
         "counterMax": 60,
         "untilAttackFrame": 240,
         "resetWaitFrame": 10,
@@ -62,7 +62,7 @@
             },
             {
                 "value0": 20,
-                "value1": 12,
+                "value1": 10,
                 "value2": 30,
                 "value3": 30
             },
@@ -95,6 +95,18 @@
                 "value1": 12,
                 "value2": 70,
                 "value3": 15
+            },
+            {
+                "value0": 70,
+                "value1": 70,
+                "value2": 70,
+                "value3": 70
+            },
+            {
+                "value0": 70,
+                "value1": 70,
+                "value2": 70,
+                "value3": 70
             }
         ],
         "reuseFramesPerHP": [
@@ -102,13 +114,7 @@
                 "value0": 180,
                 "value1": 30,
                 "value2": 120,
-                "value3": 60
-            },
-            {
-                "value0": 180,
-                "value1": 30,
-                "value2": 120,
-                "value3": 60
+                "value3": 80
             },
             {
                 "value0": 180,
@@ -125,7 +131,13 @@
             {
                 "value0": 180,
                 "value1": 30,
-                "value2": 180,
+                "value2": 120,
+                "value3": 80
+            },
+            {
+                "value0": 180,
+                "value1": 30,
+                "value2": 120,
                 "value3": 80
             },
             {
@@ -161,32 +173,44 @@
             {
                 "value0": 180,
                 "value1": 60,
-                "value2": 240,
+                "value2": 0,
                 "value3": 90
             },
             {
                 "value0": 180,
                 "value1": 60,
-                "value2": 240,
+                "value2": 0,
                 "value3": 90
             },
             {
                 "value0": 180,
                 "value1": 60,
-                "value2": 240,
+                "value2": 0,
                 "value3": 90
             },
             {
                 "value0": 180,
                 "value1": 60,
-                "value2": 240,
+                "value2": 0,
                 "value3": 90
             },
             {
                 "value0": 180,
                 "value1": 60,
-                "value2": 240,
+                "value2": 0,
                 "value3": 90
+            },
+            {
+                "value0": 180,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
+            },
+            {
+                "value0": 180,
+                "value1": 0,
+                "value2": 0,
+                "value3": 0
             }
         ],
         "obstaclePatterns": [
