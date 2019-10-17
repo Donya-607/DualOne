@@ -1,0 +1,30 @@
+{
+    "Pause": {
+        "cereal_class_version": 0,
+        "uiPausePos": {
+            "cereal_class_version": 0,
+            "x": 960.0,
+            "y": 84.52799987792969
+        },
+        "uiRetryPos": {
+            "x": 960.0,
+            "y": 333.0
+        },
+        "uiResumePos": {
+            "x": 960.0,
+            "y": 333.0
+        },
+        "uiBackPos": {
+            "x": 960.0,
+            "y": 333.0
+        },
+        "uiArrowPosL": {
+            "x": 724.5280151367188,
+            "y": 333.0
+        },
+        "uiArrowPosR": {
+            "x": 1225.6600341796876,
+            "y": 333.0
+        }
+    }
+}

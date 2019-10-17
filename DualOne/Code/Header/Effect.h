@@ -83,6 +83,7 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 
 	// Explosion variable 
 	bool			isExplosion;
+	bool			isSlide;
 	int				explosionPopNum;
 	int				popNumOnce;
 	Donya::Vector3	explosionPos;
@@ -98,7 +99,7 @@ class ParticleManager : public Donya::Singleton<ParticleManager>
 	DLevel			damageLevel;
 
 private:
-	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), explosionPopNum(0), explosionPos(0.0f,0.0f,0.0f), isExplosion(false) , isBossSmoke(false) ,damageLevel(LEVEL1){}
+	ParticleManager() :sprSled(nullptr), sprSmoke(nullptr), sledEffects(), missileEffects(), timer(0), popNumOnce(0), explosionPopNum(0), explosionPos(0.0f,0.0f,0.0f), isExplosion(false) , isBossSmoke(false) , isSlide(false), damageLevel(LEVEL1){}
 
 public:
 	void Init();
@@ -158,7 +159,13 @@ public:
 	);
 
 
-
+	/*---------------------*/
+	//	Setter
+	/*---------------------*/
+	void SetIsSlide(bool _flag)
+	{
+		isSlide = _flag;
+	}
 
 	/*---------------------*/
 	//	Create fanction

@@ -1,6 +1,6 @@
 {
     "Game": {
-        "cereal_class_version": 4,
+        "cereal_class_version": 5,
         "lightDirection": {
             "cereal_class_version": 0,
             "x": 0.0,
@@ -47,6 +47,20 @@
             "x": 0.0,
             "y": 0.0,
             "z": 0.0
+        },
+        "sprUsage": {
+            "cereal_class_version": 0,
+            "degree": 0.0,
+            "alpha": 1.0,
+            "ssPos": {
+                "cereal_class_version": 0,
+                "x": 260.0,
+                "y": 450.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0
+            }
         }
     }
 }

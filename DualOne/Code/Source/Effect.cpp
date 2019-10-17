@@ -19,6 +19,7 @@ void ParticleManager::Init()
 	LoadSprite();
 	timer = 0;
 	isExplosion = false;
+	isSlide = true;
 	explosionPopNum = 0;
 	popNumOnce = 0;
 	explosionPos = Donya::Vector3(0.0f, 0.0f, 0.0f);
@@ -32,9 +33,12 @@ void ParticleManager::Init()
 void ParticleManager::Update(ParticleEmitterPosition _arg)
 {
 	++timer;
-	for (int i = 0; i < 3; i++)
+	if (isSlide)
 	{
-		CreateSledParticle(_arg.playerPos);
+		for (int i = 0; i < 3; i++)
+		{
+			CreateSledParticle(_arg.playerPos);
+		}
 	}
 
 	// Explosion!
@@ -359,11 +363,11 @@ void ParticleManager::CreateBossDamageLoop(Donya::Vector3 _pos)
 	switch (damageLevel)
 	{
 	case LEVEL1:
-		generateInterval = 10;	break;
+		generateInterval = 6;	break;
 	case LEVEL2:
-		generateInterval = 5;	break;
-	case LEVEL3:
 		generateInterval = 2;	break;
+	case LEVEL3:
+		generateInterval = 1;	break;
 	default:
 		break;
 	}
