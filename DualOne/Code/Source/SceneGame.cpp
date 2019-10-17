@@ -76,6 +76,7 @@ static std::string EasingTypeToStr( int easingType )
 	return "Error Type !";
 }
 
+// TODO:Swap this class to "UIObject" at UI.h.
 struct Usage
 {
 public:
@@ -894,7 +895,8 @@ Scene::Result SceneGame::ReturnResult()
 	// else
 
 	bool requestPause = pImpl->controller.Trigger( Donya::Gamepad::Button::START ) || pImpl->controller.Trigger( Donya::Gamepad::Button::SELECT ) || Donya::Keyboard::Trigger( 'P' );
-	if ( requestPause && IsDoneCameraMove() && !Fader::Get().IsExist() )
+	bool allowPause   = ( pImpl->status == Impl::State::Game && !Fader::Get().IsExist() );
+	if ( requestPause && allowPause )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 

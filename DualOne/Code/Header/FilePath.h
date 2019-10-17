@@ -11,6 +11,7 @@ enum class SpriteAttribute
 	FMODLogoBlack,
 	FMODLogoWhite,
 	Font,
+	TitleLogo,
 	Usage,
 	Sentences,
 	Warning,

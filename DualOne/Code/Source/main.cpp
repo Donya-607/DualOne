@@ -29,7 +29,7 @@ INT WINAPI wWinMain( _In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _
 
 	srand( scast<unsigned int>( time( NULL ) ) );
 
-	std::string title{ "Lagerman" };
+	std::string title{ "ê·éRëÂíEèo" };
 	Donya::Init( cmdShow, Common::ScreenWidth(), Common::ScreenHeight(), title.c_str() );
 
 	Donya::SetWindowIcon( instance, IDI_ICON );

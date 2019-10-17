@@ -158,8 +158,10 @@
     <ClInclude Include="Code\Header\SceneOver.h" />
     <ClInclude Include="Code\Header\ScenePause.h" />
     <ClInclude Include="Code\Header\SceneTitle.h" />
+    <ClInclude Include="Code\Header\Sentence.h" />
     <ClInclude Include="Code\Header\StorageForScene.h" />
     <ClInclude Include="Code\Header\Timer.h" />
+    <ClInclude Include="Code\Header\UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -182,8 +184,10 @@
     <ClCompile Include="Code\Source\SceneOver.cpp" />
     <ClCompile Include="Code\Source\ScenePause.cpp" />
     <ClCompile Include="Code\Source\SceneTitle.cpp" />
+    <ClCompile Include="Code\Source\Sentence.cpp" />
     <ClCompile Include="Code\Source\StorageForScene.cpp" />
     <ClCompile Include="Code\Source\Timer.cpp" />
+    <ClCompile Include="Code\Source\UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />

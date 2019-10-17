@@ -26,6 +26,8 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 		return L"./Data/Images/Rights/FMOD Logo White - Black Background.png";	// break;
 	case SpriteAttribute::Font:
 		return L"./Data/Images/Font/Font.png";		// break;
+	case SpriteAttribute::TitleLogo:
+		return L"./Data/Images/TitleLogo/Logo.png";	// break;
 	case SpriteAttribute::Usage:
 		return L"./Data/Images/UI/Usage.png";		// break;
 	case SpriteAttribute::Sentences:

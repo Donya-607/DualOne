@@ -26,6 +26,8 @@
     <ClInclude Include="Code\Header\StorageForScene.h" />
     <ClInclude Include="Code\Header\Timer.h" />
     <ClInclude Include="Code\Header\Effect.h" />
+    <ClInclude Include="Code\Header\Sentence.h" />
+    <ClInclude Include="Code\Header\UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Code\Header\Icon.rc" />
@@ -54,6 +56,8 @@
     <ClCompile Include="Code\Source\StorageForScene.cpp" />
     <ClCompile Include="Code\Source\Timer.cpp" />
     <ClCompile Include="Code\Source\Effect.cpp" />
+    <ClCompile Include="Code\Source\Sentence.cpp" />
+    <ClCompile Include="Code\Source\UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Object">

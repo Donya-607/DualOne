@@ -6,8 +6,9 @@
 
 class SceneTitle : public Scene
 {
-private:
+public:
 	class Impl;
+private:
 	std::unique_ptr<SceneTitle::Impl> pImpl;
 public:
 	SceneTitle();
