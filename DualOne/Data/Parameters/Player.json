@@ -14,7 +14,7 @@
                 "y": 8.0,
                 "z": 13.253999710083008
             },
-            "exist": false
+            "exist": true
         },
         "changeLaneSpeed": 0.125,
         "chargeSpeed": 0.05000000074505806,

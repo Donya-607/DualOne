@@ -130,14 +130,21 @@ public:
 	{
 		Title,	// Showing the title-scene at another scene.
 		Game,	// Playing main scene.
+		Over,
 	};
 public:
 	State	status;
 
 	int		cameraEaseKind;			// Linking to Donya::Ease::Kind.
 	int		cameraEaseType;			// Linking to Donya::Ease::Type.
-	float	cameraLerpFactor;		// 0.0f ~ 1.0f.
+	int		overCameraEaseKind;		// Linking to Donya::Ease::Kind.
+	int		overCameraEaseType;		// Linking to Donya::Ease::Type.
 	float	cameraLerpSpeed;		// 1.0f / (whole-frame).
+	float	overCameraLerpSpeed;	// 1.0f / (whole-frame).
+
+	float	cameraLerpFactor;		// 0.0f ~ 1.0f.
+	float	overCameraLerpFactor;	// 0.0f ~ 1.0f.
+
 	float	initDistanceOfBoss;		// Distance from origin.
 	size_t	sprFont;
 
@@ -155,6 +162,7 @@ public:
 	Donya::Vector3	cameraFocus;		// Use at game-scene. Relative position from the camera.
 	Donya::Vector3	titleCameraDistance;// Use at title-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3	titleCameraFocus;	// Use at title-scene. Relative position from the camera.
+	Donya::Vector3	overCameraDistance;	// Use at game-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
 
 	Donya::XInput	controller;
 
@@ -167,7 +175,8 @@ public:
 public:
 	Impl() :
 		status( State::Title ),
-		cameraEaseKind(), cameraEaseType(), cameraLerpFactor(), cameraLerpSpeed(),
+		cameraEaseKind(), cameraEaseType(), overCameraEaseKind(), overCameraEaseType(),
+		cameraLerpSpeed(), overCameraLerpSpeed(), cameraLerpFactor(), overCameraLerpFactor(),
 		initDistanceOfBoss(),
 		sprFont( NULL ),
 		camera(),
@@ -178,6 +187,7 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		titleCameraDistance( 0.0f, 1.0f, -1.0f ), titleCameraFocus( 0.0f, -0.5f, 1.0f ),
+		overCameraDistance( 0.0f, 1.0f, -1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		lanePositions(), reflectedEntities(),
 		prepareStart( false ), wasTouched( false ), wasRetried( false )
@@ -235,6 +245,16 @@ private:
 		}
 		if ( 6 <= version )
 		{
+			archive
+			(
+				CEREAL_NVP( overCameraEaseKind ),
+				CEREAL_NVP( overCameraEaseType ),
+				CEREAL_NVP( overCameraLerpSpeed ),
+				CEREAL_NVP( overCameraDistance )
+			);
+		}
+		if ( 7 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -285,12 +305,21 @@ public:
 				ImGui::SliderFloat3( u8"タイトル・カメラの位置（自機からの相対）", &titleCameraDistance.x,	-1024.0f, 1024.0f );
 				ImGui::SliderFloat3( u8"タイトル・カメラ注視点（自身からの相対）", &titleCameraFocus.x,		-1024.0f, 1024.0f );
 				ImGui::Text( "" );
+				
+				ImGui::SliderFloat3( u8"ゲームオーバー・カメラの移動先（自機からの相対）", &overCameraDistance.x,	-1024.0f, 1024.0f );
+				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"カメラにかけるイージング" ) )
 				{
 					ImGui::SliderInt( u8"種類",		&cameraEaseKind, 0, GetEasingKindCount() - 1 );
 					ImGui::SliderInt( u8"タイプ",	&cameraEaseType, 0, GetEasingTypeCount() - 1 );
 					std::string easingCaption = "名：" + EasingKindToStr( cameraEaseKind ) + " " + EasingTypeToStr( cameraEaseType );
+					easingCaption = Donya::MultiToUTF8( easingCaption );
+					ImGui::Text( easingCaption.c_str() );
+					
+					ImGui::SliderInt( u8"オーバー・種類",		&overCameraEaseKind, 0, GetEasingKindCount() - 1 );
+					ImGui::SliderInt( u8"オーバー・タイプ",	&overCameraEaseType, 0, GetEasingTypeCount() - 1 );
+					easingCaption = "オーバー・名：" + EasingKindToStr( overCameraEaseKind ) + " " + EasingTypeToStr( overCameraEaseType );
 					easingCaption = Donya::MultiToUTF8( easingCaption );
 					ImGui::Text( easingCaption.c_str() );
 
@@ -300,6 +329,13 @@ public:
 					: scast<int>( 1.0f / cameraLerpSpeed );
 					ImGui::SliderInt( u8"移動にかける時間（フレーム）", &cameraMoveFrame, 1, 256 );
 					cameraLerpSpeed = 1.0f / scast<float>( cameraMoveFrame );
+
+					static int overCameraMoveFrame =
+					( ZeroEqual( overCameraLerpSpeed ) )
+					? 1
+					: scast<int>( 1.0f / overCameraLerpSpeed );
+					ImGui::SliderInt( u8"オーバー・移動にかける時間（フレーム）", &overCameraMoveFrame, 1, 1024 );
+					overCameraLerpSpeed = 1.0f / scast<float>( overCameraMoveFrame );
 
 					ImGui::TreePop();
 				}
@@ -380,7 +416,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 5 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 6 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -523,7 +559,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	pImpl->ground.Update( pImpl->player.GetPos() );
 
-	pImpl->player.Update( playerInput );
+	if ( !pImpl->wasTouched )
+	{
+		pImpl->player.Update( playerInput );
+	}
 
 	// Update "pImpl->reflectedEntities".
 	{
@@ -781,8 +820,35 @@ void SceneGame::UpdateCamera()
 		}
 		else
 		{
-			nowCameraDistance	= pImpl->cameraDistance;
-			nowCameraFocus		= pImpl->cameraFocus;
+			if ( pImpl->wasTouched )
+			{
+				nowCameraDistance	= pImpl->cameraDistance;
+				nowCameraFocus		= pImpl->cameraFocus;
+
+				Donya::Easing::Kind kind = scast<Donya::Easing::Kind>( pImpl->overCameraEaseKind );
+				Donya::Easing::Type type = scast<Donya::Easing::Type>( pImpl->overCameraEaseType );
+				float ease = Ease( kind, type, pImpl->overCameraLerpFactor );
+
+				Donya::Vector3 destination = pImpl->overCameraDistance;
+
+				Donya::Vector3 vecToDest = destination - nowCameraFocus;
+				vecToDest *= ease;
+
+				nowCameraDistance += vecToDest;
+
+				pImpl->overCameraLerpFactor += pImpl->overCameraLerpSpeed;
+				pImpl->overCameraLerpFactor = std::min( 1.0f, pImpl->overCameraLerpFactor );
+
+				if ( 1.0f <= pImpl->overCameraLerpFactor )
+				{
+					pImpl->status = Impl::State::Over;
+				}
+			}
+			else
+			{
+				nowCameraDistance	= pImpl->cameraDistance;
+				nowCameraFocus		= pImpl->cameraFocus;
+			}
 		}
 	}
 
@@ -922,6 +988,18 @@ Scene::Result SceneGame::ReturnResult()
 	}
 	// else
 
+	if ( pImpl->status == Impl::State::Over )
+	{
+		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
+
+		StorageForScene::Get().StoreTimer( pImpl->currentTime );
+
+		Scene::Result change{};
+		change.AddRequest( Scene::Request::ADD_SCENE );
+		change.sceneType = Scene::Type::Over;
+		return change;
+	}
+
 #if DEBUG_MODE
 	if ( ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) ) || pImpl->boss.IsDead() )
 	{
@@ -936,7 +1014,7 @@ Scene::Result SceneGame::ReturnResult()
 		return change;
 	}
 	// else
-	if ( Donya::Keyboard::Trigger( 'Q' ) || pImpl->wasTouched )
+	if ( Donya::Keyboard::Trigger( 'Q' ) )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.

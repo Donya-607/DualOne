@@ -64,7 +64,7 @@ public:
 public:
 	Impl() :
 		sprFont( NULL ),
-		choice( Nil ),
+		choice( BackToTitle ),
 		uiClearPos(), uiImgClearTimePos(), uiImgBestTimePos(), uiStrClearTimePos(), uiStrBestTimePos(),
 		uiNewRecordPos(), uiRetryPos(), uiBackPos(), uiArrowPosL(), uiArrowPosR(),
 		clearTime(), bestTime(),
