@@ -6,8 +6,9 @@
 
 class SceneTitle : public Scene
 {
-private:
+public:
 	class Impl;
+private:
 	std::unique_ptr<SceneTitle::Impl> pImpl;
 public:
 	SceneTitle();
@@ -21,6 +22,7 @@ public:
 	void	Draw( float elapsedTime );
 private:
 	bool	IsDecisionTriggered() const;
+	bool	IsDecisionPressing() const;
 	bool	IsDecisionReleased() const;
 
 	void	StartFade();

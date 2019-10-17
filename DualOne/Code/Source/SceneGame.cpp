@@ -76,6 +76,53 @@ static std::string EasingTypeToStr( int easingType )
 	return "Error Type !";
 }
 
+// TODO:Swap this class to "UIObject" at UI.h.
+struct Usage
+{
+public:
+	size_t sprite{};
+	float  degree{};
+	float  alpha{};
+	Donya::Vector2 ssPos{};	// screen-space.
+	Donya::Vector2 scale{};
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( degree ),
+			CEREAL_NVP( alpha ),
+			CEREAL_NVP( ssPos ),
+			CEREAL_NVP( scale )
+		);
+
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+public:
+	void LoadSprite()
+	{
+		sprite = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Usage ), 4U );
+	}
+
+	void Draw()
+	{
+		Donya::Sprite::DrawExt
+		(
+			sprite,
+			ssPos.x, ssPos.y,
+			scale.x, scale.y,
+			degree, alpha
+		);
+	}
+};
+
+CEREAL_CLASS_VERSION( Usage, 0 )
+
 struct SceneGame::Impl
 {
 public:
@@ -83,14 +130,21 @@ public:
 	{
 		Title,	// Showing the title-scene at another scene.
 		Game,	// Playing main scene.
+		Over,
 	};
 public:
 	State	status;
 
 	int		cameraEaseKind;			// Linking to Donya::Ease::Kind.
 	int		cameraEaseType;			// Linking to Donya::Ease::Type.
-	float	cameraLerpFactor;		// 0.0f ~ 1.0f.
+	int		overCameraEaseKind;		// Linking to Donya::Ease::Kind.
+	int		overCameraEaseType;		// Linking to Donya::Ease::Type.
 	float	cameraLerpSpeed;		// 1.0f / (whole-frame).
+	float	overCameraLerpSpeed;	// 1.0f / (whole-frame).
+
+	float	cameraLerpFactor;		// 0.0f ~ 1.0f.
+	float	overCameraLerpFactor;	// 0.0f ~ 1.0f.
+
 	float	initDistanceOfBoss;		// Distance from origin.
 	size_t	sprFont;
 
@@ -100,12 +154,15 @@ public:
 	Boss	boss;
 	Timer	currentTime;
 
+	Usage	sprUsage;
+
 	Donya::Vector3	lightDirection;
 
 	Donya::Vector3	cameraDistance;		// Use at game-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3	cameraFocus;		// Use at game-scene. Relative position from the camera.
 	Donya::Vector3	titleCameraDistance;// Use at title-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
 	Donya::Vector3	titleCameraFocus;	// Use at title-scene. Relative position from the camera.
+	Donya::Vector3	overCameraDistance;	// Use at game-scene. X, Y is calculated from world-space, Z is calculated from local of player space.
 
 	Donya::XInput	controller;
 
@@ -118,7 +175,8 @@ public:
 public:
 	Impl() :
 		status( State::Title ),
-		cameraEaseKind(), cameraEaseType(), cameraLerpFactor(), cameraLerpSpeed(),
+		cameraEaseKind(), cameraEaseType(), overCameraEaseKind(), overCameraEaseType(),
+		cameraLerpSpeed(), overCameraLerpSpeed(), cameraLerpFactor(), overCameraLerpFactor(),
 		initDistanceOfBoss(),
 		sprFont( NULL ),
 		camera(),
@@ -129,6 +187,7 @@ public:
 		lightDirection( 0.0f, 0.0f, 1.0f ),
 		cameraDistance( 0.0f, 1.0f, -1.0f ), cameraFocus( 0.0f, -0.5f, 1.0f ),
 		titleCameraDistance( 0.0f, 1.0f, -1.0f ), titleCameraFocus( 0.0f, -0.5f, 1.0f ),
+		overCameraDistance( 0.0f, 1.0f, -1.0f ),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
 		lanePositions(), reflectedEntities(),
 		prepareStart( false ), wasTouched( false ), wasRetried( false )
@@ -182,6 +241,20 @@ private:
 		}
 		if ( 5 <= version )
 		{
+			archive( CEREAL_NVP( sprUsage ) );
+		}
+		if ( 6 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( overCameraEaseKind ),
+				CEREAL_NVP( overCameraEaseType ),
+				CEREAL_NVP( overCameraLerpSpeed ),
+				CEREAL_NVP( overCameraDistance )
+			);
+		}
+		if ( 7 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -190,8 +263,8 @@ public:
 	void LoadParameter( bool isBinary = true )
 	{
 		Serializer::Extension ext = ( isBinary )
-			? Serializer::Extension::BINARY
-			: Serializer::Extension::JSON;
+		? Serializer::Extension::BINARY
+		: Serializer::Extension::JSON;
 		std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
 
 		Serializer seria;
@@ -202,13 +275,13 @@ public:
 
 	void SaveParameter()
 	{
-		Serializer::Extension bin = Serializer::Extension::BINARY;
+		Serializer::Extension bin  = Serializer::Extension::BINARY;
 		Serializer::Extension json = Serializer::Extension::JSON;
-		std::string binPath = GenerateSerializePath( SERIAL_ID, bin );
+		std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
 		std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
 
 		Serializer seria;
-		seria.Save( bin, binPath.c_str(), SERIAL_ID, *this );
+		seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
 		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
 	}
 	
@@ -232,12 +305,21 @@ public:
 				ImGui::SliderFloat3( u8"タイトル・カメラの位置（自機からの相対）", &titleCameraDistance.x,	-1024.0f, 1024.0f );
 				ImGui::SliderFloat3( u8"タイトル・カメラ注視点（自身からの相対）", &titleCameraFocus.x,		-1024.0f, 1024.0f );
 				ImGui::Text( "" );
+				
+				ImGui::SliderFloat3( u8"ゲームオーバー・カメラの移動先（自機からの相対）", &overCameraDistance.x,	-1024.0f, 1024.0f );
+				ImGui::Text( "" );
 
 				if ( ImGui::TreeNode( u8"カメラにかけるイージング" ) )
 				{
 					ImGui::SliderInt( u8"種類",		&cameraEaseKind, 0, GetEasingKindCount() - 1 );
 					ImGui::SliderInt( u8"タイプ",	&cameraEaseType, 0, GetEasingTypeCount() - 1 );
 					std::string easingCaption = "名：" + EasingKindToStr( cameraEaseKind ) + " " + EasingTypeToStr( cameraEaseType );
+					easingCaption = Donya::MultiToUTF8( easingCaption );
+					ImGui::Text( easingCaption.c_str() );
+					
+					ImGui::SliderInt( u8"オーバー・種類",		&overCameraEaseKind, 0, GetEasingKindCount() - 1 );
+					ImGui::SliderInt( u8"オーバー・タイプ",	&overCameraEaseType, 0, GetEasingTypeCount() - 1 );
+					easingCaption = "オーバー・名：" + EasingKindToStr( overCameraEaseKind ) + " " + EasingTypeToStr( overCameraEaseType );
 					easingCaption = Donya::MultiToUTF8( easingCaption );
 					ImGui::Text( easingCaption.c_str() );
 
@@ -247,6 +329,13 @@ public:
 					: scast<int>( 1.0f / cameraLerpSpeed );
 					ImGui::SliderInt( u8"移動にかける時間（フレーム）", &cameraMoveFrame, 1, 256 );
 					cameraLerpSpeed = 1.0f / scast<float>( cameraMoveFrame );
+
+					static int overCameraMoveFrame =
+					( ZeroEqual( overCameraLerpSpeed ) )
+					? 1
+					: scast<int>( 1.0f / overCameraLerpSpeed );
+					ImGui::SliderInt( u8"オーバー・移動にかける時間（フレーム）", &overCameraMoveFrame, 1, 1024 );
+					overCameraLerpSpeed = 1.0f / scast<float>( overCameraMoveFrame );
 
 					ImGui::TreePop();
 				}
@@ -285,6 +374,16 @@ public:
 					ImGui::TreePop();
 				}
 
+				if ( ImGui::TreeNode( u8"操作方法の表示位置" ) )
+				{
+					ImGui::SliderFloat( u8"角度", &sprUsage.degree, 0.0f, 360.0f );
+					ImGui::SliderFloat( u8"アルファ", &sprUsage.alpha, 0.0f, 1.0f );
+					ImGui::SliderFloat2( u8"描画位置（Ｘ，Ｙ）", &sprUsage.ssPos.x, 0.0f, 1920.0f );
+					ImGui::SliderFloat2( u8"スケール（Ｘ，Ｙ）", &sprUsage.scale.x, 0.0f, 1.0f );
+
+					ImGui::TreePop();
+				}
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -317,7 +416,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 4 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 6 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -330,11 +429,10 @@ SceneGame::~SceneGame()
 
 void SceneGame::Init()
 {
-	Donya::Sound::Play( Music::BGM_Game );
-
 	pImpl->LoadParameter();
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
+	pImpl->sprUsage.LoadSprite();
 
 	pImpl->currentTime.Set( 0, 0, 0 );
 
@@ -424,7 +522,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			pImpl->prepareStart = true;
 		}
 	}
-	else
+	else if ( !pImpl->wasTouched ) // Not failed.
 	{
 		pImpl->currentTime.Update();
 	}
@@ -448,6 +546,8 @@ Scene::Result SceneGame::Update( float elapsedTime )
 				pImpl->player.GetCurrentLane(),
 				pImpl->player.GetPos().z + pImpl->initDistanceOfBoss
 			);
+
+			Donya::Sound::Play( Music::BGM_Game );
 		}
 	}
 
@@ -459,7 +559,10 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	pImpl->ground.Update( pImpl->player.GetPos() );
 
-	pImpl->player.Update( playerInput );
+	if ( !pImpl->wasTouched )
+	{
+		pImpl->player.Update( playerInput );
+	}
 
 	// Update "pImpl->reflectedEntities".
 	{
@@ -476,7 +579,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			{
 				if ( element.ShouldErase() )
 				{
-					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 15, 3 );
+					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 120, 1 );
 					return true;
 				}
 				// else
@@ -518,7 +621,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	}
 	if ( Donya::Keyboard::Trigger( 'F' ) )
 	{
-		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 15, 3 );
+		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1200, 1 );
 	}
 
 #endif // DEBUG_MODE
@@ -528,29 +631,36 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
-	// Draw BackGround.
-	Donya::Sprite::DrawRect
-	(
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		Common::ScreenWidthF(),
-		Common::ScreenHeightF(),
-		Donya::Sprite::Color::DARK_GRAY, 1.0f
-	);
+	// Drawing 2D asset.
+	{
+		Donya::Sprite::SetDrawDepth( 1.0f );
 
-#if DEBUG_MODE
+		// BackGround.
+		Donya::Sprite::DrawRect
+		(
+			Common::HalfScreenWidthF(),
+			Common::HalfScreenHeightF(),
+			Common::ScreenWidthF(),
+			Common::ScreenHeightF(),
+			Donya::Sprite::Color::DARK_GRAY, 1.0f
+		);
 
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		"Game",
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+		Donya::Sprite::SetDrawDepth( 0.0f );
 
-#endif // DEBUG_MODE
+		pImpl->sprUsage.Draw();
+
+		if ( pImpl->status != Impl::State::Title )
+		{
+			Donya::Sprite::DrawString
+			(
+				pImpl->sprFont,
+				pImpl->currentTime.ToStr(),
+				32.0f, 64.0f,
+				64.0f, 64.0f,
+				64.0f, 64.0f
+			);
+		}
+	}
 
 	using namespace DirectX;
 
@@ -586,15 +696,6 @@ void SceneGame::Draw( float elapsedTime )
 	{
 		it.Draw( matView, matProj, lightDir, cameraPos );
 	}
-
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		pImpl->currentTime.ToStr(),
-		32.0f, 64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
 }
 
 bool SceneGame::IsDecisionTriggered() const
@@ -722,8 +823,35 @@ void SceneGame::UpdateCamera()
 		}
 		else
 		{
-			nowCameraDistance	= pImpl->cameraDistance;
-			nowCameraFocus		= pImpl->cameraFocus;
+			if ( pImpl->wasTouched )
+			{
+				nowCameraDistance	= pImpl->cameraDistance;
+				nowCameraFocus		= pImpl->cameraFocus;
+
+				Donya::Easing::Kind kind = scast<Donya::Easing::Kind>( pImpl->overCameraEaseKind );
+				Donya::Easing::Type type = scast<Donya::Easing::Type>( pImpl->overCameraEaseType );
+				float ease = Ease( kind, type, pImpl->overCameraLerpFactor );
+
+				Donya::Vector3 destination = pImpl->overCameraDistance;
+
+				Donya::Vector3 vecToDest = destination - nowCameraFocus;
+				vecToDest *= ease;
+
+				nowCameraDistance += vecToDest;
+
+				pImpl->overCameraLerpFactor += pImpl->overCameraLerpSpeed;
+				pImpl->overCameraLerpFactor = std::min( 1.0f, pImpl->overCameraLerpFactor );
+
+				if ( 1.0f <= pImpl->overCameraLerpFactor )
+				{
+					pImpl->status = Impl::State::Over;
+				}
+			}
+			else
+			{
+				nowCameraDistance	= pImpl->cameraDistance;
+				nowCameraFocus		= pImpl->cameraFocus;
+			}
 		}
 	}
 
@@ -760,13 +888,13 @@ void SceneGame::DetectCollision()
 		for ( const auto &it : reflectableAttacks )
 		{
 			other = it.GetHitBox();
-			if ( AABB::IsHitAABB( other, playerBox ) )
+			if ( AABB::IsHitAABB( other, playerBox, /* ignoreExistFlag = */ true ) )
 			{
 				it.HitToOther();
 
 				HitToPlayer( /* canReflection = */ true );
 
-				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 15, 3 );
+				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 120, 1 );
 			}
 		}
 	}
@@ -775,6 +903,21 @@ void SceneGame::DetectCollision()
 		AABB other{};
 		auto &obstacles = pImpl->boss.FetchObstacles();
 		for ( const auto &it : obstacles )
+		{
+			other = it.GetHitBox();
+			if ( AABB::IsHitAABB( other, playerBox ) )
+			{
+				it.HitToOther();
+
+				HitToPlayer( /* canReflection = */ false );
+			}
+		}
+	}
+	// Beams vs Player.
+	{
+		AABB other{};
+		auto &beams = pImpl->boss.FetchBeams();
+		for ( const auto &it : beams )
 		{
 			other = it.GetHitBox();
 			if ( AABB::IsHitAABB( other, playerBox ) )
@@ -836,7 +979,8 @@ Scene::Result SceneGame::ReturnResult()
 	// else
 
 	bool requestPause = pImpl->controller.Trigger( Donya::Gamepad::Button::START ) || pImpl->controller.Trigger( Donya::Gamepad::Button::SELECT ) || Donya::Keyboard::Trigger( 'P' );
-	if ( requestPause && IsDoneCameraMove() && !Fader::Get().IsExist() )
+	bool allowPause   = ( pImpl->status == Impl::State::Game && !Fader::Get().IsExist() );
+	if ( requestPause && allowPause )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 
@@ -846,6 +990,18 @@ Scene::Result SceneGame::ReturnResult()
 		return pause;
 	}
 	// else
+
+	if ( pImpl->status == Impl::State::Over )
+	{
+		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
+
+		StorageForScene::Get().StoreTimer( pImpl->currentTime );
+
+		Scene::Result change{};
+		change.AddRequest( Scene::Request::ADD_SCENE );
+		change.sceneType = Scene::Type::Over;
+		return change;
+	}
 
 #if DEBUG_MODE
 	if ( ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) ) || pImpl->boss.IsDead() )
@@ -861,7 +1017,7 @@ Scene::Result SceneGame::ReturnResult()
 		return change;
 	}
 	// else
-	if ( Donya::Keyboard::Trigger( 'Q' ) || pImpl->wasTouched )
+	if ( Donya::Keyboard::Trigger( 'Q' ) )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.

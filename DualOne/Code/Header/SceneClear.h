@@ -6,8 +6,9 @@
 
 class SceneClear : public Scene
 {
-private:
+public:
 	class Impl;
+private:
 	std::unique_ptr<SceneClear::Impl> pImpl;
 public:
 	SceneClear();

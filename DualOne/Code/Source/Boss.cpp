@@ -884,7 +884,8 @@ Beam::Beam() :
 	beamLength(),
 	hitBox(),
 	basePos(), beamDestPos(),
-	posture()
+	posture(),
+	wasHitToOther( false )
 {}
 Beam::~Beam() = default;
 
@@ -993,12 +994,19 @@ AABB Beam::GetHitBox() const
 	AABB wsHitBox = hitBox;
 	wsHitBox.pos += beamDestPos;
 
+	if ( wasHitToOther ) { wsHitBox.exist = false; }
+
 	return wsHitBox;
 }
 
 bool Beam::ShouldErase() const
 {
 	return ( status == State::End ) ? true : false;
+}
+
+void Beam::HitToOther() const
+{
+	wasHitToOther = true;
 }
 
 void Beam::SetPosture()
@@ -2133,11 +2141,17 @@ const std::vector<Obstacle> &Boss::FetchObstacles() const
 {
 	return obstacles;
 }
+const std::vector<Beam>     &Boss::FetchBeams() const
+{
+	return beams;
+}
 std::vector<AABB> Boss::FetchHitBoxes() const
 {
+	std::vector<AABB> hitBoxes{};
+
+#ifdef CONTAIN_BEAMS_COUNT
 	const size_t BEAM_COUNT = beams.size();
 	const size_t WAVE_COUNT = waves.size();
-	std::vector<AABB> hitBoxes{};
 	hitBoxes.reserve( BEAM_COUNT + WAVE_COUNT );
 
 	for ( const auto &it : beams )
@@ -2148,6 +2162,16 @@ std::vector<AABB> Boss::FetchHitBoxes() const
 	{
 		hitBoxes.emplace_back( it.GetHitBox() );
 	}
+#else
+	const size_t WAVE_COUNT = waves.size();
+	hitBoxes.reserve( WAVE_COUNT );
+
+	for ( const auto &it : waves )
+	{
+		hitBoxes.emplace_back( it.GetHitBox() );
+	}
+#endif // CONTAIN_BEAMS_COUNT
+
 
 	return hitBoxes;
 }
@@ -2844,6 +2868,8 @@ void Boss::SetDestructMode()
 			*( VELOCITIES[i] ) = vector;
 		}
 	}
+
+	Donya::Sound::Play( Music::BossDefeated );
 }
 void Boss::DestructionUpdate()
 {

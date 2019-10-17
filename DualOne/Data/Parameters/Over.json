@@ -1,0 +1,26 @@
+{
+    "Over": {
+        "cereal_class_version": 0,
+        "uiOverPos": {
+            "cereal_class_version": 0,
+            "x": 1000.0,
+            "y": 200.0
+        },
+        "uiBackPos": {
+            "x": 1000.0,
+            "y": 400.0
+        },
+        "uiRetryPos": {
+            "x": 1000.0,
+            "y": 400.0
+        },
+        "uiArrowPosL": {
+            "x": 800.0,
+            "y": 400.0
+        },
+        "uiArrowPosR": {
+            "x": 1250.0,
+            "y": 410.0
+        }
+    }
+}

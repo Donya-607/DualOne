@@ -307,6 +307,7 @@ private:
 	Donya::Vector3		basePos;
 	Donya::Vector3		beamDestPos;
 	Donya::Quaternion	posture;
+	mutable bool		wasHitToOther;
 public:
 	Beam();
 	~Beam();
@@ -358,6 +359,7 @@ public:
 	AABB GetHitBox() const;
 
 	bool ShouldErase() const;
+	void HitToOther() const;
 private:
 	void SetPosture();
 
@@ -945,6 +947,11 @@ public:
 	/// Please call Obstacle::HitToOther() when hit detected.
 	/// </summary>
 	const std::vector<Obstacle> &FetchObstacles() const;
+	/// <summary>
+	/// The beam can not reflection.<para></para>
+	/// Please call Beam::HitToOther() when hit detected.
+	/// </summary>
+	const std::vector<Beam> &FetchBeams() const;
 	/// <summary>
 	/// Returns hit-boxes is can not reflection.
 	/// </summary>
