@@ -359,18 +359,21 @@ void ParticleManager::CreateBossDamageLoop(Donya::Vector3 _pos)
 	switch (damageLevel)
 	{
 	case LEVEL1:
-		generateInterval = 60;	break;
-	case LEVEL2:
 		generateInterval = 30;	break;
+	case LEVEL2:
+		generateInterval = 15;	break;
 	case LEVEL3:
-		generateInterval = 10;	break;
+		generateInterval = 5;	break;
 	default:
 		break;
 	}
 
 	if (timer % generateInterval == 0)
 	{
-		CreateBossDamageParticle(_pos);
+		Donya::Vector3 priPos = _pos;
+		priPos.y += 40.0f;
+		priPos.z += 12.0f;
+		CreateBossDamageParticle(priPos);
 	}
 }
 
@@ -579,7 +582,7 @@ void Particle::SetBossElements(Donya::Vector3 _emitterPos)
 	pos = _emitterPos;
 	velocity = Donya::Vector3
 	(
-		Donya::Random::GenerateFloat(-5.0f, 5.0f),
+		Donya::Random::GenerateFloat(-2.0f, 2.0f),
 		Donya::Random::GenerateFloat(3.0f, 5.0f),
 		-10.0f
 	);
@@ -666,13 +669,15 @@ void Particle::UpdateOfMissiles()
 
 void Particle::UpdateOfBossDamage()
 {
-
+	
 	pos += velocity;
 //	scale.x = scale.y = scale.z = 50.0f * (30 / existanceTime);
+	scale.x = scale.y = scale.z = 50.0f * (static_cast<float>(existanceTime) / 30.0f);
 	--existanceTime;
 }
 
 void Particle::UpdateOfShockWave()
+
 {
 	constexpr float GRAVITY = -0.98f;
 
