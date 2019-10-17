@@ -528,6 +528,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
+	Donya::Sprite::SetDrawDepth( 1.0f );
 	// Draw BackGround.
 	Donya::Sprite::DrawRect
 	(
@@ -538,19 +539,15 @@ void SceneGame::Draw( float elapsedTime )
 		Donya::Sprite::Color::DARK_GRAY, 1.0f
 	);
 
-#if DEBUG_MODE
-
+	Donya::Sprite::SetDrawDepth( 0.0f );
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,
-		"Game",
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
+		pImpl->currentTime.ToStr(),
+		32.0f, 64.0f,
 		32.0f, 32.0f,
 		32.0f, 32.0f
 	);
-
-#endif // DEBUG_MODE
 
 	using namespace DirectX;
 
@@ -586,15 +583,6 @@ void SceneGame::Draw( float elapsedTime )
 	{
 		it.Draw( matView, matProj, lightDir, cameraPos );
 	}
-
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		pImpl->currentTime.ToStr(),
-		32.0f, 64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
 }
 
 bool SceneGame::IsDecisionTriggered() const
