@@ -13,6 +13,7 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "Sentence.h"
 #include "StorageForScene.h"
 
 #undef max
@@ -20,7 +21,7 @@
 
 ScenePause::ScenePause() :
 	choice( Choice::Resume ),
-	sprFont( NULL ),
+	uiPausePos(), uiRetryPos(), uiResumePos(), uiBackPos(),
 	controller( Donya::XInput::PadNumber::PAD_1 )
 {
 
@@ -29,10 +30,10 @@ ScenePause::~ScenePause() = default;
 
 void ScenePause::Init()
 {
+	LoadParameter();
+
 	// Suppress continiously trigger pause-button.
 	controller.Update();
-
-	sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 }
 
 void ScenePause::Uninit()
@@ -42,6 +43,12 @@ void ScenePause::Uninit()
 
 Scene::Result ScenePause::Update( float elapsedTime )
 {
+#if USE_IMGUI
+
+	UseImGui();
+
+#endif // USE_IMGUI
+
 	controller.Update();
 
 	UpdateChooseItem();
@@ -73,25 +80,23 @@ void ScenePause::Draw( float elapsedTime )
 		Donya::Sprite::Color::BLACK, 0.6f
 	);
 
-	auto GetString = []( Choice choice )->std::string
+	const auto &GET = Sentence::Get();
+	switch ( choice )
 	{
-		switch ( choice )
-		{
-		case ScenePause::BackToTitle:	return "  Back to Title >";	break;
-		case ScenePause::Resume:		return "< Resume        >";	break;
-		case ScenePause::ReTry:			return "< Retry";			break;
-		default: break;
-		}
-		return "";
-	};
-	Donya::Sprite::DrawString
-	(
-		sprFont,
-		GetString( choice ).c_str(),
-		512.0f, 128.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+	case ScenePause::BackToTitle:
+		GET.Draw( Sentence::Kind::BackToTitle, uiBackPos );
+		break;
+	case ScenePause::Resume:
+		GET.Draw( Sentence::Kind::BackToGame, uiResumePos );
+		break;
+	case ScenePause::ReTry:
+		GET.Draw( Sentence::Kind::Retry, uiRetryPos );
+		break;
+	default: break;
+	}
+	GET.Draw( Sentence::Kind::Pause,		uiPausePos  );
+	if( choice != ScenePause::Choice::BackToTitle	) { GET.Draw( Sentence::Kind::LeftArrow,	uiArrowPosL ); }
+	if( choice != ScenePause::Choice::Retry			) { GET.Draw( Sentence::Kind::RightArrow,	uiArrowPosR ); }
 }
 
 void ScenePause::UpdateChooseItem()
@@ -234,8 +239,22 @@ void ScenePause::UseImGui()
 {
 	if ( ImGui::BeginIfAllowed() )
 	{
-		if ( ImGui::TreeNode( u8"タイトル画面" ) )
+		if ( ImGui::TreeNode( u8"ポーズ画面" ) )
 		{
+			auto ShowVec2 = []( const std::string &caption, Donya::Vector2 *pV )
+			{
+				if ( !pV ) { return; }
+				// else
+				ImGui::SliderFloat2( caption.c_str(), &pV->x, 0.0f, 1920.0f );
+			};
+
+			ShowVec2( u8"ポーズ・描画位置",			&uiPausePos		);
+			ShowVec2( u8"リトライ・描画位置",			&uiRetryPos		);
+			ShowVec2( u8"再開・描画位置",				&uiResumePos	);
+			ShowVec2( u8"タイトルへ戻る・描画位置",	&uiBackPos		);
+			ShowVec2( u8"左矢印・描画位置",			&uiArrowPosL	);
+			ShowVec2( u8"右矢印位置",				&uiArrowPosR	);
+
 			if ( ImGui::TreeNode( u8"ファイル" ) )
 			{
 				static bool isBinary = false;

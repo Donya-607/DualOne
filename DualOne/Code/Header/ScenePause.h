@@ -20,7 +20,12 @@ private:
 private:
 	Choice			choice;
 
-
+	Donya::Vector2	uiPausePos;
+	Donya::Vector2	uiRetryPos;
+	Donya::Vector2	uiResumePos;
+	Donya::Vector2	uiBackPos;
+	Donya::Vector2	uiArrowPosL;
+	Donya::Vector2	uiArrowPosR;
 	
 	Donya::XInput	controller;
 public:
@@ -31,10 +36,15 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, const std::uint32_t version )
 	{
-		/*archive
+		archive
 		(
-			CEREAL_NVP( x ),
-		);*/
+			CEREAL_NVP( uiPausePos ),
+			CEREAL_NVP( uiRetryPos ),
+			CEREAL_NVP( uiResumePos ),
+			CEREAL_NVP( uiBackPos ),
+			CEREAL_NVP( uiArrowPosL ),
+			CEREAL_NVP( uiArrowPosR )
+		);
 
 		if ( 1 <= version )
 		{
