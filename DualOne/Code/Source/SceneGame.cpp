@@ -963,6 +963,7 @@ void SceneGame::DetectCollision()
 		if ( AABB::IsHitAABB( playerBox, boss ) )
 		{
 			pImpl->wasTouched = true;
+			ParticleManager::Get().SetIsSlide( false );
 		}
 	}
 }
