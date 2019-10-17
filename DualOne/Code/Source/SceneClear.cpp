@@ -21,6 +21,7 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "Sentence.h"
 #include "StorageForScene.h"
 #include "Timer.h"
 
@@ -39,15 +40,33 @@ public:
 public:
 	size_t			sprFont;
 	Choice			choice;
+
+	Donya::Vector2	uiClearPos;
+	Donya::Vector2	uiImgClearTimePos;	// Position of sentence-image.
+	Donya::Vector2	uiImgBestTimePos;	// Position of sentence-image.
+	Donya::Vector2	uiStrClearTimePos;	// Position of string-image.
+	Donya::Vector2	uiStrBestTimePos;	// Position of string-image.
+	Donya::Vector2	uiNewRecordPos;
+	Donya::Vector2	uiRetryPos;
+	Donya::Vector2	uiBackPos;
+	Donya::Vector2	uiArrowPosL;
+	Donya::Vector2	uiArrowPosR;
+
 	Timer			clearTime;
 	Timer			bestTime;
+
 	std::string		timeString;		// Store the "clearTime" contents. looks like "12:34:56"(min-sec-ms).
 	std::string		bestTimeString;	// Store the "bestTime" contents. looks like "12:34:56"(min-sec-ms).
+
 	Donya::XInput	controller;
+
 	bool			wasNewRecord;	// True if the "clearTime" faster than "bestTime".
 public:
-	Impl() : sprFont( NULL ),
+	Impl() :
+		sprFont( NULL ),
 		choice( Nil ),
+		uiClearPos(), uiImgClearTimePos(), uiImgBestTimePos(), uiStrClearTimePos(), uiStrBestTimePos(),
+		uiNewRecordPos(), uiRetryPos(), uiBackPos(), uiArrowPosL(), uiArrowPosR(),
 		clearTime(), bestTime(),
 		timeString(), bestTimeString(),
 		controller( Donya::XInput::PadNumber::PAD_1 ),
@@ -62,9 +81,23 @@ private:
 
 		if ( 1 <= version )
 		{
-			/*
-			archive( CEREAL_NVP() );
-			*/
+			archive
+			(
+				CEREAL_NVP( uiClearPos ),
+				CEREAL_NVP( uiImgClearTimePos ),
+				CEREAL_NVP( uiImgBestTimePos ),
+				CEREAL_NVP( uiStrClearTimePos ),
+				CEREAL_NVP( uiStrBestTimePos ),
+				CEREAL_NVP( uiNewRecordPos ),
+				CEREAL_NVP( uiRetryPos ),
+				CEREAL_NVP( uiBackPos ),
+				CEREAL_NVP( uiArrowPosL ),
+				CEREAL_NVP( uiArrowPosR )
+			);
+		}
+		if ( 2 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
 		}
 	}
 	static constexpr const char *SERIAL_ID = "Result";
@@ -110,6 +143,29 @@ public:
 				}
 				ImGui::Text( "" );
 
+				if ( ImGui::TreeNode( u8"画像の位置" ) )
+				{
+					auto ShowVec2 = []( const std::string &caption, Donya::Vector2 *pV )
+					{
+						if ( !pV ) { return; }
+						// else
+						ImGui::SliderFloat2( caption.c_str(), &pV->x, 0.0f, 1920.0f );
+					};
+
+					ShowVec2( u8"クリア・描画位置", &uiClearPos );
+					ShowVec2( u8"画像クリアタイム・描画位置", &uiImgClearTimePos );
+					ShowVec2( u8"画像ベストタイム・描画位置", &uiImgBestTimePos );
+					ShowVec2( u8"数字クリアタイム・描画位置", &uiStrClearTimePos );
+					ShowVec2( u8"数字ベストタイム・描画位置", &uiStrBestTimePos );
+					ShowVec2( u8"新記録・描画位置", &uiNewRecordPos );
+					ShowVec2( u8"リトライ・描画位置", &uiRetryPos );
+					ShowVec2( u8"タイトルへ戻る・描画位置", &uiBackPos );
+					ShowVec2( u8"左矢印・描画位置", &uiArrowPosL );
+					ShowVec2( u8"右矢印・描画位置", &uiArrowPosR );
+
+					ImGui::TreePop();
+				}
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -140,6 +196,8 @@ public:
 #endif // USE_IMGUI
 };
 
+CEREAL_CLASS_VERSION( SceneClear::Impl, 1 )
+
 SceneClear::SceneClear() : pImpl( std::make_unique<SceneClear::Impl>() )
 {
 
@@ -153,10 +211,10 @@ void SceneClear::Init()
 {
 	Donya::Sound::Play( Music::BGM_Clear );
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
-
 	pImpl->bestTime.Set( 99, 59, 59 );
 	pImpl->LoadParameter(); // Load best-time.
+
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 
 	pImpl->clearTime  = StorageForScene::Get().GetTimer();
 	pImpl->timeString = pImpl->clearTime.ToStr();
@@ -219,71 +277,49 @@ void SceneClear::Draw( float elapsedTime )
 		Donya::Sprite::Color::BLACK, 0.6f
 	);
 
-	Donya::Sprite::DrawStringExt
-	(
-		pImpl->sprFont,
-		"Clear",
-		Common::HalfScreenWidthF(),
-		64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f,
-		2.0f, 2.0f
-	);
+	const auto &GET = Sentence::Get();
+	switch ( pImpl->choice )
+	{
+	case Impl::BackToTitle:
+		GET.Draw( Sentence::Kind::BackToTitle, pImpl->uiBackPos );
+		break;
+		break;
+	case Impl::ReTry:
+		GET.Draw( Sentence::Kind::Retry, pImpl->uiRetryPos );
+		break;
+	default: break;
+	}
 
+	GET.Draw( Sentence::Kind::GAME_CLEAR, pImpl->uiClearPos );
+	if ( pImpl->choice != Impl::Choice::BackToTitle	) { GET.Draw( Sentence::Kind::LeftArrow,  pImpl->uiArrowPosL ); }
+	if ( pImpl->choice != Impl::Choice::ReTry		) { GET.Draw( Sentence::Kind::RightArrow, pImpl->uiArrowPosR ); }
+
+	GET.Draw( Sentence::Kind::ClearTime, pImpl->uiImgClearTimePos );
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,
 		pImpl->timeString,
-		32.0f, 64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
+		pImpl->uiStrClearTimePos.x,
+		pImpl->uiStrClearTimePos.y,
+		64.0f, 64.0f,
+		64.0f, 64.0f
 	);
-	std::string bestTimeDesc{};
-	{
-		bestTimeDesc = "BestTime : ";
 
-		if ( pImpl->wasNewRecord )
-		{
-			bestTimeDesc += "New Record!";
-		}
-	}
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		bestTimeDesc,
-		32.0f, 128.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+	GET.Draw( Sentence::Kind::BestTime, pImpl->uiImgBestTimePos );
 	Donya::Sprite::DrawString
 	(
 		pImpl->sprFont,
 		pImpl->bestTimeString,
-		32.0f, 160.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
+		pImpl->uiStrBestTimePos.x,
+		pImpl->uiStrBestTimePos.y,
+		64.0f, 64.0f,
+		64.0f, 64.0f
 	);
 
-	auto GetString = []( Impl::Choice choice )->std::string
+	if ( pImpl->wasNewRecord )
 	{
-		switch ( choice )
-		{
-		case Impl::Choice::Nil:			return "<Choose by arrow>";	break;
-		case Impl::Choice::BackToTitle:	return "  Back to Title >";	break;
-		case Impl::Choice::ReTry:		return "< Retry";			break;
-		default: break;
-		}
-		return "";
-	};
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		GetString( pImpl->choice ).c_str(),
-		Common::HalfScreenWidthF(),
-		128.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+		GET.Draw( Sentence::Kind::NewRecord, pImpl->uiNewRecordPos );
+	}
 }
 
 void SceneClear::UpdateChooseItem()

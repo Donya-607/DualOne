@@ -50,12 +50,12 @@
         },
         "sprUsage": {
             "cereal_class_version": 0,
-            "degree": 354.43701171875,
+            "degree": 0.0,
             "alpha": 1.0,
             "ssPos": {
                 "cereal_class_version": 0,
-                "x": 283.1340026855469,
-                "y": 256.0
+                "x": 260.0,
+                "y": 450.0
             },
             "scale": {
                 "x": 1.0,

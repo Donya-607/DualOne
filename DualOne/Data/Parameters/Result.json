@@ -1,11 +1,52 @@
 {
     "Result": {
-        "cereal_class_version": 0,
+        "cereal_class_version": 1,
         "bestTime": {
             "cereal_class_version": 0,
-            "current": 35,
-            "second": 42,
+            "current": 1,
+            "second": 5,
             "minute": 0
+        },
+        "uiClearPos": {
+            "cereal_class_version": 0,
+            "x": 996.2260131835938,
+            "y": 120.75499725341797
+        },
+        "uiImgClearTimePos": {
+            "x": 344.1510009765625,
+            "y": 193.20799255371095
+        },
+        "uiImgBestTimePos": {
+            "x": 368.302001953125,
+            "y": 344.1510009765625
+        },
+        "uiStrClearTimePos": {
+            "x": 181.1320037841797,
+            "y": 259.62298583984377
+        },
+        "uiStrBestTimePos": {
+            "x": 187.1699981689453,
+            "y": 434.7170104980469
+        },
+        "uiNewRecordPos": {
+            "x": 682.2639770507813,
+            "y": 350.1889953613281
+        },
+        "uiRetryPos": {
+            "x": 664.1510009765625,
+            "y": 404.52801513671877
+        },
+        "uiBackPos": {
+            "x": 658.1129760742188,
+            "y": 356.22601318359377
+        },
+        "uiArrowPosL": {
+            "x": 627.9249877929688,
+            "y": 368.302001953125
+        },
+        "uiArrowPosR": {
+            "x": 688.302001953125,
+            "y": 338.1130065917969
         }
     }
 }
