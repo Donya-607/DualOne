@@ -174,6 +174,11 @@ void Ground::Init()
 	{
 		blocks[i].Init(i);
 	}
+
+	for (size_t i = 0; i < walls.size(); i++)
+	{
+		walls[i].Init(i);
+	}
 	CREATE_TREE = 15;
 	treePos.y = 0.0f;
 
@@ -196,6 +201,10 @@ void Ground::Update(Donya::Vector3 _playerPos)
 	for (auto& it : trees)
 	{
 		it.Update();
+	}
+	for (auto& it : walls)
+	{
+		it.Update(_playerPos);
 	}
 
 	if (++timer >= CREATE_TREE)
@@ -235,6 +244,10 @@ void Ground::Draw(
 		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
 	for (auto& it : trees)
+	{
+		it.Draw(matView, matProjection, lightDirection, cameraPosition);
+	}
+	for (auto& it : walls)
 	{
 		it.Draw(matView, matProjection, lightDirection, cameraPosition);
 	}
@@ -404,3 +417,138 @@ void Tree::LoadModel()
 	wasLoaded = true;
 }
 
+/*-------------------------------------------------*/
+//
+//	Wall
+//
+/*-------------------------------------------------*/
+std::shared_ptr<Donya::StaticMesh> Wall::pModel;
+/*-------------------------------------------------*/
+//	‰Šú‰»ŠÖ”
+/*-------------------------------------------------*/
+void Wall::Init(int _num)
+{
+	LoadModel();
+	if (_num == 0)
+	{
+		pos = Donya::Vector3(200.0f, 0.0f, -500.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = false;
+	}
+	else if(_num == 1)
+	{
+		pos = Donya::Vector3(-200.0f, 0.0f, 0.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = true;
+	}
+	else if (_num == 2)
+	{
+		pos = Donya::Vector3(200.0f, 0.0f, 500.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = false;
+	}
+	else if(_num == 3)
+	{
+		pos = Donya::Vector3(-200.0f, 0.0f, 1000.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = true;
+	}
+	else if (_num == 4)
+	{
+		pos = Donya::Vector3(200.0f, 0.0f, 1500.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = false;
+	}
+	else if (_num == 5)
+	{
+		pos = Donya::Vector3(-200.0f, 0.0f, 2000.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = true;
+	}
+	else if (_num == 6)
+	{
+		pos = Donya::Vector3(200.0f, 0.0f, 2500.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = false;
+	}
+	else if (_num == 7)
+	{
+		pos = Donya::Vector3(-200.0f, 0.0f, 3000.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = true;
+	}
+	else if (_num == 8)
+	{
+		pos = Donya::Vector3(200.0f, 0.0f, 3500.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = false;
+	}
+	else if (_num == 9)
+	{
+		pos = Donya::Vector3(-200.0f, 0.0f, 4000.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		isRightWall = true;
+	}
+}
+
+void Wall::Update(Donya::Vector3 _playerPos)
+{
+	ApplyLoopToMap(_playerPos);
+}
+
+void Wall::Draw(
+	const DirectX::XMFLOAT4X4& matView,
+	const DirectX::XMFLOAT4X4& matProjection,
+	const DirectX::XMFLOAT4& lightDirection,
+	const DirectX::XMFLOAT4& cameraPosition,
+	bool isEnableFill
+)
+{
+	using namespace DirectX;
+
+	auto Matrix = [](const XMFLOAT4X4 & matrix)
+	{
+		return XMLoadFloat4x4(&matrix);
+	};
+	auto Float4x4 = [](const XMMATRIX & M)
+	{
+		XMFLOAT4X4 matrix{};
+		XMStoreFloat4x4(&matrix, M);
+		return matrix;
+	};
+	XMMATRIX R;
+	XMMATRIX S = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+	if (isRightWall)
+		R = DirectX::XMMatrixRotationRollPitchYaw(0.0f, DirectX::XMConvertToRadians(0.0f), 0.0f);
+	else
+		R = DirectX::XMMatrixRotationRollPitchYaw(0.0f, DirectX::XMConvertToRadians(180.0f), 0.0f);
+	XMMATRIX T = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	XMMATRIX W = S * R * T;
+	XMMATRIX WVP = W * Matrix(matView) * Matrix(matProjection);
+
+	constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	pModel->Render(Float4x4(WVP), Float4x4(W), lightDirection, color, cameraPosition);
+}
+
+void Wall::LoadModel()
+{
+	static bool wasLoaded = false;
+	if (wasLoaded) { return; }
+	// else
+
+	Donya::Loader loader{};
+	bool result = loader.Load(GetModelPath(ModelAttribute::SideWall), nullptr);
+
+	_ASSERT_EXPR(result, L"Failed : Load boss's missile model.");
+
+	pModel = Donya::StaticMesh::Create(loader);
+
+	if (!pModel)
+	{
+		_ASSERT_EXPR(0, L"Failed : Load boss's missile model.");
+		exit(-1);
+	}
+
+	wasLoaded = true;
+}

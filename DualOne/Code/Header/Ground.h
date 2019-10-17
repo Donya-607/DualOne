@@ -7,6 +7,37 @@
 #include "Donya/StaticMesh.h"
 #include "Donya/UseImgui.h"
 
+class Wall
+{
+public:
+	static std::shared_ptr<Donya::StaticMesh> pModel;
+private:
+
+	Donya::Vector3 pos;
+	Donya::Vector3 scale;
+	bool			isRightWall;
+
+public:
+	void Init(int _num);
+	void Update(Donya::Vector3 _playerPos);
+	void Draw
+	(
+		const DirectX::XMFLOAT4X4& matView,
+		const DirectX::XMFLOAT4X4& matProjection,
+		const DirectX::XMFLOAT4& lightDirection,
+		const DirectX::XMFLOAT4& cameraPosition,
+		bool isEnableFill = true
+	);
+
+	void LoadModel();
+	void ApplyLoopToMap(Donya::Vector3 _playerPos)
+	{
+		if (pos.z >= _playerPos.z + 2000)
+		{
+			pos.z = _playerPos.z - 2000;
+		}
+	}
+};
 
 class Block
 {
@@ -75,6 +106,7 @@ class Ground
 {
 	std::array<Block, 4> blocks;
 	std::vector<Tree>	trees;
+	std::array<Wall, 10>	walls;
 	int					timer;
 public:
 	static Donya::Vector3 treePos;
