@@ -34,5 +34,6 @@ enum class ModelAttribute
 	Obstacle,
 	Wave,
 	Beam,
+	SideWall,
 };
 std::string GetModelPath( ModelAttribute fileAttribute );

@@ -11,7 +11,6 @@
 struct ParticleEmitterPosition
 {
 	Donya::Vector3 playerPos;
-	Donya::Vector3 explosionPos;
 	Donya::Vector3 bossPos;
 };
 
@@ -169,7 +168,7 @@ public:
 	void CreateShockWaveParticle(Donya::Vector3 _pos);
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
 	void ReserveExplosionParticles(Donya::Vector3 _emitPos, int _popNum, int _onceNum);
-	void CreateExplosionLoop(Donya::Vector3 _pos);
+	void CreateExplosionLoop();
 	void CreateBossDamageParticle(Donya::Vector3 _pos);
 	void CreateBossDamageLoop(Donya::Vector3 _pos);
 	void StartBossDamageParticle();

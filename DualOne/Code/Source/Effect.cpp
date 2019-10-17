@@ -31,14 +31,14 @@ void ParticleManager::Init()
 /*-------------------------------------------------*/
 void ParticleManager::Update(ParticleEmitterPosition _arg)
 {
+	++timer;
 	for (int i = 0; i < 3; i++)
 	{
 		CreateSledParticle(_arg.playerPos);
 	}
 
 	// Explosion!
-	Donya::Vector3 provisional = _arg.explosionPos;
-	CreateExplosionLoop(provisional);
+	CreateExplosionLoop();
 
 	CreateBossDamageLoop(_arg.bossPos);
 
@@ -51,6 +51,10 @@ void ParticleManager::Update(ParticleEmitterPosition _arg)
 	for (auto& it : missileEffects)
 	{
 		it.UpdateOfMissiles();
+	}
+	for (auto& it : bossDamageEffects)
+	{
+		it.UpdateOfBossDamage();
 	}
 	for (auto& it : shockWaveEffects)
 	{
@@ -328,10 +332,11 @@ void ParticleManager::ReserveExplosionParticles(Donya::Vector3 _emitPos, int _po
 	isExplosion = true;
 }
 
-void ParticleManager::CreateExplosionLoop(Donya::Vector3 _pos)
+void ParticleManager::CreateExplosionLoop()
 {
 	if (!isExplosion) return;
-	Donya::Vector3 emitPos = _pos;
+//	Donya::Vector3 emitPos = _pos;
+	Donya::Vector3 emitPos = explosionPos;
 	for (int i = 0; i < popNumOnce; i++)
 	{
 //		CreateExplosionParticle(_pos, explosionPopNum);
@@ -342,7 +347,7 @@ void ParticleManager::CreateExplosionLoop(Donya::Vector3 _pos)
 			isExplosion = false;
 			break;
 		}
-		emitPos += 1.0f;
+		emitPos.z += 1.0f;
 	}
 }
 
@@ -590,7 +595,7 @@ void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, floa
 	{
 		if (_scale == 1.0f) scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
 		else 				scale = Donya::Vector3(50.0f * _scale, 50.0f * _scale, 50.0f * _scale);
-		velocity = Donya::Vector3(0.0f,0.0f,-9.0f);
+		velocity = Donya::Vector3(0.0f,0.0f,-10.0f);
 		color = Donya::Vector4(1.0f, 0.3f, 0.0f, 1.0f);
 	}
 	else
@@ -644,7 +649,6 @@ void Particle::UpdateOfSleds()
 
 void Particle::UpdateOfMissiles()
 {
-	--existanceTime;
 
 	// Update Position
 	pos += velocity;
@@ -657,22 +661,23 @@ void Particle::UpdateOfMissiles()
 	if (angle.z >= 360)angle.z = 0;
 	// Update scale
 	scale.x = scale.y = scale.x * existanceTime / 15 ;
+	--existanceTime;
 }
 
 void Particle::UpdateOfBossDamage()
 {
-	--existanceTime;
 
 	pos += velocity;
-	scale.x = scale.y = scale.z = 50.0f * (existanceTime / 30);
+//	scale.x = scale.y = scale.z = 50.0f * (30 / existanceTime);
+	--existanceTime;
 }
 
 void Particle::UpdateOfShockWave()
 {
 	constexpr float GRAVITY = -0.98f;
-	--existanceTime;
 
 	velocity.y += GRAVITY;
 
 	pos += velocity;
+	--existanceTime;
 }

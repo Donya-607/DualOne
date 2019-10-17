@@ -73,6 +73,8 @@ std::string GetModelPath( ModelAttribute fileAttribute )
 		return "./Data/Models/Boss/ShockWave.bin";			// break;
 	case ModelAttribute::Beam:
 		return "./Data/Models/Boss/Beam.bin";				// break;
+	case ModelAttribute::SideWall:
+		return "./Data/Models/Boss/SideWall.bin";			// break;
 	default:
 		assert( !"Error : Specified unexpect model type." ); break;
 	}
