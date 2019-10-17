@@ -28,6 +28,8 @@ ScenePause::~ScenePause() = default;
 
 void ScenePause::Init()
 {
+	controller.Update();
+
 	sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
 }
 
