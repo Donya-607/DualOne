@@ -3,6 +3,7 @@
 #include "Donya/GamepadXInput.h"
 #include "Donya/Serializer.h"
 #include "Donya/UseImgui.h"
+#include "Donya/Vector.h"
 
 #include "Scene.h"
 
@@ -18,7 +19,9 @@ private:
 	};
 private:
 	Choice			choice;
-	size_t			sprFont;
+
+
+	
 	Donya::XInput	controller;
 public:
 	ScenePause();

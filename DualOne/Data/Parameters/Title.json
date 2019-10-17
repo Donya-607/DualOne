@@ -1,0 +1,31 @@
+{
+    "Title": {
+        "cereal_class_version": 0,
+        "uiTitleLogo": {
+            "cereal_class_version": 0,
+            "degree": 0.0,
+            "alpha": 1.0,
+            "ssPos": {
+                "cereal_class_version": 0,
+                "x": 968.3480224609375,
+                "y": 531.947998046875
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0
+            }
+        },
+        "uiButtonPos": {
+            "x": 777.0,
+            "y": 666.0
+        },
+        "uiHoldPos": {
+            "x": 1024.0,
+            "y": 666.0
+        },
+        "uiReleasePos": {
+            "x": 1024.0,
+            "y": 666.0
+        }
+    }
+}

@@ -15,6 +15,7 @@
 
 #include "Common.h"
 #include "Music.h"
+#include "Sentence.h"
 
 using namespace DirectX;
 
@@ -26,6 +27,9 @@ Framework::~Framework() = default;
 bool Framework::Init()
 {
 	LoadSounds();
+
+	Sentence::Get().LoadSprite();
+	Sentence::Get().LoadParameter();
 
 	pSceneMng = std::make_unique<SceneMng>();
 
@@ -63,6 +67,11 @@ void Framework::Update( float elapsedTime/*Elapsed seconds from last frame*/ )
 	DebugShowInformation();
 
 #endif // DEBUG_MODE
+#if USE_IMGUI
+
+	Sentence::Get().UseImGui();
+
+#endif // USE_IMGUI
 
 	pSceneMng->Update( elapsedTime );
 }
