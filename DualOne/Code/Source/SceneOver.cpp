@@ -45,7 +45,7 @@ public:
 	Donya::XInput	controller;
 public:
 	Impl() :
-		choice( Nil ),
+		choice( ReTry ),
 		uiOverPos(), uiBackPos(), uiRetryPos(),
 		controller( Donya::XInput::PadNumber::PAD_1 )
 	{}
