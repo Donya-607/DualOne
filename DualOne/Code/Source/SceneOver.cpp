@@ -68,7 +68,7 @@ void SceneOver::Init()
 {
 	Donya::Sound::Play( Music::BGM_Over );
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 }
 
 void SceneOver::Uninit()

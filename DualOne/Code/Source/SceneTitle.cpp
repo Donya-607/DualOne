@@ -59,7 +59,7 @@ void SceneTitle::Init()
 {
 	Donya::Sound::Play( Music::BGM_Title );
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 }
 
 void SceneTitle::Uninit()
@@ -93,8 +93,8 @@ void SceneTitle::Draw( float elapsedTime )
 		"Title",
 		Common::HalfScreenWidthF(),
 		Common::HalfScreenHeightF(),
-		32.0f, 32.0f,
-		32.0f, 32.0f
+		64.0f, 64.0f,
+		64.0f, 64.0f
 	);
 }
 

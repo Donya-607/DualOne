@@ -10,7 +10,9 @@ enum class SpriteAttribute
 {
 	FMODLogoBlack,
 	FMODLogoWhite,
-	TestFont,
+	Font,
+	Usage,
+	Sentences,
 	Warning,
 	GroundTex1,
 	GroundTex2,

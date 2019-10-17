@@ -76,6 +76,52 @@ static std::string EasingTypeToStr( int easingType )
 	return "Error Type !";
 }
 
+struct Usage
+{
+public:
+	size_t sprite{};
+	float  degree{};
+	float  alpha{};
+	Donya::Vector2 ssPos{};	// screen-space.
+	Donya::Vector2 scale{};
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize( Archive &archive, std::uint32_t version )
+	{
+		archive
+		(
+			CEREAL_NVP( degree ),
+			CEREAL_NVP( alpha ),
+			CEREAL_NVP( ssPos ),
+			CEREAL_NVP( scale )
+		);
+
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP( x ) );
+		}
+	}
+public:
+	void LoadSprite()
+	{
+		sprite = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Usage ), 4U );
+	}
+
+	void Draw()
+	{
+		Donya::Sprite::DrawExt
+		(
+			sprite,
+			ssPos.x, ssPos.y,
+			scale.x, scale.y,
+			degree, alpha
+		);
+	}
+};
+
+CEREAL_CLASS_VERSION( Usage, 0 )
+
 struct SceneGame::Impl
 {
 public:
@@ -99,6 +145,8 @@ public:
 	Ground	ground;
 	Boss	boss;
 	Timer	currentTime;
+
+	Usage	sprUsage;
 
 	Donya::Vector3	lightDirection;
 
@@ -182,6 +230,10 @@ private:
 		}
 		if ( 5 <= version )
 		{
+			archive( CEREAL_NVP( sprUsage ) );
+		}
+		if ( 6 <= version )
+		{
 			// archive( CEREAL_NVP( x ) );
 		}
 	}
@@ -190,8 +242,8 @@ public:
 	void LoadParameter( bool isBinary = true )
 	{
 		Serializer::Extension ext = ( isBinary )
-			? Serializer::Extension::BINARY
-			: Serializer::Extension::JSON;
+		? Serializer::Extension::BINARY
+		: Serializer::Extension::JSON;
 		std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
 
 		Serializer seria;
@@ -202,13 +254,13 @@ public:
 
 	void SaveParameter()
 	{
-		Serializer::Extension bin = Serializer::Extension::BINARY;
+		Serializer::Extension bin  = Serializer::Extension::BINARY;
 		Serializer::Extension json = Serializer::Extension::JSON;
-		std::string binPath = GenerateSerializePath( SERIAL_ID, bin );
+		std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
 		std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
 
 		Serializer seria;
-		seria.Save( bin, binPath.c_str(), SERIAL_ID, *this );
+		seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
 		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
 	}
 	
@@ -285,6 +337,16 @@ public:
 					ImGui::TreePop();
 				}
 
+				if ( ImGui::TreeNode( u8"操作方法の表示位置" ) )
+				{
+					ImGui::SliderFloat( u8"角度", &sprUsage.degree, 0.0f, 360.0f );
+					ImGui::SliderFloat( u8"アルファ", &sprUsage.alpha, 0.0f, 1.0f );
+					ImGui::SliderFloat2( u8"描画位置（Ｘ，Ｙ）", &sprUsage.ssPos.x, 0.0f, 1920.0f );
+					ImGui::SliderFloat2( u8"スケール（Ｘ，Ｙ）", &sprUsage.scale.x, 0.0f, 1.0f );
+
+					ImGui::TreePop();
+				}
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -317,7 +379,7 @@ public:
 #endif // USE_IMGUI
 };
 
-CEREAL_CLASS_VERSION( SceneGame::Impl, 4 )
+CEREAL_CLASS_VERSION( SceneGame::Impl, 5 )
 
 SceneGame::SceneGame() : pImpl( std::make_unique<Impl>() )
 {
@@ -334,7 +396,8 @@ void SceneGame::Init()
 
 	pImpl->LoadParameter();
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
+	pImpl->sprUsage.LoadSprite();
 
 	pImpl->currentTime.Set( 0, 0, 0 );
 
@@ -476,7 +539,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			{
 				if ( element.ShouldErase() )
 				{
-					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 1, 1 );
+					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 120, 1 );
 					return true;
 				}
 				// else
@@ -518,7 +581,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	}
 	if ( Donya::Keyboard::Trigger( 'F' ) )
 	{
-		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1, 1 );
+		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1200, 1 );
 	}
 
 #endif // DEBUG_MODE
@@ -528,26 +591,33 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 void SceneGame::Draw( float elapsedTime )
 {
-	Donya::Sprite::SetDrawDepth( 1.0f );
-	// Draw BackGround.
-	Donya::Sprite::DrawRect
-	(
-		Common::HalfScreenWidthF(),
-		Common::HalfScreenHeightF(),
-		Common::ScreenWidthF(),
-		Common::ScreenHeightF(),
-		Donya::Sprite::Color::DARK_GRAY, 1.0f
-	);
+	// Drawing 2D asset.
+	{
+		Donya::Sprite::SetDrawDepth( 1.0f );
 
-	Donya::Sprite::SetDrawDepth( 0.0f );
-	Donya::Sprite::DrawString
-	(
-		pImpl->sprFont,
-		pImpl->currentTime.ToStr(),
-		32.0f, 64.0f,
-		32.0f, 32.0f,
-		32.0f, 32.0f
-	);
+		// BackGround.
+		Donya::Sprite::DrawRect
+		(
+			Common::HalfScreenWidthF(),
+			Common::HalfScreenHeightF(),
+			Common::ScreenWidthF(),
+			Common::ScreenHeightF(),
+			Donya::Sprite::Color::DARK_GRAY, 1.0f
+		);
+
+		Donya::Sprite::SetDrawDepth( 0.0f );
+
+		pImpl->sprUsage.Draw();
+
+		Donya::Sprite::DrawString
+		(
+			pImpl->sprFont,
+			pImpl->currentTime.ToStr(),
+			32.0f, 64.0f,
+			64.0f, 64.0f,
+			64.0f, 64.0f
+		);
+	}
 
 	using namespace DirectX;
 
@@ -748,13 +818,13 @@ void SceneGame::DetectCollision()
 		for ( const auto &it : reflectableAttacks )
 		{
 			other = it.GetHitBox();
-			if ( AABB::IsHitAABB( other, playerBox ) )
+			if ( AABB::IsHitAABB( other, playerBox, /* ignoreExistFlag = */ true ) )
 			{
 				it.HitToOther();
 
 				HitToPlayer( /* canReflection = */ true );
 
-				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 1, 1 );
+				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 120, 1 );
 			}
 		}
 	}

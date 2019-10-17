@@ -24,8 +24,12 @@ std::wstring GetSpritePath( SpriteAttribute fileAttribute )
 		return L"./Data/Images/Rights/FMOD Logo Black - White Background.png";	// break;
 	case SpriteAttribute::FMODLogoWhite:
 		return L"./Data/Images/Rights/FMOD Logo White - Black Background.png";	// break;
-	case SpriteAttribute::TestFont:
-		return L"./Data/Images/Font/TestFont.png";	// break;
+	case SpriteAttribute::Font:
+		return L"./Data/Images/Font/Font.png";		// break;
+	case SpriteAttribute::Usage:
+		return L"./Data/Images/UI/Usage.png";		// break;
+	case SpriteAttribute::Sentences:
+		return L"./Data/Images/UI/Sentences.png";	// break;
 	case SpriteAttribute::Warning:
 		return L"./Data/Images/UI/Warning.png";		// break;
 	case SpriteAttribute::GroundTex1:

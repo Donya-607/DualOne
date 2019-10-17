@@ -31,7 +31,7 @@ void ScenePause::Init()
 	// Suppress continiously trigger pause-button.
 	controller.Update();
 
-	sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 }
 
 void ScenePause::Uninit()

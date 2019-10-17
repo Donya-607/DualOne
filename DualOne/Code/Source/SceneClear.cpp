@@ -153,7 +153,7 @@ void SceneClear::Init()
 {
 	Donya::Sound::Play( Music::BGM_Clear );
 
-	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::TestFont ), 1024U );
+	pImpl->sprFont = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Font ), 1024U );
 
 	pImpl->bestTime.Set( 99, 59, 59 );
 	pImpl->LoadParameter(); // Load best-time.

@@ -598,7 +598,7 @@ void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, floa
 	{
 		if (_scale == 1.0f) scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
 		else 				scale = Donya::Vector3(50.0f * _scale, 50.0f * _scale, 50.0f * _scale);
-		velocity = Donya::Vector3(0.0f,0.0f,-10.0f);
+		velocity = Donya::Vector3(0.0f,0.0f,-11.0f);
 		color = Donya::Vector4(1.0f, 0.3f, 0.0f, 1.0f);
 	}
 	else
