@@ -844,6 +844,21 @@ void SceneGame::DetectCollision()
 			}
 		}
 	}
+	// Beams vs Player.
+	{
+		AABB other{};
+		auto &beams = pImpl->boss.FetchBeams();
+		for ( const auto &it : beams )
+		{
+			other = it.GetHitBox();
+			if ( AABB::IsHitAABB( other, playerBox ) )
+			{
+				it.HitToOther();
+
+				HitToPlayer( /* canReflection = */ false );
+			}
+		}
+	}
 	// Other-Attacks vs Player.
 	{
 		std::vector<AABB> hitBoxes = pImpl->boss.FetchHitBoxes();
