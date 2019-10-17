@@ -3,10 +3,6 @@
 #include <algorithm>
 #include <string>
 
-#include "cereal/cereal.hpp"
-#include "cereal/archives/binary.hpp"
-#include "cereal/archives/json.hpp"
-
 #include "Donya/GamepadXInput.h"
 #include "Donya/Keyboard.h"
 #include "Donya/Random.h"
@@ -50,9 +46,77 @@ private:
 	template<class Archive>
 	void serialize( Archive &archive, const std::uint32_t version )
 	{
-		// archive( CEREAL_NVP() );
+		/*archive
+		(
+			CEREAL_NVP( x ),
+		);*/
+
+		if ( 1 <= version )
+		{
+			// archive( CEREAL_NVP() );
+		}
 	}
+	static constexpr const char *SERIAL_ID = "Over";
 public:
+	void LoadParameter( bool isBinary )
+	{
+		Serializer::Extension ext = ( isBinary )
+		? Serializer::Extension::BINARY
+		: Serializer::Extension::JSON;
+		std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+		Serializer seria;
+		seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+	}
+
+#if USE_IMGUI
+
+	void SaveParameter()
+	{
+		Serializer::Extension bin  = Serializer::Extension::BINARY;
+		Serializer::Extension json = Serializer::Extension::JSON;
+		std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+		std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+		Serializer seria;
+		seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+		seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+	}
+
+	void UseImGui()
+	{
+		if ( ImGui::BeginIfAllowed() )
+		{
+			if ( ImGui::TreeNode( u8"ゲームオーバー画面" ) )
+			{
+				if ( ImGui::TreeNode( u8"ファイル" ) )
+				{
+					static bool isBinary = false;
+					if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+					if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+					std::string loadStr{ "読み込み " };
+					loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+					if ( ImGui::Button( u8"保存" ) )
+					{
+						SaveParameter();
+					}
+					if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+					{
+						LoadParameter( isBinary );
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::End();
+		}
+	}
+
+#endif // USE_IMGUI
 };
 
 SceneOver::SceneOver() : pImpl( std::make_unique<SceneOver::Impl>() )

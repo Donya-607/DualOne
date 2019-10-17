@@ -65,7 +65,7 @@ private:
 public:
 	void LoadSprite();
 
-	void Draw( Kind kind, Donya::Vector2 ssPos, float degree = 0.0f, float alpha = 1.0f, float scale = 1.0f );
+	void Draw( Kind kind, Donya::Vector2 ssPos, float degree = 0.0f, float alpha = 1.0f, float scale = 1.0f ) const;
 public:
 	void LoadParameter( bool isBinary = true );
 

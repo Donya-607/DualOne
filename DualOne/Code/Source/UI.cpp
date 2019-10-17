@@ -26,3 +26,15 @@ void UIObject::Draw()
 		degree, alpha
 	);
 }
+
+#if USE_IMGUI
+
+void UIObject::CallSlidersOfImGui()
+{
+	ImGui::SliderFloat( u8"角度",				&degree,  0.0f, 360.0f );
+	ImGui::SliderFloat( u8"アルファ",			&alpha,   0.0f, 1.0f );
+	ImGui::SliderFloat2( u8"位置（Ｘ，Ｙ）",		&ssPos.x, 0.0f, 1920.0f );
+	ImGui::SliderFloat2( u8"スケール（Ｘ，Ｙ）",	&scale.x, 0.0f, 1.0f );
+}
+
+#endif // USE_IMGUI

@@ -2,6 +2,7 @@
 
 #include "Donya/Serializer.h"
 #include "Donya/Vector.h"
+#include "Donya/UseImgui.h"
 
 struct UIObject
 {
@@ -36,6 +37,15 @@ public:
 	void LoadSprite( const std::wstring &filePath, size_t maxInstanceCount );
 
 	void Draw();
+
+#if USE_IMGUI
+
+public:
+
+	// You must call at between ImGui::Begin() and ImGui::End().
+	void CallSlidersOfImGui();
+
+#endif // USE_IMGUI
 };
 
 CEREAL_CLASS_VERSION( UIObject, 0 )

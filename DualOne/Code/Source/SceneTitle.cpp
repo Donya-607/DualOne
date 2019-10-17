@@ -15,6 +15,7 @@
 #include "Fader.h"
 #include "FilePath.h"
 #include "Music.h"
+#include "Sentence.h"
 #include "UI.h"
 
 #undef min
@@ -32,11 +33,12 @@ public:
 	Donya::XInput	controller;
 	bool			wasAddedGameScene;	// Append the game-scene below me(title).
 	bool			isHolding;
+	bool			removeTitle;
 public:
 	Impl() :
 		uiTitleLogo(), uiButtonPos(), uiHoldPos(), uiReleasePos(),
 		controller( Donya::Gamepad::PadNumber::PAD_1 ),
-		wasAddedGameScene( false ), isHolding( false )
+		wasAddedGameScene( false ), isHolding( false ), removeTitle( false )
 	{}
 private:
 	friend class cereal::access;
@@ -58,7 +60,7 @@ private:
 	}
 	static constexpr const char *SERIAL_ID = "Title";
 public:
-	void LoadParameter( bool isBinary )
+	void LoadParameter( bool isBinary = true )
 	{
 		Serializer::Extension ext = ( isBinary )
 		? Serializer::Extension::BINARY
@@ -89,6 +91,17 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"タイトル画面" ) )
 			{
+				if ( ImGui::TreeNode( u8"ロゴ" ) )
+				{
+					uiTitleLogo.CallSlidersOfImGui();
+					ImGui::TreePop();
+				}
+
+				ImGui::SliderFloat2( u8"Ａボタン・位置（Ｘ，Ｙ）", &uiButtonPos.x, 0.0f, 1920.0f );
+				ImGui::SliderFloat2( u8"押しつづけて……・位置（Ｘ，Ｙ）", &uiHoldPos.x, 0.0f, 1920.0f );
+				ImGui::SliderFloat2( u8"はなしてスタート・位置（Ｘ，Ｙ）", &uiReleasePos.x, 0.0f, 1920.0f );
+				
+
 				if ( ImGui::TreeNode( u8"ファイル" ) )
 				{
 					static bool isBinary = false;
@@ -134,6 +147,8 @@ void SceneTitle::Init()
 {
 	Donya::Sound::Play( Music::BGM_Title );
 
+	pImpl->LoadParameter();
+
 	pImpl->uiTitleLogo.LoadSprite( GetSpritePath( SpriteAttribute::TitleLogo ), 2U );
 }
 
@@ -144,16 +159,22 @@ void SceneTitle::Uninit()
 
 Scene::Result SceneTitle::Update( float elapsedTime )
 {
+#if USE_IMGUI
+
+	pImpl->UseImGui();
+
+#endif // USE_IMGUI
+
 	pImpl->controller.Update();
 
-	/*
-	if ( IsDecisionTriggered() && !Fader::Get().IsExist() )
+	if ( IsDecisionPressing() )
 	{
-		Donya::Sound::Play( Music::ItemDecision );
-
-		StartFade();
+		pImpl->isHolding = true;
 	}
-	*/
+	else if ( pImpl->isHolding )
+	{
+		pImpl->removeTitle = true;
+	}
 
 	return ReturnResult();
 }
@@ -162,7 +183,20 @@ void SceneTitle::Draw( float elapsedTime )
 {
 	Donya::Sprite::SetDrawDepth( 0.0f );
 
-	
+	const auto &GET = Sentence::Get();
+
+	if ( pImpl->isHolding )
+	{
+		pImpl->uiTitleLogo.alpha = 0.5f;
+		pImpl->uiTitleLogo.Draw();
+		GET.Draw( Sentence::Kind::ReleaseThenStart, pImpl->uiReleasePos );
+	}
+	else
+	{
+		pImpl->uiTitleLogo.Draw();
+		GET.Draw( Sentence::Kind::ButtonA, pImpl->uiButtonPos );
+		GET.Draw( Sentence::Kind::HoldingButton_, pImpl->uiHoldPos );
+	}
 }
 
 bool SceneTitle::IsDecisionTriggered() const
@@ -171,6 +205,13 @@ bool SceneTitle::IsDecisionTriggered() const
 	( pImpl->controller.IsConnected() )
 	? pImpl->controller.Trigger( Donya::Gamepad::A )
 	: ( Donya::Keyboard::Trigger( 'Z' ) ) ? true : false;
+}
+bool SceneTitle::IsDecisionPressing() const
+{
+	return
+	( pImpl->controller.IsConnected() )
+	? pImpl->controller.Press( Donya::Gamepad::A )
+	: ( Donya::Keyboard::Press( 'Z' ) ) ? true : false;
 }
 bool SceneTitle::IsDecisionReleased() const
 {
@@ -212,8 +253,7 @@ Scene::Result SceneTitle::ReturnResult()
 		return append;
 	}
 
-	// if ( Fader::Get().IsClosed() )
-	if ( IsDecisionReleased() )
+	if ( pImpl->removeTitle )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 

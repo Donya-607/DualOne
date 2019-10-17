@@ -28,7 +28,7 @@ void Sentence::LoadSprite()
 	sprite = Donya::Sprite::Load( GetSpritePath( SpriteAttribute::Sentences ), 128U );
 }
 
-void Sentence::Draw( Kind kind, Donya::Vector2 ssPos, float degree, float alpha, float scale )
+void Sentence::Draw( Kind kind, Donya::Vector2 ssPos, float degree, float alpha, float scale ) const
 {
 	int iKind = scast<int>( kind );
 	if ( iKind < 0 || KIND_COUNT <= iKind ) { return; }

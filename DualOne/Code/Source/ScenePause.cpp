@@ -7,6 +7,7 @@
 #include "Donya/Sprite.h"
 #include "Donya/Sound.h"
 #include "Donya/Vector.h"
+#include "Donya/Useful.h"
 
 #include "Common.h"
 #include "Fader.h"
@@ -203,3 +204,63 @@ Scene::Result ScenePause::ReturnResult()
 	Scene::Result noop{ Scene::Request::NONE, Scene::Type::Null };
 	return noop;
 }
+
+void ScenePause::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void ScenePause::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void ScenePause::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"タイトル画面" ) )
+		{
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = false;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
