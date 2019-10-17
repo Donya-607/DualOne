@@ -96,7 +96,7 @@ void ScenePause::Draw( float elapsedTime )
 	}
 	GET.Draw( Sentence::Kind::Pause,		uiPausePos  );
 	if( choice != ScenePause::Choice::BackToTitle	) { GET.Draw( Sentence::Kind::LeftArrow,	uiArrowPosL ); }
-	if( choice != ScenePause::Choice::Retry			) { GET.Draw( Sentence::Kind::RightArrow,	uiArrowPosR ); }
+	if( choice != ScenePause::Choice::ReTry			) { GET.Draw( Sentence::Kind::RightArrow,	uiArrowPosR ); }
 }
 
 void ScenePause::UpdateChooseItem()
