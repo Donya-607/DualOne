@@ -386,7 +386,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 {
 	pImpl->controller.Update();
 
-	auto MakePlayerInput = [&]( bool doChargeForce = false )->Player::Input
+	auto MakePlayerInput = [&]()->Player::Input
 	{
 		Player::Input input{};
 
@@ -398,14 +398,14 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			if ( triggerLeft  ) { input.stick.x = -1.0f; }
 			if ( triggerRight ) { input.stick.x =  1.0f; }
 
-			if ( ctrller.Press( Donya::Gamepad::Button::A ) || doChargeForce ) { input.doCharge = true; }
+			if ( ctrller.Press( Donya::Gamepad::Button::A ) ) { input.doCharge = true; }
 		}
 		else
 		{
 			if ( Donya::Keyboard::Trigger( VK_RIGHT ) ) { input.stick.x =  1.0f; }
 			if ( Donya::Keyboard::Trigger( VK_LEFT  ) ) { input.stick.x = -1.0f; }
 
-			if ( Donya::Keyboard::Press( 'Z' ) || doChargeForce ) { input.doCharge = true; }
+			if ( Donya::Keyboard::Press( 'Z' ) ) { input.doCharge = true; }
 		}
 
 		if ( pImpl->status == Impl::State::Title )
@@ -417,19 +417,28 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	};
 	Player::Input playerInput{};
 
-	if ( ( IsDecisionReleased() || pImpl->wasRetried ) && pImpl->status == Impl::State::Title )
+	if ( pImpl->status == Impl::State::Title )
 	{
-		pImpl->prepareStart = true;
+		if ( IsDecisionReleased() || pImpl->wasRetried )
+		{
+			pImpl->prepareStart = true;
+		}
 	}
+	else
+	{
+		pImpl->currentTime.Update();
+	}
+
+	playerInput = MakePlayerInput();
 
 	if ( pImpl->prepareStart )
 	{
 		// Charging player for reflect a missile, must do this before change the status.
 		if ( !pImpl->player.IsFullCharged() )
 		{
-			playerInput = MakePlayerInput( /* doChargeForce = */ true );
+			playerInput.doCharge = true;
 		}
-		else
+		else if ( !playerInput.doCharge )
 		{
 			pImpl->status		= Impl::State::Game;
 			pImpl->prepareStart	= false;
@@ -440,13 +449,6 @@ Scene::Result SceneGame::Update( float elapsedTime )
 				pImpl->player.GetPos().z + pImpl->initDistanceOfBoss
 			);
 		}
-	}
-
-	if ( pImpl->status != Impl::State::Title )
-	{
-		playerInput = MakePlayerInput();
-
-		pImpl->currentTime.Update();
 	}
 
 #if USE_IMGUI
