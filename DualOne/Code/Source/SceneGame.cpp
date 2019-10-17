@@ -476,7 +476,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			{
 				if ( element.ShouldErase() )
 				{
-					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 1, 1 );
+					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 15, 3 );
 					return true;
 				}
 				// else
@@ -518,7 +518,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 	}
 	if ( Donya::Keyboard::Trigger( 'F' ) )
 	{
-		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1, 1 );
+		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 15, 3 );
 	}
 
 #endif // DEBUG_MODE
@@ -766,7 +766,7 @@ void SceneGame::DetectCollision()
 
 				HitToPlayer( /* canReflection = */ true );
 
-				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 1, 1 );
+				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 15, 3 );
 			}
 		}
 	}

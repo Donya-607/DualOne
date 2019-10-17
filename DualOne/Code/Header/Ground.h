@@ -32,9 +32,9 @@ public:
 	void LoadModel();
 	void ApplyLoopToMap(Donya::Vector3 _playerPos)
 	{
-		if (pos.z >= _playerPos.z + 2000)
+		if (pos.z >= _playerPos.z + 3000)
 		{
-			pos.z = _playerPos.z - 2000;
+			pos.z = _playerPos.z - 3000;
 		}
 	}
 };

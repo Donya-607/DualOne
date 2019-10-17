@@ -55,7 +55,7 @@ struct Particle
 	//	Set Parameter fanction
 	void SetNoneElements(Donya::Vector3 _emitterPos);
 	void SetSledElements(Donya::Vector3 _emitterPos);
-	void SetBossElements(Donya::Vector3 _emitterPos);
+	void SetBossElements(Donya::Vector3 _emitterPos, bool _isEnableRight);
 	void SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, float _scale = 1.0f);
 	void SetShockWaveElements(Donya::Vector3 _emitterPos);
 
@@ -169,7 +169,7 @@ public:
 	void CreateExplosionParticle(Donya::Vector3 _pos, int _loopNum);
 	void ReserveExplosionParticles(Donya::Vector3 _emitPos, int _popNum, int _onceNum);
 	void CreateExplosionLoop();
-	void CreateBossDamageParticle(Donya::Vector3 _pos);
+	void CreateBossDamageParticle(Donya::Vector3 _pos, bool _isEnableRight);
 	void CreateBossDamageLoop(Donya::Vector3 _pos);
 	void StartBossDamageParticle();
 	void UpdateBossDamageLevel();

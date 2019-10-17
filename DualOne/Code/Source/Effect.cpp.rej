@@ -1,0 +1,27 @@
+diff a/DualOne/Code/Source/Effect.cpp b/DualOne/Code/Source/Effect.cpp	(rejected hunks)
+@@ -359,18 +359,21 @@
+ 	switch (damageLevel)
+ 	{
+ 	case LEVEL1:
+-		generateInterval = 60;	break;
+-	case LEVEL2:
+ 		generateInterval = 30;	break;
++	case LEVEL2:
++		generateInterval = 15;	break;
+ 	case LEVEL3:
+-		generateInterval = 10;	break;
++		generateInterval = 5;	break;
+ 	default:
+ 		break;
+ 	}
+ 
+ 	if (timer % generateInterval == 0)
+ 	{
+-		CreateBossDamageParticle(_pos);
++		Donya::Vector3 priPos = _pos;
++		priPos.y += 40.0f;
++		priPos.z += 12.0f;
++		CreateBossDamageParticle(priPos);
+ 	}
+ }
+ 
