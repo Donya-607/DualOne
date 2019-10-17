@@ -522,7 +522,7 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			pImpl->prepareStart = true;
 		}
 	}
-	else
+	else if ( !pImpl->wasTouched ) // Not failed.
 	{
 		pImpl->currentTime.Update();
 	}

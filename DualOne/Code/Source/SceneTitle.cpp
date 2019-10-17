@@ -187,7 +187,7 @@ void SceneTitle::Draw( float elapsedTime )
 
 	if ( pImpl->isHolding )
 	{
-		pImpl->uiTitleLogo.alpha = 0.5f;
+		// pImpl->uiTitleLogo.alpha = 0.5f; // Unnecessary
 		pImpl->uiTitleLogo.Draw();
 		GET.Draw( Sentence::Kind::ReleaseThenStart, pImpl->uiReleasePos );
 	}
