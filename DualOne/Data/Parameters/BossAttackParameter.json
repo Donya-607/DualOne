@@ -7,125 +7,125 @@
         "resetWaitFrame": 0,
         "intervalsPerHP": [
             {
-                "value0": 1,
+                "value0": 15,
                 "value1": 10,
-                "value2": 12,
-                "value3": 12
+                "value2": 20,
+                "value3": 20
             },
             {
-                "value0": 1,
+                "value0": 15,
                 "value1": 10,
-                "value2": 12,
-                "value3": 12
+                "value2": 20,
+                "value3": 20
             },
             {
-                "value0": 1,
+                "value0": 15,
                 "value1": 10,
-                "value2": 12,
-                "value3": 12
+                "value2": 20,
+                "value3": 20
             },
             {
-                "value0": 1,
+                "value0": 15,
                 "value1": 20,
-                "value2": 12,
-                "value3": 12
+                "value2": 30,
+                "value3": 20
             },
             {
-                "value0": 114,
+                "value0": 15,
                 "value1": 20,
-                "value2": 12,
-                "value3": 12
+                "value2": 30,
+                "value3": 20
             },
             {
-                "value0": 114,
+                "value0": 15,
                 "value1": 20,
-                "value2": 12,
-                "value3": 12
-            },
-            {
-                "value0": 159,
-                "value1": 12,
-                "value2": 20,
+                "value2": 30,
                 "value3": 20
             },
             {
-                "value0": 186,
+                "value0": 15,
                 "value1": 12,
-                "value2": 20,
+                "value2": 30,
                 "value3": 20
             },
             {
-                "value0": 223,
+                "value0": 15,
                 "value1": 12,
-                "value2": 20,
-                "value3": 20
+                "value2": 30,
+                "value3": 30
             },
             {
-                "value0": 103,
+                "value0": 15,
                 "value1": 12,
-                "value2": 20,
-                "value3": 20
+                "value2": 30,
+                "value3": 30
+            },
+            {
+                "value0": 15,
+                "value1": 12,
+                "value2": 30,
+                "value3": 30
             }
         ],
         "reuseFramesPerHP": [
             {
-                "value0": 1,
-                "value1": 120,
+                "value0": 180,
+                "value1": 30,
                 "value2": 120,
+                "value3": 60
+            },
+            {
+                "value0": 180,
+                "value1": 30,
+                "value2": 120,
+                "value3": 60
+            },
+            {
+                "value0": 180,
+                "value1": 30,
+                "value2": 120,
+                "value3": 60
+            },
+            {
+                "value0": 180,
+                "value1": 60,
+                "value2": 240,
+                "value3": 90
+            },
+            {
+                "value0": 180,
+                "value1": 60,
+                "value2": 240,
+                "value3": 90
+            },
+            {
+                "value0": 180,
+                "value1": 60,
+                "value2": 240,
+                "value3": 90
+            },
+            {
+                "value0": 180,
+                "value1": 120,
+                "value2": 240,
                 "value3": 150
             },
             {
-                "value0": 1,
+                "value0": 180,
                 "value1": 120,
-                "value2": 120,
+                "value2": 240,
                 "value3": 150
             },
             {
-                "value0": 1,
+                "value0": 180,
                 "value1": 120,
-                "value2": 120,
+                "value2": 240,
                 "value3": 150
             },
             {
-                "value0": 1,
+                "value0": 180,
                 "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 1,
-                "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 99,
-                "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 65,
-                "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 186,
-                "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 223,
-                "value1": 120,
-                "value2": 120,
-                "value3": 150
-            },
-            {
-                "value0": 223,
-                "value1": 120,
-                "value2": 120,
+                "value2": 240,
                 "value3": 150
             }
         ],

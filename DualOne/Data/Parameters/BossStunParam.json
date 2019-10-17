@@ -1,0 +1,32 @@
+{
+    "BossStunParam": {
+        "cereal_class_version": 0,
+        "invisibleCycleFrame": 1,
+        "invisibleLowestAlpha": 0.0,
+        "rotationSpeedMiddle": 12.611000061035157,
+        "rotationSpeedHigh": 23.513999938964845,
+        "stunFrames": {
+            "value0": 30,
+            "value1": 60,
+            "value2": 90
+        },
+        "stunVelocities": {
+            "value0": {
+                "cereal_class_version": 0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": -1.1360000371932984
+            },
+            "value1": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -2.6510000228881838
+            },
+            "value2": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -3.4079999923706056
+            }
+        }
+    }
+}

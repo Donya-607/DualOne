@@ -217,6 +217,10 @@ public:
 		{
 			if ( ImGui::TreeNode( u8"一般設定" ) )
 			{
+				ImGui::Text( u8"Ｈキー：当たり判定の表示・非表示切り替え" );
+				ImGui::Text( u8"Ｔキー：ImGuiの表示・非表示切り替え" );
+				ImGui::Text( "" );
+
 				ImGui::SliderFloat3( u8"ライトの方向", &lightDirection.x, -4.0f, 4.0f );
 				ImGui::Text( "" );
 
@@ -358,6 +362,8 @@ void SceneGame::Init()
 
 void SceneGame::Uninit()
 {
+	ParticleManager::Get().Uninit();
+
 	pImpl->player.Uninit();
 
 	for ( auto &it : pImpl->reflectedEntities )
@@ -450,7 +456,13 @@ Scene::Result SceneGame::Update( float elapsedTime )
 			pImpl->reflectedEntities.end(),
 			[]( ReflectedEntity &element )
 			{
-				return element.ShouldErase();
+				if ( element.ShouldErase() )
+				{
+					ParticleManager::Get().ReserveExplosionParticles( element.GetPos(), 1, 1 );
+					return true;
+				}
+				// else
+				return false;
 			}
 		);
 
@@ -471,22 +483,44 @@ Scene::Result SceneGame::Update( float elapsedTime )
 
 	DetectCollision();
 
+#if DEBUG_MODE
+
+	if ( Donya::Keyboard::Press( 'A' ) )
+	{
+		bool enableImpact = false;
+		Donya::Vector3 tmpCollidePos{};
+		if ( Donya::Keyboard::Trigger( '1' ) ) { tmpCollidePos.y =  0.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '2' ) ) { tmpCollidePos.y = 50.0f; enableImpact = true; }
+		if ( Donya::Keyboard::Trigger( '3' ) ) { tmpCollidePos.y =999.0f; enableImpact = true; }
+
+		if ( enableImpact )
+		{
+			pImpl->boss.ReceiveImpact( tmpCollidePos );
+		}
+	}
+	if ( Donya::Keyboard::Trigger( 'F' ) )
+	{
+		ParticleManager::Get().ReserveExplosionParticles( pImpl->player.GetPos(), 1, 1 );
+	}
+
+#endif // DEBUG_MODE
+
 	return ReturnResult();
 }
 
 void SceneGame::Draw( float elapsedTime )
 {
 	// Draw BackGround.
-#if DEBUG_MODE
-
 	Donya::Sprite::DrawRect
 	(
 		Common::HalfScreenWidthF(),
 		Common::HalfScreenHeightF(),
 		Common::ScreenWidthF(),
 		Common::ScreenHeightF(),
-		Donya::Sprite::Color::TEAL, 1.0f
+		Donya::Sprite::Color::DARK_GRAY, 1.0f
 	);
+
+#if DEBUG_MODE
 
 	Donya::Sprite::DrawString
 	(
@@ -713,6 +747,8 @@ void SceneGame::DetectCollision()
 				it.HitToOther();
 
 				HitToPlayer( /* canReflection = */ true );
+
+				ParticleManager::Get().ReserveExplosionParticles( it.GetPos(), 1, 1 );
 			}
 		}
 	}

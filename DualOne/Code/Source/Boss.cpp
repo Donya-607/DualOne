@@ -1579,6 +1579,116 @@ void CollisionDetail::UseImGui()
 // region CollisionDetail
 #pragma endregion
 
+#pragma region StunParam
+
+StunParam::StunParam() :
+	invisibleCycleFrame(),
+	invisibleLowestAlpha(),
+	rotationSpeedMiddle(),
+	rotationSpeedHigh(),
+	stunFrames(),
+	stunVelocities()
+{}
+StunParam::~StunParam() = default;
+
+void StunParam::LoadParameter( bool isBinary )
+{
+	Serializer::Extension ext = ( isBinary )
+	? Serializer::Extension::BINARY
+	: Serializer::Extension::JSON;
+	std::string filePath = GenerateSerializePath( SERIAL_ID, ext );
+
+	Serializer seria;
+	seria.Load( ext, filePath.c_str(), SERIAL_ID, *this );
+}
+
+#if USE_IMGUI
+
+void StunParam::SaveParameter()
+{
+	Serializer::Extension bin  = Serializer::Extension::BINARY;
+	Serializer::Extension json = Serializer::Extension::JSON;
+	std::string binPath  = GenerateSerializePath( SERIAL_ID, bin );
+	std::string jsonPath = GenerateSerializePath( SERIAL_ID, json );
+
+	Serializer seria;
+	seria.Save( bin,  binPath.c_str(),  SERIAL_ID, *this );
+	seria.Save( json, jsonPath.c_str(), SERIAL_ID, *this );
+}
+
+void StunParam::UseImGui()
+{
+	if ( ImGui::BeginIfAllowed() )
+	{
+		if ( ImGui::TreeNode( u8"ボスの気絶関連" ) )
+		{
+			ImGui::SliderInt( u8"点滅間隔（フレーム）", &invisibleCycleFrame, 1, 128 );
+			ImGui::Text( "" );
+
+			ImGui::SliderFloat( u8"回転速度（扇型）", &rotationSpeedMiddle, 0.0f, 32.0f );
+			ImGui::SliderFloat( u8"回転速度（ぐるり）", &rotationSpeedHigh, 0.0f, 32.0f );
+			
+			if ( ImGui::TreeNode( u8"気絶時間の設定" ) )
+			{
+				std::string caption{};
+
+				const size_t COUNT = stunFrames.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = "レベル：" + std::to_string( i );
+					ImGui::SliderInt( Donya::MultiToUTF8( caption ).c_str(), &stunFrames[i], 1, 360 );
+				}
+				
+				ImGui::TreePop();
+			}
+			if ( ImGui::TreeNode( u8"気絶時の移動速度の設定" ) )
+			{
+				std::string caption{};
+
+				const size_t COUNT = stunVelocities.size();
+				for ( size_t i = 0; i < COUNT; ++i )
+				{
+					caption = "レベル：" + std::to_string( i );
+					ImGui::SliderFloat3( Donya::MultiToUTF8( caption ).c_str(), &stunVelocities[i].x, -64.0f, 64.0f );
+				}
+				
+				ImGui::TreePop();
+			}
+
+			ImGui::Text( "" );
+
+			if ( ImGui::TreeNode( u8"ファイル" ) )
+			{
+				static bool isBinary = true;
+				if ( ImGui::RadioButton( "Binary", isBinary ) ) { isBinary = true; }
+				if ( ImGui::RadioButton( "JSON", !isBinary ) ) { isBinary = false; }
+				std::string loadStr{ "読み込み " };
+				loadStr += ( isBinary ) ? "Binary" : "JSON";
+
+				if ( ImGui::Button( u8"保存" ) )
+				{
+					SaveParameter();
+				}
+				if ( ImGui::Button( Donya::MultiToUTF8( loadStr ).c_str() ) )
+				{
+					LoadParameter( isBinary );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::End();
+	}
+}
+
+#endif // USE_IMGUI
+
+// region StunParam
+#pragma endregion
+
 #pragma region DestructionParam
 
 DestructionParam::DestructionParam() :
@@ -1709,7 +1819,7 @@ Boss::Boss() :
 	status( State::Hidden ),
 	currentHP( 1 ),
 	attackTimer(), waitReuseFrame(),
-	stunTimer(), bounceTimer(), destructTimer(),
+	stunTimer(), stunFrame(), stunLevel(), bounceTimer(), destructTimer(),
 	maxDistanceToTarget(), gravity(), initBouncePower(),
 	hitBox(),
 	bounceAppearTimeRange(), bouncePowerRange(),
@@ -1757,6 +1867,7 @@ void Boss::Init( float initDistanceFromOrigin, const std::vector<Donya::Vector3>
 
 	AttackParam::Get().LoadParameter();
 	CollisionDetail::Get().LoadParameter();
+	StunParam::Get().LoadParameter();
 	DestructionParam::Get().LoadParameter();
 
 	currentHP = AttackParam::Get().maxHP;
@@ -1815,6 +1926,7 @@ void Boss::Update( int targetLaneNo, const Donya::Vector3 &wsAttackTargetPos )
 	Wave::UseImGui();
 	AttackParam::Get().UseImGui();
 	CollisionDetail::Get().UseImGui();
+	StunParam::Get().UseImGui();
 	DestructionParam::Get().UseImGui();
 
 #endif // USE_IMGUI
@@ -1846,7 +1958,19 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		return matrix;
 	};
 
+	bool isDrawBoss = true;
+	if ( status == State::Stun )
+	{
+		const int &INTERVAL = StunParam::Get().invisibleCycleFrame;
+		int  clampedTimer = stunTimer % ( INTERVAL << 1 );
+		if ( clampedTimer < INTERVAL )
+		{
+			isDrawBoss = false;
+		}
+	}
+
 	// Rendering model parts.
+	if ( isDrawBoss )
 	{
 		// Make matrix that is transform to parent-space for each model.
 		/*
@@ -1882,11 +2006,10 @@ void Boss::Draw( const DirectX::XMFLOAT4X4 &matView, const DirectX::XMFLOAT4X4 &
 		XMMATRIX WA = MA * WB; //      MA * MB * MF * W
 		XMMATRIX WR = MR * WA; // MR * MA * MB * MF * W
 
+		constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		auto RenderModelPart = [&]( const ModelPart &mp, const XMMATRIX &W )
 		{
 			XMMATRIX WVP = W * Matrix( matView ) * Matrix( matProjection );
-
-			constexpr XMFLOAT4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 			mp.pModel->Render( Float4x4( WVP ), Float4x4( W ), lightDirection, color, cameraPosition, isEnableFill );
 		};
@@ -2451,6 +2574,7 @@ void Boss::ResetArmState()
 	arm.easeParam	= 0.0f;
 	arm.radian		= 0.0f;
 
+	modelArm.posture  = Donya::Quaternion::Identity();
 	modelBody.posture = Donya::Quaternion::Identity();
 }
 void Boss::ArmUpdate()
@@ -2569,10 +2693,40 @@ void Boss::UpdateAttacks()
 	UpdateWaves();
 }
 
+int  Boss::GetCurrentInjuryLevel() const
+{
+	// HACK:Doing hard coding... :(
+	constexpr int LEVEL_COUNT = 3;
+	constexpr std::array<int, LEVEL_COUNT> LEVEL_BORDERS
+	{
+		9,
+		6,
+		4
+	};
+
+	int i = 0;
+	for ( ; i < LEVEL_COUNT; ++i )
+	{
+		if ( LEVEL_BORDERS[i] < currentHP )
+		{
+			break;
+		}
+	}
+	return std::min( LEVEL_COUNT - 1, i );
+}
+
 void Boss::ReceiveDamage( int damage )
 {
 	if ( damage <= 0 ) { return; }
 	// else
+
+	const int &maxHP = AttackParam::Get().maxHP;
+	if ( currentHP == maxHP )
+	{
+		ParticleManager::Get().StartBossDamageParticle();
+	}
+
+	const int oldInjuryLevel = GetCurrentInjuryLevel();
 
 	currentHP -= damage;
 	if ( currentHP <= 0 )
@@ -2584,29 +2738,67 @@ void Boss::ReceiveDamage( int damage )
 	}
 	// else
 
+	const int currentInjuryLevel = GetCurrentInjuryLevel();
+	if ( oldInjuryLevel != currentInjuryLevel )
+	{
+		ParticleManager::Get().UpdateBossDamageLevel();
+	}
+
 	status			= State::Stun;
 
 	ResetArmState();
 
-	auto &PARAM		= AttackParam::Get();
-	waitReuseFrame	= PARAM.damageWaitFrame;
-	stunTimer		= PARAM.stunFrame;
+	const auto &ATK_PARAM	= AttackParam::Get();
+	waitReuseFrame			= ATK_PARAM.damageWaitFrame;
+
+	const auto &STUN_PARAM = StunParam::Get();
+	int level = damage - 1;
+	stunLevel = std::min( STUN_PARAM.STUN_LEVEL_COUNT - 1, level );
+
+	stunFrame		= STUN_PARAM.stunFrames[stunLevel];
+	stunVelocity	= STUN_PARAM.stunVelocities[stunLevel];
+	stunTimer		= 0;
 
 	Donya::Sound::Play( Music::BossReceiveDamage );
 }
-
 void Boss::StunUpdate()
 {
-	Donya::Quaternion rotation = Donya::Quaternion::Make( 0.0f, ToRadian( -16.0f ), 0.0f );
-	basePosture = rotation * basePosture;
-
-	stunTimer--;
-	if ( stunTimer <= 0 )
+	auto FanRotation = [&]()
 	{
-		stunTimer = 0;
+		constexpr float BACK = ToRadian( 180.0f );
+		const float SPEED = ToRadian( StunParam::Get().rotationSpeedMiddle );
+		float radian = sinf( SPEED * stunTimer );
+		basePosture = Donya::Quaternion::Make( Donya::Vector3::Up(), BACK + radian );
+	};
+	auto WholeRotation = [&]()
+	{
+		const float radian = ToRadian( StunParam::Get().rotationSpeedHigh );
+		Donya::Quaternion rotation = Donya::Quaternion::Make( Donya::Vector3::Up(), radian );
+		basePosture = rotation * basePosture;
+	};
+
+	auto level = scast<StunParam::StunLevel>( stunLevel );
+	switch ( level )
+	{
+	case StunParam::StunLevel::Low:
+		break;
+	case StunParam::StunLevel::Middle:
+		FanRotation();
+		break;
+	case StunParam::StunLevel::High:
+		WholeRotation();
+		break;
+	default: break;
+	}
+
+	stunTimer++;
+	if ( stunFrame <= stunTimer )
+	{
 		status = State::Normal;
 
-		basePosture = Donya::Quaternion::Make( 0.0f, ToRadian( 180.0f ), 0.0f );
+		stunTimer		= 0;
+
+		basePosture		= Donya::Quaternion::Make( Donya::Vector3::Up(), ToRadian( 180.0f ) );
 	}
 }
 bool Boss::IsStunning() const

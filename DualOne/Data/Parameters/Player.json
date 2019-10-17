@@ -14,10 +14,10 @@
                 "y": 8.0,
                 "z": 12.0
             },
-            "exist": true
+            "exist": false
         },
         "changeLaneSpeed": 0.125,
-        "chargeSpeed": 0.1666666716337204,
+        "chargeSpeed": 0.03333333507180214,
         "fallResistance": 0.5,
         "gravity": 0.800000011920929,
         "jumpResistance": 0.5,
