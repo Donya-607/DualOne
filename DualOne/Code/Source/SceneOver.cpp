@@ -70,7 +70,7 @@ private:
 	}
 	static constexpr const char *SERIAL_ID = "Over";
 public:
-	void LoadParameter( bool isBinary )
+	void LoadParameter( bool isBinary = true )
 	{
 		Serializer::Extension ext = ( isBinary )
 		? Serializer::Extension::BINARY
@@ -156,6 +156,8 @@ SceneOver::~SceneOver()
 void SceneOver::Init()
 {
 	Donya::Sound::Play( Music::BGM_Over );
+
+	pImpl->LoadParameter();
 }
 
 void SceneOver::Uninit()

@@ -45,7 +45,7 @@
         "stunVelocity": {
             "x": 0.0,
             "y": 0.0,
-            "z": -6.0
+            "z": -1.1360000371932984
         },
         "modelBody": {
             "cereal_class_version": 0,
@@ -96,7 +96,7 @@
             "bodyAngleRatio": 0.26499998569488528
         },
         "gravity": 0.4000000059604645,
-        "initBouncePower": 16.0,
+        "initBouncePower": 18.0,
         "bounceAppearTimeRange": {
             "cereal_class_version": 0,
             "x": 0.0,
