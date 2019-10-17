@@ -2868,6 +2868,8 @@ void Boss::SetDestructMode()
 			*( VELOCITIES[i] ) = vector;
 		}
 	}
+
+	Donya::Sound::Play( Music::BossDefeated );
 }
 void Boss::DestructionUpdate()
 {
