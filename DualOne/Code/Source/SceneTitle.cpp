@@ -125,7 +125,7 @@ void SceneTitle::StartFade()
 Scene::Result SceneTitle::ReturnResult()
 {
 #if DEBUG_MODE
-	if ( Donya::Keyboard::Trigger( VK_BACK ) )
+	if ( Donya::Keyboard::Trigger( VK_BACK ) && Donya::Keyboard::Press( VK_RSHIFT ) )
 	{
 		Scene::Result change{};
 		change.AddRequest( Scene::Request::ADD_SCENE, Scene::Request::REMOVE_ALL );
