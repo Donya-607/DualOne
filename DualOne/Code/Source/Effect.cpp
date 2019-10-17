@@ -359,27 +359,46 @@ void ParticleManager::CreateBossDamageLoop(Donya::Vector3 _pos)
 	switch (damageLevel)
 	{
 	case LEVEL1:
-		generateInterval = 30;	break;
+		generateInterval = 10;	break;
 	case LEVEL2:
-		generateInterval = 15;	break;
-	case LEVEL3:
 		generateInterval = 5;	break;
+	case LEVEL3:
+		generateInterval = 2;	break;
 	default:
 		break;
 	}
 
 	if (timer % generateInterval == 0)
 	{
+		static bool isEnableRight;
 		Donya::Vector3 priPos = _pos;
-		priPos.y += 40.0f;
-		priPos.z += 12.0f;
-		CreateBossDamageParticle(priPos);
+		if (isEnableRight)
+		{
+			static bool isPlusZ;
+			priPos.x += 40.0f;
+			priPos.y += 55.0f;
+			if (isPlusZ)
+				priPos.z += 1.0f;
+			isPlusZ = !isPlusZ;
+		}
+		else
+		{
+			static bool isPlusZ2;
+			priPos.x -= 40.0f;
+			priPos.y += 55.0f;
+			if (isPlusZ2)
+				priPos.z -= 1.0f;
+			isPlusZ2 = !isPlusZ2;
+		}
+		CreateBossDamageParticle(priPos, isEnableRight);
+		isEnableRight = !isEnableRight;
+
 	}
 }
 
-void ParticleManager::CreateBossDamageParticle(Donya::Vector3 _pos)
+void ParticleManager::CreateBossDamageParticle(Donya::Vector3 _pos, bool _isEnableRight)
 {
-	Particle pre(_pos, Particle::Type::BOSS_DAMAGE_EFFECT);
+	Particle pre(_pos, Particle::Type::BOSS_DAMAGE_EFFECT, _isEnableRight);
 	bossDamageEffects.emplace_back(pre);
 }
 
@@ -507,7 +526,7 @@ Particle::Particle(Donya::Vector3 _emitterPos, Type _type, bool _noMove, float _
 	{
 	case Particle::NONE:				SetNoneElements(_emitterPos);				break;
 	case Particle::SLED_EFFECT:			SetSledElements(_emitterPos);				break;
-	case Particle::BOSS_DAMAGE_EFFECT:	SetBossElements(_emitterPos);				break;
+	case Particle::BOSS_DAMAGE_EFFECT:	SetBossElements(_emitterPos, _noMove);				break;
 	case Particle::MISSILE_EFFECT:		SetMissileElements(_emitterPos, _noMove, _scale);	break;
 	case Particle::SHOCKWAVE_EFFECT:	SetShockWaveElements(_emitterPos);			break;
 	default:																		break;
@@ -577,17 +596,30 @@ void Particle::SetSledElements(Donya::Vector3 _emitterPos)
 	existanceTime = 20;
 }
 
-void Particle::SetBossElements(Donya::Vector3 _emitterPos)
+void Particle::SetBossElements(Donya::Vector3 _emitterPos, bool _isEnableRight)
 {
 	pos = _emitterPos;
-	velocity = Donya::Vector3
-	(
-		Donya::Random::GenerateFloat(-2.0f, 2.0f),
-		Donya::Random::GenerateFloat(3.0f, 5.0f),
-		-10.0f
-	);
+	if (_isEnableRight)
+	{
+		velocity = Donya::Vector3
+		(
+			Donya::Random::GenerateFloat(0.0f, 2.0f),
+			Donya::Random::GenerateFloat(3.0f, 5.0f),
+			-10.0f
+		);
+	}
+	else
+	{
+		velocity = Donya::Vector3
+		(
+			Donya::Random::GenerateFloat(-2.0f, 0.0f),
+			Donya::Random::GenerateFloat(3.0f, 5.0f),
+			-10.0f
+		);
+	}
 	scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
-	color = Donya::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+//	color = Donya::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	color = Donya::Vector4(0.8f, 0.8f, 0.8f, 1.0f);
 	angle = Donya::Vector3(0.0f, 0.0f, Donya::Random::GenerateFloat(0.0f,360.0f));
 	existanceTime = 30;
 }
@@ -596,9 +628,9 @@ void Particle::SetMissileElements(Donya::Vector3 _emitterPos, bool _noMove, floa
 {
 	if (_noMove)
 	{
-		if (_scale == 1.0f) scale = Donya::Vector3(50.0f, 50.0f, 50.0f);
-		else 				scale = Donya::Vector3(50.0f * _scale, 50.0f * _scale, 50.0f * _scale);
-		velocity = Donya::Vector3(0.0f,0.0f,-11.0f);
+		if (_scale == 1.0f) scale = Donya::Vector3(100.0f, 100.0f, 100.0f);
+		else 				scale = Donya::Vector3(100.0f * _scale, 100.0f * _scale, 100.0f * _scale);
+		velocity = Donya::Vector3(0.0f,0.0f,-10.0f);
 		color = Donya::Vector4(1.0f, 0.3f, 0.0f, 1.0f);
 	}
 	else
@@ -637,7 +669,7 @@ void Particle::SetShockWaveElements(Donya::Vector3 _emitterPos)
 	velocity = Vector3{ 0.0f,/*10.0f*/Donya::Random::GenerateFloat(3.0f,10.0f),0.0f };
 	scale = Vector3{ 2.0f,2.0f,2.0f };
 	angle = Vector3{ 0.0f,0.0f,0.0f };
-	existanceTime = 20;
+	existanceTime = 30;
 }
 
 /*-------------------------------------------------*/
@@ -669,15 +701,15 @@ void Particle::UpdateOfMissiles()
 
 void Particle::UpdateOfBossDamage()
 {
-	
+
 	pos += velocity;
-//	scale.x = scale.y = scale.z = 50.0f * (30 / existanceTime);
+	angle.z -= Donya::Random::GenerateFloat(5.0f, 10.0f);
+	if (angle.z >= 360)angle.z = 0;
 	scale.x = scale.y = scale.z = 50.0f * (static_cast<float>(existanceTime) / 30.0f);
 	--existanceTime;
 }
 
 void Particle::UpdateOfShockWave()
-
 {
 	constexpr float GRAVITY = -0.98f;
 

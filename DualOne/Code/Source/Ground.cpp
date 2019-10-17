@@ -53,7 +53,7 @@ void Block::Init(size_t _num)
 #if 0
 	scale = Donya::Vector3(100.0f, 1.0f, 2000.0f);
 #else
-	scale = Donya::Vector3(3000.0f, 10100.0f, 0.1f);
+	scale = Donya::Vector3(3000.0f, 10003.0f, 0.1f);
 
 	if (_num % 2 == 0)
 		pos.y += -1.0f;
@@ -431,63 +431,64 @@ void Wall::Init(int _num)
 	if (_num == 0)
 	{
 		pos = Donya::Vector3(200.0f, 0.0f, -500.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.5f);
 		isRightWall = false;
 	}
 	else if(_num == 1)
 	{
 		pos = Donya::Vector3(-200.0f, 0.0f, 0.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = true;
 	}
 	else if (_num == 2)
 	{
 		pos = Donya::Vector3(200.0f, 0.0f, 500.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = false;
 	}
 	else if(_num == 3)
 	{
 		pos = Donya::Vector3(-200.0f, 0.0f, 1000.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = true;
 	}
 	else if (_num == 4)
 	{
 		pos = Donya::Vector3(200.0f, 0.0f, 1500.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = false;
 	}
 	else if (_num == 5)
 	{
 		pos = Donya::Vector3(-200.0f, 0.0f, 2000.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = true;
 	}
 	else if (_num == 6)
 	{
 		pos = Donya::Vector3(200.0f, 0.0f, 2500.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = false;
 	}
 	else if (_num == 7)
 	{
 		pos = Donya::Vector3(-200.0f, 0.0f, 3000.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = true;
 	}
 	else if (_num == 8)
 	{
 		pos = Donya::Vector3(200.0f, 0.0f, 3500.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.0f);
 		isRightWall = false;
 	}
 	else if (_num == 9)
 	{
 		pos = Donya::Vector3(-200.0f, 0.0f, 4000.0f);
-		scale = Donya::Vector3(1.0f, 1.0f, 1.0f);
+		scale = Donya::Vector3(1.0f, 1.0f, 2.5f);
 		isRightWall = true;
 	}
+
 }
 
 void Wall::Update(Donya::Vector3 _playerPos)
