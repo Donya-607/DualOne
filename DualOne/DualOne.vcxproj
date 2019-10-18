@@ -164,9 +164,6 @@
     <ClInclude Include="Code\Header\UI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Code\Header\Icon.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Code\Source\Boss.cpp" />
     <ClCompile Include="Code\Source\Camera.cpp" />
     <ClCompile Include="Code\Source\Common.cpp" />
@@ -191,6 +188,12 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Data\Images\Icon\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Code\Header\Icon.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -24,11 +24,11 @@
         },
         "aliveFrame": 120,
         "exposingLength": 128.0,
-        "fastModePosZ": 3.5,
+        "fastModePosZ": 3.0,
         "fastModeInitPos": {
             "cereal_class_version": 0,
             "x": 0.0,
-            "y": -1.0
+            "y": 6.0
         }
     }
 }

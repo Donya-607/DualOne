@@ -30,9 +30,6 @@
     <ClInclude Include="Code\Header\UI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Code\Header\Icon.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Code\Source\Common.cpp" />
     <ClCompile Include="Code\Source\Fader.cpp" />
     <ClCompile Include="Code\Source\FilePath.cpp" />
@@ -66,5 +63,11 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Configuration\Vector.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Data\Images\Icon\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Code\Header\Icon.rc" />
   </ItemGroup>
 </Project>
