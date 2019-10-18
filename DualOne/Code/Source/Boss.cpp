@@ -161,6 +161,14 @@ void Missile::UseImGui()
 				ImGui::TreePop();
 			}
 
+			if ( ImGui::TreeNode( u8"タイトルミサイル" ) )
+			{
+				ImGui::SliderFloat( u8"Ｚ位置の飛び出しの増幅", &parameter.fastModePosZ, 0.5f, 10.0f );
+				ImGui::SliderFloat2( u8"初期位置Ｘ，Ｙ", &parameter.fastModeInitPos.x, -128.0f, 128.0f );
+
+				ImGui::TreePop();
+			}
+
 			if ( ImGui::TreeNode( u8"ファイル" ) )
 			{
 				static bool isBinary = true;
@@ -194,6 +202,7 @@ Missile::Missile() :
 	status( State::Expose ),
 	aliveFrame( 0 ), waitFrame( 0 ),
 	exposingLength(),
+	fastModePosZ( 1.0f ), fastModeInitPos(),
 	hitBox(),
 	pos(), basePos(), velocity(),
 	posture(),
@@ -323,7 +332,9 @@ void Missile::InitToFastMode()
 	status		= State::Wait;
 	waitFrame	= 0;
 
-	exposingLength *= 3.5f;
+	exposingLength *= fastModePosZ;
+	pos.x = fastModeInitPos.x;
+	pos.y = fastModeInitPos.y;
 }
 
 void Missile::ExposeUpdate()

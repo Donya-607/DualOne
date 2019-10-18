@@ -52,6 +52,8 @@ private:
 	int					waitFrame;
 	
 	float				exposingLength;	// Use when generated ~ wait.
+	float				fastModePosZ;	// Will be multiple to exposingLength
+	Donya::Vector2		fastModeInitPos;// Valid x, y.
 
 	AABB				hitBox;			// The position is local-space, size is world-space.
 	Donya::Vector3		pos;
@@ -83,6 +85,14 @@ private:
 			archive( CEREAL_NVP( exposingLength ) );
 		}
 		if ( 3 <= version )
+		{
+			archive
+			(
+				CEREAL_NVP( fastModePosZ ),
+				CEREAL_NVP( fastModeInitPos )
+			);
+		}
+		if ( 4 <= version )
 		{
 			// archive( CEREAL_NVP( x ) );
 		}
@@ -127,7 +137,7 @@ private:
 	void Move();
 };
 
-CEREAL_CLASS_VERSION( Missile, 2 )
+CEREAL_CLASS_VERSION( Missile, 3 )
 
 class Obstacle
 {
