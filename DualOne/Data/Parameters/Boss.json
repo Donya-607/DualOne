@@ -86,8 +86,8 @@
         },
         "arm": {
             "cereal_class_version": 3,
-            "incrementation": 0.016949152573943139,
-            "highestAngle": 1.3077614307403565,
+            "incrementation": 0.03333333507180214,
+            "highestAngle": 1.3075144290924073,
             "easingKindRise": 11,
             "easingKindFall": 5,
             "shakeStrength": 3.5,

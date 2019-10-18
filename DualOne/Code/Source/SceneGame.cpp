@@ -992,9 +992,21 @@ Scene::Result SceneGame::ReturnResult()
 	}
 	// else
 
-	if ( pImpl->status == Impl::State::Over )
+	if ( pImpl->boss.IsDead() )
 	{
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
+
+		StorageForScene::Get().StoreTimer( pImpl->currentTime );
+
+		Scene::Result change{};
+		change.AddRequest( Scene::Request::ADD_SCENE );
+		change.sceneType = Scene::Type::Clear;
+		return change;
+	}
+
+	if ( pImpl->status == Impl::State::Over )
+	{
+		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of over, so I should stop the BGM here.
 
 		StorageForScene::Get().StoreTimer( pImpl->currentTime );
 
@@ -1005,7 +1017,7 @@ Scene::Result SceneGame::ReturnResult()
 	}
 
 #if DEBUG_MODE
-	if ( ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) ) || pImpl->boss.IsDead() )
+	if ( ( Donya::Keyboard::Trigger( VK_RETURN ) && Donya::Keyboard::Press( VK_RSHIFT ) ) )
 	{
 		Donya::Sound::Play( Music::ItemDecision );
 		Donya::Sound::Stop( Music::BGM_Game );		// Game scene is not erased for showing scene of clear, so I should stop the BGM here.
